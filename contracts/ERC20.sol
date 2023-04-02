@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts (last updated v4.8.0) (token/ERC20/ERC20.sol)
 
 pragma solidity ^0.8.0;
 
@@ -10,7 +9,6 @@ import "../interfaces/IERC20Metadata.sol";
  *
  * This implementation is agnostic to the way tokens are created. This means
  * that a supply mechanism has to be added in a derived contract using {_mint}.
- * For a generic mechanism see {ERC20PresetMinterPauser}.
  *
  * TIP: For a detailed writeup see our guide
  * https://forum.openzeppelin.com/t/how-to-implement-erc20-supply-mechanisms/226[How
@@ -229,8 +227,6 @@ contract ERC20 is IERC20Metadata {
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
 
-        //_beforeTokenTransfer(from, to, amount);
-
         uint256 fromBalance = _balances[from];
         require(fromBalance >= amount, "ERC20: transfer amount exceeds balance");
         unchecked {
@@ -242,7 +238,6 @@ contract ERC20 is IERC20Metadata {
 
         emit Transfer(from, to, amount);
 
-       // _afterTokenTransfer(from, to, amount);
     }
 
     /** @dev Creates `amount` tokens and assigns them to `account`, increasing
@@ -257,7 +252,6 @@ contract ERC20 is IERC20Metadata {
     function _mint(address account, uint256 amount) internal virtual {
         require(account != address(0), "ERC20: mint to the zero address");
 
-        //_beforeTokenTransfer(address(0), account, amount);
 
         _totalSupply += amount;
         unchecked {
@@ -266,37 +260,9 @@ contract ERC20 is IERC20Metadata {
         }
         emit Transfer(address(0), account, amount);
 
-       // _afterTokenTransfer(address(0), account, amount);
     }
 
-    /**
-     * @dev Destroys `amount` tokens from `account`, reducing the
-     * total supply.
-     *
-     * Emits a {Transfer} event with `to` set to the zero address.
-     *
-     * Requirements:
-     *
-     * - `account` cannot be the zero address.
-     * - `account` must have at least `amount` tokens.
-     */
-    // function _burn(address account, uint256 amount) internal virtual {
-    //     require(account != address(0), "ERC20: burn from the zero address");
 
-    //     _beforeTokenTransfer(account, address(0), amount);
-
-    //     uint256 accountBalance = _balances[account];
-    //     require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
-    //     unchecked {
-    //         _balances[account] = accountBalance - amount;
-    //         // Overflow not possible: amount <= accountBalance <= totalSupply.
-    //         _totalSupply -= amount;
-    //     }
-
-    //     emit Transfer(account, address(0), amount);
-
-    //     _afterTokenTransfer(account, address(0), amount);
-    // }
 
     /**
      * @dev Sets `amount` as the allowance of `spender` over the `owner` s tokens.
@@ -345,43 +311,5 @@ contract ERC20 is IERC20Metadata {
         }
     }
 
-    // /**
-    //  * @dev Hook that is called before any transfer of tokens. This includes
-    //  * minting and burning.
-    //  *
-    //  * Calling conditions:
-    //  *
-    //  * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
-    //  * will be transferred to `to`.
-    //  * - when `from` is zero, `amount` tokens will be minted for `to`.
-    //  * - when `to` is zero, `amount` of ``from``'s tokens will be burned.
-    //  * - `from` and `to` are never both zero.
-    //  *
-    //  * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
-    //  */
-    // function _beforeTokenTransfer(
-    //     address from,
-    //     address to,
-    //     uint256 amount
-    // ) internal virtual {}
 
-    // /**
-    //  * @dev Hook that is called after any transfer of tokens. This includes
-    //  * minting and burning.
-    //  *
-    //  * Calling conditions:
-    //  *
-    //  * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
-    //  * has been transferred to `to`.
-    //  * - when `from` is zero, `amount` tokens have been minted for `to`.
-    //  * - when `to` is zero, `amount` of ``from``'s tokens have been burned.
-    //  * - `from` and `to` are never both zero.
-    //  *
-    //  * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
-    //  */
-    // function _afterTokenTransfer(
-    //     address from,
-    //     address to,
-    //     uint256 amount
-    // ) internal virtual {}
 }

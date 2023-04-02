@@ -9,13 +9,13 @@
 // Code released under the MIT License.
 ////**************************************************************
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.18;
 
 import "../ERC20.sol";
 
 contract MockToken is ERC20 {
 
-    uint256 constant public MAX_SUPPLY = 500_000_000e18;
+    uint256 constant public MAX_SUPPLY = 5_000_000_000e18;
     uint8 decimals_;
     constructor(string memory _name, string memory _symbol, uint8 _decimals)
         ERC20(_name, _symbol)
