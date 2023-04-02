@@ -5,5 +5,5 @@ __pycache__
 build/
 reports/
 .env
-logdo
+logdo.md
 
