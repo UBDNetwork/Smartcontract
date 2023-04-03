@@ -44,8 +44,6 @@ contract UBDNDistributor is Ownable {
         );
 
         emit Purchase(outAmount, _paymentToken, _inAmount);
-
-
     }
 
     ///////////////////////////////////////////////////////////
