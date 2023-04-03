@@ -9,9 +9,9 @@
 // Code released under the MIT License.
 //****************************************************************
 
-pragma solidity 0.8.18;
+pragma solidity 0.8.19;
 
-import "./ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract UBDNToken is ERC20 {
 
