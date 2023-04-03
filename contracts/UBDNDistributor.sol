@@ -34,7 +34,8 @@ contract UBDNDistributor is Ownable {
         require(address(distributionToken) != address(0), 'Distribution not Define');
         require(paymentTokens[_paymentToken], 'This payment token not supported');
         // 1. Receive payment
-        // TODO think aboy require
+        // TODO think about require
+        // TODO think about real transfered anount for payments with fee
         IERC20(_paymentToken).safeTransferFrom(msg.sender, owner(),_inAmount);
         // 2. Transfer distribution tokens
         uint256 outAmount = _calcTokensForExactStable(_paymentToken,_inAmount);
@@ -42,7 +43,6 @@ contract UBDNDistributor is Ownable {
             msg.sender, 
             outAmount
         );
-
         emit Purchase(outAmount, _paymentToken, _inAmount);
     }
 
@@ -67,20 +67,50 @@ contract UBDNDistributor is Ownable {
 
     ///////////////////////////////////////////////////////////
 
-    function calcTokensForExactStable(uint256 _inAmount) 
+    function calcTokensForExactStable(address _paymentToken, uint256 _inAmount) 
         external 
         view 
         returns(uint256) 
     {
-
+        return _calcTokensForExactStable(_paymentToken, _inAmount);
     }
 
-    function calcStableForExactTokens(uint256 _inAmount) 
+    function calcStableForExactTokens(address _paymentToken, uint256 _outAmount) 
         external 
         view 
         returns(uint256) 
     {
+        return _calcStableForExactTokens(_paymentToken, _outAmount);
+    }
 
+    function priceInUnitsAndRemainByRound(uint256 _round) 
+        external 
+        view 
+        returns(uint256, uint256) 
+    {
+        return _priceInUnitsAndRemainByRound(_round);
+    }
+    function _calcStableForExactTokens(address _paymentToken, uint256 _outAmount) 
+        internal
+        virtual 
+        view 
+        returns(uint256 inAmount) 
+    {
+        uint256 outA = _outAmount;
+        uint256 curR = _currenRound();
+        uint256 curPrice; 
+        uint256 curRest;
+        while (outA > 0) {
+            (curPrice, curRest) = _priceInUnitsAndRemainByRound(curR); 
+            if (outA > curRest) {
+                inAmount += curRest * curPrice;
+                outA -= curRest;
+                ++ curR;
+            } else {
+                inAmount += outA / curPrice;
+                return inAmount;
+            }
+        }
     }
 
     function _calcTokensForExactStable(address _paymentToken, uint256 _inAmount) 
@@ -95,11 +125,13 @@ contract UBDNDistributor is Ownable {
         uint256 curRest;
         while (inA > 0) {
             (curPrice, curRest) = _priceInUnitsAndRemainByRound(curR); 
-            if (inA / (curPrice * IERC20Metadata(_paymentToken).decimals()) > curRest) {
+            if (inA / (curPrice * 10**IERC20Metadata(_paymentToken).decimals()) > curRest) {
                 outAmount += curRest;
-                inA -= curRest * (curPrice*IERC20Metadata(_paymentToken).decimals());
+                inA -= curRest * curPrice;
+                ++ curR;
             } else {
-                outAmount += inA / (curPrice*IERC20Metadata(_paymentToken).decimals());
+                outAmount += inA / curPrice;
+                return outAmount;
             }
         }
     }
