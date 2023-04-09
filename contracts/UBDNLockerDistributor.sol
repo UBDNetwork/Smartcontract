@@ -16,7 +16,7 @@ contract UBDNLockerDistributor is Ownable {
         uint256 lockedUntil;
     }
 
-    uint256 constant public START_PRICE = 1;         // 1 stable coin unit, not decimal. 
+    uint256 constant public START_PRICE = 2;         // 1 stable coin unit, not decimal. 
     uint256 constant public PRICE_INCREASE_STEP = 1; // 1 stable coin unit, not decimal. 
     uint256 constant public INCREASE_FROM_ROUND = 1;
     uint256 constant public ROUND_VOLUME = 1_000_000e18; // in wei
