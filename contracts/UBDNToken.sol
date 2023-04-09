@@ -15,12 +15,19 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract UBDNToken is ERC20 {
 
-    uint256 constant public MAX_SUPPLY = 50_000_000e18;
+    uint256 constant public INITIAL_SUPPLY = 5_000_000e18;
+    address public minter; // sale contract
 
-    constructor(address initialKeeper)
+    constructor(address _initialKeeper, address _minter)
         ERC20("UBD Network", "UBDN")
     { 
-        _mint(initialKeeper, MAX_SUPPLY);
+        _mint(_initialKeeper, INITIAL_SUPPLY);
+        minter = _minter;
+    }
+
+    function mint(address _to, uint256 _amount) external {
+        require(msg.sender == minter, 'Only distibutor contarct');
+         _mint(_to, _amount);
     }
     
 }

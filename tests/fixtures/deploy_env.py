@@ -7,12 +7,12 @@ def distributor(accounts, UBDNDistributor):
 
 @pytest.fixture(scope="module")
 def ubdn(accounts, UBDNToken, distributor):
-    erc = accounts[0].deploy(UBDNToken, distributor.address)
+    erc = accounts[0].deploy(UBDNToken, accounts[1], distributor.address)
     yield erc
 
 @pytest.fixture(scope="module")
 def erc20(accounts, UBDNToken):
-    erc = accounts[0].deploy(UBDNToken, accounts[0])
+    erc = accounts[0].deploy(UBDNToken, accounts[1], accounts[0])
     yield erc
 
 
