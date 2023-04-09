@@ -5,32 +5,44 @@ pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "../interfaces/IERC20Mint.sol";
 
-/// @title UBDNDistributor ERC20 Token Distributor
-/// @author Envelop Team
-/// @notice This implementation of distributor intend sell
-/// all preminted erc20 tokens from this conatract balance. 
-/// @dev  totallSupply must be preminted to this contract balance.
-contract UBDNDistributor is Ownable {
-    using SafeERC20 for IERC20;
+
+contract UBDNLockerDistributor is Ownable {
+    using SafeERC20 for IERC20Mint;
     
+    struct Lock {
+        uint256 amount;
+        uint256 lockedUntil;
+    }
+
     uint256 constant public START_PRICE = 1;         // 1 stable coin unit, not decimal. 
     uint256 constant public PRICE_INCREASE_STEP = 1; // 1 stable coin unit, not decimal. 
     uint256 constant public INCREASE_FROM_ROUND = 6;
     uint256 constant public ROUND_VOLUME = 1_000_000e18; // in wei
+    
+    uint256 public LOCK_PERIOD = 90 days;
+    uint256 public distributedAmount;
 
-    IERC20 public distributionToken;
+    IERC20Mint public distributionToken;
     mapping (address => bool) public paymentTokens;
+    mapping (address => Lock[]) public userLocks;
 
     event DistributionTokenSet(address indexed Token);
     event PaymentTokenStatus(address indexed Token, bool Status);
     event Purchase(
+        address indexed User,
         uint256 indexed PurchaseAmount, 
         address indexed PaymentToken, 
-        uint256 indexed PaymentAmount
+        uint256 PaymentAmount
     );
+    event Claimed(address User, uint256 Amount, uint256 Timestamp);
 
+    constructor (uint256 _lockPeriod) {
+        if (_lockPeriod > 0) {
+           LOCK_PERIOD = _lockPeriod;
+        }
+    }
     function buyTokensForExactStable(address _paymentToken, uint256 _inAmount) 
         external 
         returns(uint256) 
@@ -40,14 +52,29 @@ contract UBDNDistributor is Ownable {
         // 1. Receive payment
         // TODO think about require
         // TODO think about real transfered anount for payments with fee
-        IERC20(_paymentToken).safeTransferFrom(msg.sender, owner(),_inAmount);
-        // 2. Transfer distribution tokens
+        IERC20Mint(_paymentToken).safeTransferFrom(msg.sender, owner(),_inAmount);
+        // 2. Calc distribution tokens
         uint256 outAmount = _calcTokensForExactStable(_paymentToken,_inAmount);
-        distributionToken.safeTransfer(
-            msg.sender, 
-            outAmount
-        );
-        emit Purchase(outAmount, _paymentToken, _inAmount);
+        
+        // 3. Save lockInfo
+        _newLock(msg.sender, outAmount);
+        distributedAmount += outAmount;
+        // 4. Mint distribution token
+        distributionToken.mint(address(this), outAmount);
+        emit Purchase(msg.sender, outAmount, _paymentToken, _inAmount);
+    }
+
+    function claimTokens() external {
+        uint256 claimAmount;
+        // calc and mark as claimed
+        for (uint256 i = 0; i < userLocks[msg.sender].length; ++i){
+            if (block.timestamp >= userLocks[msg.sender][i].lockedUntil){
+                claimAmount += userLocks[msg.sender][i].amount;
+                userLocks[msg.sender][i].amount = 0;
+            }
+        }
+        distributionToken.safeTransfer(msg.sender, claimAmount);
+        emit Claimed(msg.sender, claimAmount, block.timestamp);
     }
 
     ///////////////////////////////////////////////////////////
@@ -65,7 +92,7 @@ contract UBDNDistributor is Ownable {
         external 
         onlyOwner 
     {
-        distributionToken = IERC20(_token);
+        distributionToken = IERC20Mint(_token);
         emit DistributionTokenSet(_token);
     }
 
@@ -94,6 +121,35 @@ contract UBDNDistributor is Ownable {
     {
         return _priceInUnitsAndRemainByRound(_round);
     }
+
+    function getUserLocks(address _user) 
+        public 
+        view 
+        returns(Lock[] memory)
+    {
+        return userLocks[_user];
+    }
+
+    function getUserAvailableAmount(address _user)
+        public
+        view
+        returns(uint256 total, uint256 availableNow)
+    {
+        for (uint256 i = 0; i < userLocks[_user].length; ++i){
+            total += userLocks[_user][i].amount;
+            if (block.timestamp >= userLocks[_user][i].lockedUntil){
+                availableNow += userLocks[_user][i].amount;
+            }
+        }
+    }
+
+    /////////////////////////////////////////////////////////////////////
+    function _newLock(address _user, uint256 _lockAmount) internal {
+        userLocks[_user].push(
+            Lock(_lockAmount, block.timestamp + LOCK_PERIOD)
+        );
+    }
+
     function _calcStableForExactTokens(address _paymentToken, uint256 _outAmount) 
         internal
         virtual 
@@ -129,7 +185,7 @@ contract UBDNDistributor is Ownable {
         uint256 curRest;
         while (inA > 0) {
             (curPrice, curRest) = _priceInUnitsAndRemainByRound(curR); 
-            if (inA / (curPrice * 10**IERC20Metadata(_paymentToken).decimals()) > curRest) {
+            if (inA / (curPrice * 10**IERC20Mint(_paymentToken).decimals()) > curRest) {
                 outAmount += curRest;
                 inA -= curRest * curPrice;
                 ++ curR;
@@ -151,15 +207,10 @@ contract UBDNDistributor is Ownable {
         } else {
             price = PRICE_INCREASE_STEP * (_round - INCREASE_FROM_ROUND + 2); 
         }
-        rest = ROUND_VOLUME 
-            - ((distributionToken.totalSupply() - distributionToken.balanceOf(address(this)))
-             % ROUND_VOLUME); 
+        rest = ROUND_VOLUME - (distributedAmount % ROUND_VOLUME); 
     }
 
     function _currenRound() internal view virtual returns(uint256){
-        uint256 currentRoundNumber = 
-            (distributionToken.totalSupply() - distributionToken.balanceOf(address(this)))
-             / ROUND_VOLUME + 1;
-        return currentRoundNumber;
+        return distributedAmount / ROUND_VOLUME + 1;
     }
 }

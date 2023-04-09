@@ -6,13 +6,31 @@ def distributor(accounts, UBDNDistributor):
     yield d
 
 @pytest.fixture(scope="module")
+def lockerdistributor(accounts, UBDNLockerDistributor):
+    d = accounts[0].deploy(UBDNLockerDistributor, 0)
+    yield d    
+
+@pytest.fixture(scope="module")
 def ubdn(accounts, UBDNToken, distributor):
-    erc = accounts[0].deploy(UBDNToken, accounts[1], distributor.address)
+    erc = accounts[0].deploy(UBDNToken, 
+        distributor.address, 
+        distributor.address, 
+        50_000_000e18
+    )
     yield erc
 
 @pytest.fixture(scope="module")
+def ubdnlocked(accounts, UBDNToken, lockerdistributor):
+    erc = accounts[0].deploy(UBDNToken, 
+        accounts[0], 
+        lockerdistributor.address, 
+        5_000_000e18
+    )
+    yield erc    
+
+@pytest.fixture(scope="module")
 def erc20(accounts, UBDNToken):
-    erc = accounts[0].deploy(UBDNToken, accounts[1], accounts[0])
+    erc = accounts[0].deploy(UBDNToken, accounts[1], accounts[0], 5_000_000e18)
     yield erc
 
 
