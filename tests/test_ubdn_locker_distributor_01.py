@@ -1,10 +1,17 @@
 import pytest
 import logging
-from brownie import Wei, reverts
+from brownie import Wei, reverts, chain
 LOGGER = logging.getLogger(__name__)
 
 PAY_AMOUNT = 100_000e6
-def test_distrib_simple(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
+def pretty_print_locks(locks):
+    for l in locks:
+        logging.info('\nLocked:{:24n} tokens untill {}'.format(
+            Wei(l[0]).to('ether'), 
+            l[1]
+        ));
+
+def test_simple_buy(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     lockerdistributor.setPaymentTokenStatus(usdt, True, {'from':accounts[0]})
     lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[0]})
     usdt.approve(lockerdistributor, PAY_AMOUNT, {'from':accounts[0]})
@@ -21,6 +28,54 @@ def test_distrib_simple(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     for e in tx.events.keys():
         logging.info('Events:{}:{}'.format(e, tx.events[e]))
     assert ubdnlocked.balanceOf(lockerdistributor.address) ==  PAY_AMOUNT
+
+def test_locks(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
+    chain.sleep(3600)
+    chain.mine()
+    usdt.approve(lockerdistributor, PAY_AMOUNT, {'from':accounts[0]})
+    lockerdistributor.buyTokensForExactStable(usdt, PAY_AMOUNT, {'from':accounts[0]})
+    locks = lockerdistributor.getUserLocks(accounts[0])
+    pretty_print_locks(locks);
+    assert len(locks) == 2
+    assert lockerdistributor.getUserAvailableAmount(accounts[0])[0] == PAY_AMOUNT*2
+    assert lockerdistributor.getUserAvailableAmount(accounts[0])[1] == 0
+
+def test_claim(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
+    chain.sleep(lockerdistributor.LOCK_PERIOD() - 3600)
+    chain.mine()
+    assert lockerdistributor.getUserAvailableAmount(accounts[0])[1] == PAY_AMOUNT
+    bbefore = ubdnlocked.balanceOf(accounts[0])
+    tx = lockerdistributor.claimTokens({'from':accounts[0]})
+    for e in tx.events.keys():
+        logging.info('Events:{}:{}'.format(e, tx.events[e]))
+    assert ubdnlocked.balanceOf(accounts[0]) - bbefore == PAY_AMOUNT
+    assert lockerdistributor.getUserAvailableAmount(accounts[0])[1] == 0
+    assert lockerdistributor.getUserAvailableAmount(accounts[0])[0] == PAY_AMOUNT
+    assert tx.events['Claimed']['Amount'] == PAY_AMOUNT
+    locks = lockerdistributor.getUserLocks(accounts[0])
+    pretty_print_locks(locks);
+
+def test_second_claim(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
+    tx = lockerdistributor.claimTokens({'from':accounts[0]})
+    assert tx.events['Claimed']['Amount'] == 0
+    chain.sleep(3600)
+    chain.mine()
+    assert lockerdistributor.getUserAvailableAmount(accounts[0])[1] == PAY_AMOUNT
+    bbefore = ubdnlocked.balanceOf(accounts[0])
+    tx = lockerdistributor.claimTokens({'from':accounts[0]})
+    for e in tx.events.keys():
+        logging.info('Events:{}:{}'.format(e, tx.events[e]))
+    assert ubdnlocked.balanceOf(accounts[0]) - bbefore == PAY_AMOUNT
+    assert lockerdistributor.getUserAvailableAmount(accounts[0])[1] == 0
+    assert lockerdistributor.getUserAvailableAmount(accounts[0])[0] == 0
+    assert tx.events['Claimed']['Amount'] == PAY_AMOUNT
+    locks = lockerdistributor.getUserLocks(accounts[0])
+    pretty_print_locks(locks);    
+
+
+
+
+    
 
 
 
