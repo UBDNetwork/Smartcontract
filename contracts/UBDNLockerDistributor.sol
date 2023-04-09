@@ -18,7 +18,7 @@ contract UBDNLockerDistributor is Ownable {
 
     uint256 constant public START_PRICE = 1;         // 1 stable coin unit, not decimal. 
     uint256 constant public PRICE_INCREASE_STEP = 1; // 1 stable coin unit, not decimal. 
-    uint256 constant public INCREASE_FROM_ROUND = 6;
+    uint256 constant public INCREASE_FROM_ROUND = 1;
     uint256 constant public ROUND_VOLUME = 1_000_000e18; // in wei
     
     uint256 public LOCK_PERIOD = 90 days;
@@ -143,6 +143,10 @@ contract UBDNLockerDistributor is Ownable {
         }
     }
 
+    function getCurrentRound() external view returns(uint256){
+        return _currenRound();   
+    }
+
     /////////////////////////////////////////////////////////////////////
     function _newLock(address _user, uint256 _lockAmount) internal {
         userLocks[_user].push(
@@ -185,12 +189,20 @@ contract UBDNLockerDistributor is Ownable {
         uint256 curRest;
         while (inA > 0) {
             (curPrice, curRest) = _priceInUnitsAndRemainByRound(curR); 
-            if (inA / (curPrice * 10**IERC20Mint(_paymentToken).decimals()) > curRest) {
+            if (
+                inA 
+                / (curPrice * 10**IERC20Mint(_paymentToken).decimals())
+                * (10**distributionToken.decimals())  > curRest
+                ) 
+            {
                 outAmount += curRest;
-                inA -= curRest * curPrice;
+                
+                inA -= curRest * curPrice * 10**IERC20Mint(_paymentToken).decimals();
                 ++ curR;
             } else {
-                outAmount += inA / curPrice;
+                outAmount += inA 
+                  / (curPrice * 10**IERC20Mint(_paymentToken).decimals())
+                  * 10**distributionToken.decimals();
                 return outAmount;
             }
         }
@@ -205,7 +217,7 @@ contract UBDNLockerDistributor is Ownable {
         if (_round < INCREASE_FROM_ROUND){
             price = START_PRICE;
         } else {
-            price = PRICE_INCREASE_STEP * (_round - INCREASE_FROM_ROUND + 2); 
+            price = PRICE_INCREASE_STEP * (_round - INCREASE_FROM_ROUND + 1); 
         }
         rest = ROUND_VOLUME - (distributedAmount % ROUND_VOLUME); 
     }

@@ -29,5 +29,9 @@ contract MockToken is ERC20 {
     function decimals() public view virtual override returns (uint8) {
         return decimals_;
     }
+
+    function mint(address _for, uint256 _amount) external {
+        _mint(_for, _amount);
+    }
 }
 
