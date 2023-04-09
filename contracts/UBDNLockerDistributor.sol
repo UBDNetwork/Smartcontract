@@ -16,7 +16,7 @@ contract UBDNLockerDistributor is Ownable {
         uint256 lockedUntil;
     }
 
-    uint256 constant public START_PRICE = 2;         // 1 stable coin unit, not decimal. 
+    uint256 constant public START_PRICE = 1;         // 1 stable coin unit, not decimal. 
     uint256 constant public PRICE_INCREASE_STEP = 1; // 1 stable coin unit, not decimal. 
     uint256 constant public INCREASE_FROM_ROUND = 1;
     uint256 constant public ROUND_VOLUME = 1_000_000e18; // in wei
@@ -167,11 +167,15 @@ contract UBDNLockerDistributor is Ownable {
         while (outA > 0) {
             (curPrice, curRest) = _priceInUnitsAndRemainByRound(curR); 
             if (outA > curRest) {
-                inAmount += curRest * curPrice;
+                inAmount += curRest 
+                    * curPrice * 10**IERC20Mint(_paymentToken).decimals()
+                    / 10**distributionToken.decimals();
                 outA -= curRest;
                 ++ curR;
             } else {
-                inAmount += outA / curPrice;
+                inAmount += outA 
+                    * curPrice * 10**IERC20Mint(_paymentToken).decimals()
+                    / 10**distributionToken.decimals();
                 return inAmount;
             }
         }
@@ -190,16 +194,22 @@ contract UBDNLockerDistributor is Ownable {
         while (inA > 0) {
             (curPrice, curRest) = _priceInUnitsAndRemainByRound(curR); 
             if (
+                // calc out amount
                 inA 
                 / (curPrice * 10**IERC20Mint(_paymentToken).decimals())
                 * (10**distributionToken.decimals())  > curRest
                 ) 
             {
+                // Case when inAmount more then price of all tokens 
+                // in current round
                 outAmount += curRest;
-                
-                inA -= curRest * curPrice * 10**IERC20Mint(_paymentToken).decimals();
+                inA -= curRest 
+                       * curPrice * 10**IERC20Mint(_paymentToken).decimals()
+                       / (10**distributionToken.decimals());
                 ++ curR;
             } else {
+                // Case when inAmount less or eqal then price of all tokens 
+                // in current round
                 outAmount += inA 
                   / (curPrice * 10**IERC20Mint(_paymentToken).decimals())
                   * 10**distributionToken.decimals();
@@ -217,7 +227,7 @@ contract UBDNLockerDistributor is Ownable {
         if (_round < INCREASE_FROM_ROUND){
             price = START_PRICE;
         } else {
-            price = PRICE_INCREASE_STEP * (_round - INCREASE_FROM_ROUND + 1); 
+            price = START_PRICE + PRICE_INCREASE_STEP * (_round - INCREASE_FROM_ROUND + 1); 
         }
         rest = ROUND_VOLUME - (distributedAmount % ROUND_VOLUME); 
     }
