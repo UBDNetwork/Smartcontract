@@ -230,7 +230,11 @@ contract UBDNLockerDistributor is Ownable {
         } else {
             price = START_PRICE + PRICE_INCREASE_STEP * (_round - INCREASE_FROM_ROUND + 1); 
         }
-        rest = ROUND_VOLUME - (distributedAmount % ROUND_VOLUME); 
+        if (_round < _currenRound()){
+            rest = 0;
+        } else {
+            rest = ROUND_VOLUME - (distributedAmount % ROUND_VOLUME); 
+        }
     }
 
     function _currenRound() internal view virtual returns(uint256){
