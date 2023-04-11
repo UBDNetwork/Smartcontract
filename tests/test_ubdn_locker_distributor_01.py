@@ -27,13 +27,17 @@ def test_simple_buy(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     ))
     assert lockerdistributor.getCurrentRound() == 1
     tx = lockerdistributor.buyTokensForExactStable(usdt, PAY_AMOUNT, {'from':accounts[0]})
-    assert lockerdistributor.getCurrentRound() == 2
+    distributed = lockerdistributor.distributedAmount()
+    logging.info('Total distributed:{:n}'.format(
+        Wei(distributed).to('ether')
+    ))
+    assert lockerdistributor.getCurrentRound() == 1
     for e in tx.events.keys():
         logging.info('Events:{}:{}'.format(e, tx.events[e]))
     assert ubdnlocked.balanceOf(lockerdistributor.address) ==  out_amount_calc
-    assert lockerdistributor.priceInUnitsAndRemainByRound(1)[0] == 1
-    assert lockerdistributor.priceInUnitsAndRemainByRound(2)[0] == 2
-    assert lockerdistributor.priceInUnitsAndRemainByRound(5)[0] == 5
+    assert lockerdistributor.priceInUnitsAndRemainByRound(1)[0] == 2
+    assert lockerdistributor.priceInUnitsAndRemainByRound(2)[0] == 3
+    assert lockerdistributor.priceInUnitsAndRemainByRound(5)[0] == 6
 
 def test_locks(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     chain.sleep(3600)
@@ -64,8 +68,8 @@ def test_claim(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     pretty_print_locks(locks);
 
 def test_second_claim(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
-    tx = lockerdistributor.claimTokens({'from':accounts[0]})
-    assert tx.events['Claimed']['Amount'] == 0
+    with reverts('Nothing to claim'):
+        tx = lockerdistributor.claimTokens({'from':accounts[0]})
     chain.sleep(3600)
     chain.mine()
     locks = lockerdistributor.getUserLocks(accounts[0])
