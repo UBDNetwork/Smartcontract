@@ -73,6 +73,7 @@ contract UBDNLockerDistributor is Ownable {
                 userLocks[msg.sender][i].amount = 0;
             }
         }
+        require(claimAmount > 0, 'Nothing to claim');
         distributionToken.safeTransfer(msg.sender, claimAmount);
         emit Claimed(msg.sender, claimAmount, block.timestamp);
     }
