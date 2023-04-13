@@ -234,6 +234,11 @@ contract UBDNLockerDistributor is Ownable {
             rest = 0;
         } else {
             rest = ROUND_VOLUME - (distributedAmount % ROUND_VOLUME); 
+            if (_round == 1){
+                // first round
+                rest = ROUND_VOLUME - distributedAmount; 
+            } 
+            
         }
     }
 
