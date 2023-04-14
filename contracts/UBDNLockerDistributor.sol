@@ -99,6 +99,11 @@ contract UBDNLockerDistributor is Ownable {
 
     ///////////////////////////////////////////////////////////
 
+    /// @notice Returns amount of distributing tokens that will be
+    /// get by user if he(she) pay given stable coin amount
+    /// @dev _inAmount must be with given in wei (eg 1 USDT =1000000)
+    /// @param _paymentToken stable coin address
+    /// @param _inAmount stable coin amount that user want to spend
     function calcTokensForExactStable(address _paymentToken, uint256 _inAmount) 
         external 
         view 
@@ -107,6 +112,11 @@ contract UBDNLockerDistributor is Ownable {
         return _calcTokensForExactStable(_paymentToken, _inAmount);
     }
 
+    /// @notice Returns amount of stable coins that must be spent
+    /// for user get given  amount of distributing token
+    /// @dev _outAmount must be with given in wei (eg 1 UBDN =1e18)
+    /// @param _paymentToken stable coin address
+    /// @param _outAmount distributing token amount that user want to get
     function calcStableForExactTokens(address _paymentToken, uint256 _outAmount) 
         external 
         view 
@@ -232,13 +242,16 @@ contract UBDNLockerDistributor is Ownable {
         }
         if (_round < _currenRound()){
             rest = 0;
-        } else {
-            rest = ROUND_VOLUME - (distributedAmount % ROUND_VOLUME); 
+        } else if (_round == _currenRound()){
             if (_round == 1){
                 // first round
                 rest = ROUND_VOLUME - distributedAmount; 
+            } else {
+                rest = ROUND_VOLUME - (distributedAmount % ROUND_VOLUME); 
             } 
-            
+        } else {
+            // case when _round > _currenRound()
+            rest = ROUND_VOLUME;
         }
     }
 

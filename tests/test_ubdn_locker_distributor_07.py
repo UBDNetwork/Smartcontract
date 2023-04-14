@@ -34,6 +34,7 @@ def test_buy_1(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     usdt.transfer(accounts[1], in_amount_calc, {'from':accounts[0]})
     usdt.approve(lockerdistributor, in_amount_calc, {'from':accounts[1]})
     before_amount_distr = lockerdistributor.distributedAmount()
+    logging.info(before_amount_distr)
     logging.info(lockerdistributor.priceInUnitsAndRemainByRound(1))
     logging.info(lockerdistributor.priceInUnitsAndRemainByRound(2))
     assert in_amount_calc == 100*lockerdistributor.priceInUnitsAndRemainByRound(1)[0]*10**usdt.decimals() + 200*lockerdistributor.priceInUnitsAndRemainByRound(2)[0]*10**usdt.decimals() 
@@ -44,7 +45,7 @@ def test_buy_1(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     assert lockerdistributor.getUserLocks(accounts[1])[1][0] == 300*10**ubdnlocked.decimals()
     assert lockerdistributor.getUserLocks(accounts[1])[1][1] >= chain.time() + 90*24*3600-1
     assert len(lockerdistributor.getUserLocks(accounts[1])) == 2
-    assert lockerdistributor.getCurrentRound() == 1
+    assert lockerdistributor.getCurrentRound() == 2
 
     '''chain.sleep(2000)
     chain.mine()
