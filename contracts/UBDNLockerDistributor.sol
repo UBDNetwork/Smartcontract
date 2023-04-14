@@ -240,8 +240,12 @@ contract UBDNLockerDistributor is Ownable {
         } else {
             price = START_PRICE + PRICE_INCREASE_STEP * (_round - INCREASE_FROM_ROUND + 1); 
         }
+        
+        // in finished rounds rest always zero
         if (_round < _currenRound()){
             rest = 0;
+        
+        // in current round need calc 
         } else if (_round == _currenRound()){
             if (_round == 1){
                 // first round
@@ -249,8 +253,9 @@ contract UBDNLockerDistributor is Ownable {
             } else {
                 rest = ROUND_VOLUME - (distributedAmount % ROUND_VOLUME); 
             } 
+        
+        // in future rounds rest always ROUND_VOLUME
         } else {
-            // case when _round > _currenRound()
             rest = ROUND_VOLUME;
         }
     }
