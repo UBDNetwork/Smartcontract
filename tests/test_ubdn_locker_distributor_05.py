@@ -7,9 +7,11 @@ PAY_AMOUNT = 1000000
 
 
 def test_buy(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
-    lockerdistributor.setPaymentTokenStatus(usdt, True, {'from':accounts[0]})
-    lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[0]})
-
+    tx = lockerdistributor.setPaymentTokenStatus(usdt, True, {'from':accounts[0]})
+    assert tx.events['PaymentTokenStatus']['Token'] == usdt.address
+    assert tx.events['PaymentTokenStatus']['Status'] == True
+    tx = lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[0]})
+    assert tx.events['DistributionTokenSet']['Token'] == ubdnlocked.address
 
     in_amount_calc = lockerdistributor.calcStableForExactTokens(usdt.address, (PAY_AMOUNT+1)*10**ubdnlocked.decimals())
 
@@ -29,6 +31,13 @@ def test_buy(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     usdt.transfer(accounts[1], in_amount_calc, {'from':accounts[0]})
     usdt.approve(lockerdistributor, in_amount_calc, {'from':accounts[1]})
     tx = lockerdistributor.buyTokensForExactStable(usdt, in_amount_calc, {'from':accounts[1]})
+
+    assert tx.events['Purchase']['User'] == accounts[1]
+    assert tx.events['Purchase']['PurchaseAmount'] == out_amount_calc
+    assert tx.events['Purchase']['PaymentToken'] == usdt.address
+    assert tx.events['Purchase']['PaymentAmount'] == in_amount_calc
+
+
     assert lockerdistributor.distributedAmount() == (PAY_AMOUNT+1)*10**ubdnlocked.decimals()
     assert ubdnlocked.balanceOf(lockerdistributor.address) == lockerdistributor.distributedAmount()
 
