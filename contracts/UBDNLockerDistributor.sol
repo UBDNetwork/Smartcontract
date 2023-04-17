@@ -60,7 +60,7 @@ contract UBDNLockerDistributor is Ownable {
         IERC20Mint(_paymentToken).safeTransferFrom(msg.sender, owner(),_inAmount);
         // 2. Calc distribution tokens
         uint256 outAmount = _calcTokensForExactStable(_paymentToken,_inAmount);
-        
+        require(outAmount > 0, 'Cant buy zero');
         // 3. Save lockInfo
         _newLock(msg.sender, outAmount);
         distributedAmount += outAmount;
