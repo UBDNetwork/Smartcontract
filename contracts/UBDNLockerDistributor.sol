@@ -43,6 +43,11 @@ contract UBDNLockerDistributor is Ownable {
            LOCK_PERIOD = _lockPeriod;
         }
     }
+
+    /// @notice Buy distibuting token with stable coins
+    /// @dev _inAmount in wei. Don't forget approve
+    /// @param _paymentToken stable coin address
+    /// @param _inAmount amount od stable to spent
     function buyTokensForExactStable(address _paymentToken, uint256 _inAmount) 
         external 
         returns(uint256) 
@@ -55,7 +60,7 @@ contract UBDNLockerDistributor is Ownable {
         IERC20Mint(_paymentToken).safeTransferFrom(msg.sender, owner(),_inAmount);
         // 2. Calc distribution tokens
         uint256 outAmount = _calcTokensForExactStable(_paymentToken,_inAmount);
-        
+        require(outAmount > 0, 'Cant buy zero');
         // 3. Save lockInfo
         _newLock(msg.sender, outAmount);
         distributedAmount += outAmount;
@@ -64,6 +69,7 @@ contract UBDNLockerDistributor is Ownable {
         emit Purchase(msg.sender, outAmount, _paymentToken, _inAmount);
     }
 
+    /// @notice Claim available for now tokens
     function claimTokens() external {
         uint256 claimAmount;
         // calc and mark as claimed
@@ -125,6 +131,10 @@ contract UBDNLockerDistributor is Ownable {
         return _calcStableForExactTokens(_paymentToken, _outAmount);
     }
 
+    /// @notice Returns price without decimals and distributing token rest
+    /// for given round
+    /// @dev returns tuple  (price, rest)
+    /// @param _round round number
     function priceInUnitsAndRemainByRound(uint256 _round) 
         external 
         view 
@@ -133,6 +143,9 @@ contract UBDNLockerDistributor is Ownable {
         return _priceInUnitsAndRemainByRound(_round);
     }
 
+    /// @notice Returns array of user's locks
+    /// @dev returns tuple  array of (amount, unlock timestamp)
+    /// @param _user user address 
     function getUserLocks(address _user) 
         public 
         view 
@@ -141,6 +154,9 @@ contract UBDNLockerDistributor is Ownable {
         return userLocks[_user];
     }
 
+    /// @notice Returns array of user's locks
+    /// @dev returns tuple  array of (total locked amount, available now)
+    /// @param _user user address 
     function getUserAvailableAmount(address _user)
         public
         view
@@ -154,6 +170,7 @@ contract UBDNLockerDistributor is Ownable {
         }
     }
 
+    /// @notice Returns current round number
     function getCurrentRound() external view returns(uint256){
         return _currenRound();   
     }
@@ -240,8 +257,12 @@ contract UBDNLockerDistributor is Ownable {
         } else {
             price = START_PRICE + PRICE_INCREASE_STEP * (_round - INCREASE_FROM_ROUND + 1); 
         }
+        
+        // in finished rounds rest always zero
         if (_round < _currenRound()){
             rest = 0;
+        
+        // in current round need calc 
         } else if (_round == _currenRound()){
             if (_round == 1){
                 // first round
@@ -249,8 +270,9 @@ contract UBDNLockerDistributor is Ownable {
             } else {
                 rest = ROUND_VOLUME - (distributedAmount % ROUND_VOLUME); 
             } 
+        
+        // in future rounds rest always ROUND_VOLUME
         } else {
-            // case when _round > _currenRound()
             rest = ROUND_VOLUME;
         }
     }
