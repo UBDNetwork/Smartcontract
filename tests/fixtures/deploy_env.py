@@ -41,7 +41,7 @@ def usdt(accounts, MockToken):
 
 @pytest.fixture(scope="module")
 def usdc(accounts, MockToken):
-    erc = accounts[0].deploy(MockToken, 'USDC Mock Token', 'USDC', 6)
+    erc = accounts[0].deploy(MockToken, 'USDC Mock Token', 'USDC', 12)
     yield erc
 
 @pytest.fixture(scope="module")

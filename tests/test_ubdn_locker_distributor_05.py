@@ -72,6 +72,11 @@ def test_claim(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     assert lockerdistributor.getUserAvailableAmount(accounts[1])[1] ==  (PAY_AMOUNT+1)*10**ubdnlocked.decimals()
 
     tx = lockerdistributor.claimTokens({"from": accounts[1]})
+
+    assert tx.events['Claimed']['User'] == accounts[1]
+    assert tx.events['Claimed']['Amount'] == (PAY_AMOUNT+1)*10**ubdnlocked.decimals()
+    assert tx.events['Claimed']['Timestamp'] == chain.time()
+
     #try to claim again   
     with reverts("Nothing to claim"):
         tx = lockerdistributor.claimTokens({"from": accounts[1]})    
@@ -185,18 +190,6 @@ def test_buy_1(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     assert lockerdistributor.getCurrentRound() == 2
 
 
-
-
-        
-#   +попробовать заклаймить, когда блокировка не закончилась
-#   +попробовать 0 отправить при покупке                                  !!!!! отправляется. И куча событий переводов создается. Я бы реверт тут воткнул brownie test ./tests/test_ubdn_locker_distributor_05.py
-#   +попробовать заклаймить, когда все заклаймил
-#   +купил потом заклаймил, потом снова купил, потом снова заклаймил, потом снова пытаемся клаймить
-#   +сделать несколько покупок в разное время пользователем. Попытаться заклаймить все разом, когда последняя блокировка наступила
-#   сделать разными адресами покупки в  разное время. Каждым адрес пытается сделать клаймы разом в первую возможность разблокировки 
-#   +купить за токены с разным количеством знаков после запятой - покупать в одном раунде за dai, usdt, usdc
-#   +осталось в раунде 5 токенов и покупает кто-то 100 токенов - цена из двух раундов       !!! brownie test ./tests/test_ubdn_locker_distributor_07.py
-   
 
 
     

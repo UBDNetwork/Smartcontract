@@ -12,6 +12,15 @@ def test_buy(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
 
 
     in_amount_calc = lockerdistributor.calcStableForExactTokens(usdc.address, 100*10**ubdnlocked.decimals())
+
+    in_amount_calc_manual = 0  
+    last_price  = lockerdistributor.START_PRICE() +1
+    in_amount_calc_manual= in_amount_calc_manual + 100*last_price*10**usdc.decimals()
+    assert in_amount_calc == in_amount_calc_manual
+
+    out_amount_calc = lockerdistributor.calcTokensForExactStable(usdc, in_amount_calc)
+    assert out_amount_calc == 100*10**ubdnlocked.decimals()
+
     assert in_amount_calc == 100*lockerdistributor.priceInUnitsAndRemainByRound(1)[0]*10**usdc.decimals()
     usdc.transfer(accounts[1], in_amount_calc, {'from':accounts[0]})
     usdc.approve(lockerdistributor, in_amount_calc, {'from':accounts[1]})
@@ -24,17 +33,33 @@ def test_buy(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     
     assert lockerdistributor.getCurrentRound() == 1
     assert lockerdistributor.priceInUnitsAndRemainByRound(1)[1] == (PAY_AMOUNT - 100)*10**ubdnlocked.decimals()
+    assert lockerdistributor.priceInUnitsAndRemainByRound(2)[1] == PAY_AMOUNT*10**ubdnlocked.decimals()
     assert lockerdistributor.priceInUnitsAndRemainByRound(1)[0] == 2 #check price
     assert lockerdistributor.getUserLocks(accounts[1])[0][0] == 100*10**ubdnlocked.decimals()
     assert lockerdistributor.getUserLocks(accounts[1])[0][1] >= chain.time() + 90*24*3600-1
     assert len(lockerdistributor.getUserLocks(accounts[1])) == 1
 
+    assert lockerdistributor.getUserAvailableAmount(accounts[1])[0] ==  100*10**ubdnlocked.decimals()
+    assert lockerdistributor.getUserAvailableAmount(accounts[1])[1] ==  0
+
+
+
 #use usdt
 def test_buy_1(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
-    #buy 300 tokens
+    #buy 200 tokens
     chain.sleep(1000)
     chain.mine()
     in_amount_calc = lockerdistributor.calcStableForExactTokens(usdt.address, 200*10**ubdnlocked.decimals())
+
+    in_amount_calc_manual = 0  
+    last_price  = lockerdistributor.START_PRICE() +1
+    in_amount_calc_manual= in_amount_calc_manual + 200*last_price*10**usdt.decimals()
+    assert in_amount_calc == in_amount_calc_manual
+
+    out_amount_calc = lockerdistributor.calcTokensForExactStable(usdt, in_amount_calc)
+    assert out_amount_calc == 200*10**ubdnlocked.decimals()
+
+
     usdt.transfer(accounts[1], in_amount_calc, {'from':accounts[0]})
     usdt.approve(lockerdistributor, in_amount_calc, {'from':accounts[1]})
     before_amount_distr = lockerdistributor.distributedAmount()
@@ -48,6 +73,15 @@ def test_buy_1(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     assert len(lockerdistributor.getUserLocks(accounts[1])) == 2
     assert lockerdistributor.getCurrentRound() == 1
 
+    
+    assert lockerdistributor.priceInUnitsAndRemainByRound(1)[1] == (PAY_AMOUNT - 100 - 200)*10**ubdnlocked.decimals()
+    assert lockerdistributor.priceInUnitsAndRemainByRound(2)[1] == PAY_AMOUNT*10**ubdnlocked.decimals()
+    assert lockerdistributor.priceInUnitsAndRemainByRound(1)[0] == 2 #check price
+    assert lockerdistributor.priceInUnitsAndRemainByRound(2)[0] == 3 #check price
+    
+    assert lockerdistributor.getUserAvailableAmount(accounts[1])[0] ==  (100+200)*10**ubdnlocked.decimals()
+    assert lockerdistributor.getUserAvailableAmount(accounts[1])[1] ==  0
+
 #use dai
 def test_buy_2(accounts, ubdnlocked, lockerdistributor, usdt, usdc, dai):
     #buy 300 tokens
@@ -56,6 +90,17 @@ def test_buy_2(accounts, ubdnlocked, lockerdistributor, usdt, usdc, dai):
     chain.sleep(1000)
     chain.mine()
     in_amount_calc = lockerdistributor.calcStableForExactTokens(dai.address, 300*10**ubdnlocked.decimals())
+
+
+    in_amount_calc_manual = 0  
+    last_price  = lockerdistributor.START_PRICE() +1
+    in_amount_calc_manual= in_amount_calc_manual + 300*last_price*10**dai.decimals()
+    assert in_amount_calc == in_amount_calc_manual
+
+    out_amount_calc = lockerdistributor.calcTokensForExactStable(dai, in_amount_calc)
+    assert out_amount_calc == 300*10**ubdnlocked.decimals()
+
+
     dai.transfer(accounts[1], in_amount_calc, {'from':accounts[0]})
     dai.approve(lockerdistributor, in_amount_calc, {'from':accounts[1]})
     before_amount_distr = lockerdistributor.distributedAmount()
@@ -69,36 +114,12 @@ def test_buy_2(accounts, ubdnlocked, lockerdistributor, usdt, usdc, dai):
     assert len(lockerdistributor.getUserLocks(accounts[1])) == 3
     assert lockerdistributor.getCurrentRound() == 1
 
-    '''chain.sleep(2000)
-    chain.mine()
-
-    #buy again - 200 tokens
-    in_amount_calc = lockerdistributor.calcStableForExactTokens(usdt.address, 200*10**ubdnlocked.decimals())
-    usdt.transfer(accounts[1], in_amount_calc, {'from':accounts[0]})
-    usdt.approve(lockerdistributor, in_amount_calc, {'from':accounts[1]})
-    before_amount_distr = lockerdistributor.distributedAmount()
+    assert lockerdistributor.priceInUnitsAndRemainByRound(1)[1] == (PAY_AMOUNT - 100 - 200 - 300)*10**ubdnlocked.decimals()
+    assert lockerdistributor.priceInUnitsAndRemainByRound(2)[1] == PAY_AMOUNT*10**ubdnlocked.decimals()
+    assert lockerdistributor.priceInUnitsAndRemainByRound(1)[0] == 2 #check price
+    assert lockerdistributor.priceInUnitsAndRemainByRound(2)[0] == 3 #check price
     
-    tx = lockerdistributor.buyTokensForExactStable(usdt, in_amount_calc, {'from':accounts[1]})
+    assert lockerdistributor.getUserAvailableAmount(accounts[1])[0] ==  (100+200+300)*10**ubdnlocked.decimals()
+    assert lockerdistributor.getUserAvailableAmount(accounts[1])[1] ==  0
 
-    assert lockerdistributor.distributedAmount() == before_amount_distr + 200*10**ubdnlocked.decimals()
-    
-    assert lockerdistributor.getUserLocks(accounts[1])[2][0] == 200*10**ubdnlocked.decimals()
-    assert lockerdistributor.getUserLocks(accounts[1])[2][1] >= chain.time() + 90*24*3600-1
-    assert len(lockerdistributor.getUserLocks(accounts[1])) == 3
-    assert lockerdistributor.getCurrentRound() == 1
-
-    chain.sleep(90*24*3600+1)
-    chain.mine()
-
-    before_acc1_ub = ubdnlocked.balanceOf(accounts[1])
-    tx = lockerdistributor.claimTokens({"from": accounts[1]})    
-
-    assert lockerdistributor.getUserLocks(accounts[1])[0][0] == 0
-    assert lockerdistributor.getUserLocks(accounts[1])[1][0] == 0
-    assert lockerdistributor.getUserLocks(accounts[1])[2][0] == 0
-    assert ubdnlocked.balanceOf(accounts[1]) == (PAY_AMOUNT/2+100+200)*10**ubdnlocked.decimals()
-    assert ubdnlocked.balanceOf(lockerdistributor) == 0'''
-
-
-
-
+   
