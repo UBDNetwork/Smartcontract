@@ -54,16 +54,18 @@ contract UBDNLockerDistributor is Ownable {
     {
         require(address(distributionToken) != address(0), 'Distribution not Define');
         require(paymentTokens[_paymentToken], 'This payment token not supported');
+        
         // 1. Receive payment
-        // TODO think about require
-        // TODO think about real transfered anount for payments with fee
         IERC20Mint(_paymentToken).safeTransferFrom(msg.sender, owner(),_inAmount);
+        
         // 2. Calc distribution tokens
         uint256 outAmount = _calcTokensForExactStable(_paymentToken,_inAmount);
         require(outAmount > 0, 'Cant buy zero');
+        
         // 3. Save lockInfo
         _newLock(msg.sender, outAmount);
         distributedAmount += outAmount;
+        
         // 4. Mint distribution token
         distributionToken.mint(address(this), outAmount);
         emit Purchase(msg.sender, outAmount, _paymentToken, _inAmount);

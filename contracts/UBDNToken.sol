@@ -22,7 +22,7 @@ contract UBDNToken is ERC20 {
     }
 
     function mint(address _to, uint256 _amount) external {
-        require(msg.sender == minter, 'Only distibutor contarct');
+        require(msg.sender == minter, 'Only distibutor contract');
          _mint(_to, _amount);
     }
     

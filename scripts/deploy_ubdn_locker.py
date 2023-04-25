@@ -28,8 +28,8 @@ GOERLI_PAYMENT_TOKENS = [
 
 CHAIN = {   
     0:{'explorer_base':'io'},
-    1:{'explorer_base':'etherscan.io', 'enabled_erc20': ETH_PAYMENT_TOKENS},
-    5:{'explorer_base':'goerli.etherscan.io', 'enabled_erc20': GOERLI_PAYMENT_TOKENS},
+    1:{'explorer_base':'etherscan.io', 'enabled_erc20': ETH_PAYMENT_TOKENS, 'premint_address': 11},
+    5:{'explorer_base':'goerli.etherscan.io', 'enabled_erc20': GOERLI_PAYMENT_TOKENS,'premint_address': accounts[0]},
     56:{'explorer_base':'bscscan.com', },
     97:{'explorer_base':'testnet.bscscan.com', },
     137:{'explorer_base':'polygonscan.com', },
@@ -43,7 +43,7 @@ zero_address = '0x0000000000000000000000000000000000000000'
 
 def main():
     locker = UBDNLockerDistributor.deploy(700, tx_params)
-    erc20 = UBDNToken.deploy(accounts[0], locker.address, 5_000_000e18, tx_params)
+    erc20 = UBDNToken.deploy(CHAIN['premint_address'], locker.address, 5_000_000e18, tx_params)
     # Print addresses for quick access from console
     print("----------Deployment artifacts-------------------")
     print("locker = UBDNLockerDistributor.at('{}')".format(locker.address))

@@ -51,7 +51,7 @@ def test_decreaseAllowance_fail(accounts, erc20):
         erc20.decreaseAllowance(accounts[4], 1e18, {'from': accounts[0]})
 
 def test_mint(accounts, erc20):
-    with reverts("Only distibutor contarct"):
+    with reverts("Only distibutor contract"):
         erc20.mint(accounts[4], 1e18, {"from":accounts[1]})
 
     erc20.mint(accounts[4], 1e18, {"from":accounts[0]})
