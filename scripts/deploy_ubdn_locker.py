@@ -27,7 +27,7 @@ GOERLI_PAYMENT_TOKENS = [
 ]
 
 CHAIN = {   
-    0:{'explorer_base':'io'},
+    0:{'explorer_base':'io', 'premint_address': accounts[0]},
     1:{'explorer_base':'etherscan.io', 'enabled_erc20': ETH_PAYMENT_TOKENS, 'premint_address': 11},
     5:{'explorer_base':'goerli.etherscan.io', 'enabled_erc20': GOERLI_PAYMENT_TOKENS,'premint_address': accounts[0]},
     56:{'explorer_base':'bscscan.com', },
@@ -37,7 +37,7 @@ CHAIN = {
     43114:{'explorer_base':'cchain.explorer.avax.network', },
     43113:{'explorer_base':'cchain.explorer.avax-test.network', },
 
-}.get(web3.eth.chainId, {'explorer_base':'io'})
+}.get(web3.eth.chainId, {'explorer_base':'io','premint_address': accounts[0], 'enabled_erc20':[]})
 print(CHAIN)
 zero_address = '0x0000000000000000000000000000000000000000'
 
