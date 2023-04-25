@@ -7,6 +7,8 @@ PAY_AMOUNT = 1000000
 
 
 def test_buy(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
+    with reverts("Distribution not Define"):
+        tx = lockerdistributor.buyTokensForExactStable(usdt, 1e18, {'from':accounts[0]})
     lockerdistributor.setPaymentTokenStatus(usdt, True, {'from':accounts[0]})
     lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[0]})
 
@@ -34,6 +36,9 @@ def test_buy(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     usdt.approve(lockerdistributor, in_amount_calc, {'from':accounts[0]})
 
     tx = lockerdistributor.buyTokensForExactStable(usdt, in_amount_calc, {'from':accounts[0]})
+
+    with reverts("This payment token not supported"):
+        tx = lockerdistributor.buyTokensForExactStable(usdc, in_amount_calc, {'from':accounts[0]})
     
 
     assert lockerdistributor.getCurrentRound() == 11

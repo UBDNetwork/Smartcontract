@@ -12,7 +12,12 @@ def pretty_print_locks(locks):
         ));
 
 def test_simple_buy(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
+    with reverts("Ownable: caller is not the owner"):
+        lockerdistributor.setPaymentTokenStatus(usdt, True, {'from':accounts[1]})
     lockerdistributor.setPaymentTokenStatus(usdt, True, {'from':accounts[0]})
+
+    with reverts("Ownable: caller is not the owner"):
+        lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[1]})
     lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[0]})
     usdt.approve(lockerdistributor, PAY_AMOUNT, {'from':accounts[0]})
     logging.info('Price and rest in round  1:{}'.format(
