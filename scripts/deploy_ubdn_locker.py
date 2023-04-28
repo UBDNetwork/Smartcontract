@@ -6,7 +6,7 @@ if  web3.eth.chain_id in [4, 5, 97, 1313161555]:
     #private_key='???'
     accounts.load('ttwo');
 elif web3.eth.chain_id in [1,56,137, 1313161554]:
-    accounts.load('ubdndeployer')
+    accounts.load('ubd_deployer')
     
 print('Deployer:{}, balance: {}'.format(accounts[0],Wei(accounts[0].balance()).to('ether') ))
 print('web3.eth.chain_id={}'.format(web3.eth.chainId))
@@ -27,9 +27,14 @@ GOERLI_PAYMENT_TOKENS = [
 ]
 
 CHAIN = {   
-    0:{'explorer_base':'io', 'premint_address': accounts[0]},
-    1:{'explorer_base':'etherscan.io', 'enabled_erc20': ETH_PAYMENT_TOKENS, 'premint_address': '0xE206f8AC6067d8253C57D86ac96A789Cd90ed4D4'},
-    5:{'explorer_base':'goerli.etherscan.io', 'enabled_erc20': GOERLI_PAYMENT_TOKENS,'premint_address': accounts[0]},
+    0:{'explorer_base':'io', 'premint_address': accounts[0], 'timelock': 700},
+    1:{
+        'explorer_base':'etherscan.io', 
+        'enabled_erc20': ETH_PAYMENT_TOKENS, 
+        'premint_address': '0xE206f8AC6067d8253C57D86ac96A789Cd90ed4D4',
+        'timelock': 0
+    },
+    5:{'explorer_base':'goerli.etherscan.io', 'enabled_erc20': GOERLI_PAYMENT_TOKENS,'premint_address': accounts[0],'timelock': 700},
     56:{'explorer_base':'bscscan.com', },
     97:{'explorer_base':'testnet.bscscan.com', },
     137:{'explorer_base':'polygonscan.com', },
@@ -37,12 +42,12 @@ CHAIN = {
     43114:{'explorer_base':'cchain.explorer.avax.network', },
     43113:{'explorer_base':'cchain.explorer.avax-test.network', },
 
-}.get(web3.eth.chainId, {'explorer_base':'io','premint_address': accounts[0], 'enabled_erc20':[]})
+}.get(web3.eth.chainId, {'explorer_base':'io','premint_address': accounts[0], 'enabled_erc20':[], 'timelock': 0})
 print(CHAIN)
 zero_address = '0x0000000000000000000000000000000000000000'
 
 def main():
-    locker = UBDNLockerDistributor.deploy(700, tx_params)
+    locker = UBDNLockerDistributor.deploy(CHAIN['timelock'], tx_params)
     erc20 = UBDNToken.deploy(CHAIN['premint_address'], locker.address, 5_000_000e18, tx_params)
     # Print addresses for quick access from console
     print("----------Deployment artifacts-------------------")
