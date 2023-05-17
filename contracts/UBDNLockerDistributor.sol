@@ -199,13 +199,13 @@ contract UBDNLockerDistributor is Ownable {
             if (outA > curRest) {
                 inAmount += curRest 
                     * curPrice * 10**IERC20Mint(_paymentToken).decimals()
-                    / 10**distributionToken.decimals();
+                    / (10**distributionToken.decimals());
                 outA -= curRest;
                 ++ curR;
             } else {
                 inAmount += outA 
                     * curPrice * 10**IERC20Mint(_paymentToken).decimals()
-                    / 10**distributionToken.decimals();
+                    / (10**distributionToken.decimals());
                 return inAmount;
             }
         }
@@ -226,8 +226,9 @@ contract UBDNLockerDistributor is Ownable {
             if (
                 // calc out amount
                 inA 
+                * (10**distributionToken.decimals())
                 / (curPrice * 10**IERC20Mint(_paymentToken).decimals())
-                * (10**distributionToken.decimals())  > curRest
+                   > curRest
                 ) 
             {
                 // Case when inAmount more then price of all tokens 
@@ -241,8 +242,8 @@ contract UBDNLockerDistributor is Ownable {
                 // Case when inAmount less or eqal then price of all tokens 
                 // in current round
                 outAmount += inA 
-                  / (curPrice * 10**IERC20Mint(_paymentToken).decimals())
-                  * 10**distributionToken.decimals();
+                  * 10**distributionToken.decimals()
+                  / (curPrice * 10**IERC20Mint(_paymentToken).decimals());
                 return outAmount;
             }
         }

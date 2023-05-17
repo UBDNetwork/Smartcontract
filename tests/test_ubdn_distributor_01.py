@@ -12,8 +12,8 @@ def test_distrib_simple(accounts, ubdn, distributor, usdt, usdc):
     logging.info('Price and rest in round 10:{}'.format(
         distributor.priceInUnitsAndRemainByRound(10))
     )
-    logging.info('Amount of distributed is:{}'.format(
-        distributor.calcTokensForExactStable(usdt, PAY_AMOUNT))
+    logging.info('Amount of distributed is:{} for stable amount {}'.format(
+        distributor.calcTokensForExactStable(usdt, PAY_AMOUNT), PAY_AMOUNT)
     )
     tx = distributor.buyTokensForExactStable(usdt, PAY_AMOUNT, {'from':accounts[0]})
     for e in tx.events.keys():
