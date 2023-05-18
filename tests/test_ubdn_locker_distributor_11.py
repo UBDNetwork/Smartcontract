@@ -7,7 +7,7 @@ usdt_amount = 23
 
 #check math
 #make 10 rounds
-def test_first_round(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
+def test_odd_number(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     lockerdistributor.setPaymentTokenStatus(usdt, True, {'from':accounts[0]})
     lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[0]})
     for i in range(9):
@@ -37,4 +37,12 @@ def test_first_round(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     
     assert lockerdistributor.getUserAvailableAmount(accounts[1])[0] ==  9*lockerdistributor.ROUND_VOLUME()+out_amount_from_contract
     assert lockerdistributor.getUserAvailableAmount(accounts[1])[1] ==  0
+
+    out_amount = 1313131313131313131313
+    in_amount_from_contract = lockerdistributor.calcStableForExactTokens(usdt.address, out_amount)
+    logging.info('calcStableForExactTokens returns ubdnlocked tokens for {} usdt: {}'.format(out_amount,  in_amount_from_contract))
+
+    in_amount_calc = out_amount*lockerdistributor.priceInUnitsAndRemainByRound(10)[0]*10**usdt.decimals()/10**ubdnlocked.decimals()
+    assert round(in_amount_calc) == in_amount_from_contract
+
 

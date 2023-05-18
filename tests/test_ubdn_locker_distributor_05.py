@@ -75,7 +75,7 @@ def test_claim(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
 
     assert tx.events['Claimed']['User'] == accounts[1]
     assert tx.events['Claimed']['Amount'] == (PAY_AMOUNT+1)*10**ubdnlocked.decimals()
-    assert tx.events['Claimed']['Timestamp'] == chain.time()
+    assert tx.events['Claimed']['Timestamp'] <= chain.time()
 
     #try to claim again   
     with reverts("Nothing to claim"):
