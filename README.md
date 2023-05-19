@@ -25,15 +25,15 @@ https://goerli.etherscan.io/address/0xd0F967Fb429C13f14F1910776029D52aa98d2982#c
 **test USDT**  
 https://goerli.etherscan.io/address/0x985190ff075d46e29f863E906122F8faf35aC1Ac#code
 
-#### 2023-04-27 Deployed in Ethereum Mainnet 
+#### 2023-05-19 Deployed in Ethereum Mainnet 
 UBDN Token deployed at block 17135062 from addreess 
 `0x71373aa15b6d537E70138A39709B50e32C3660Ec` (Keys can be obtain on demand)   
  
 **Locker&Distributor**  
-https://etherscan.io/address/0x6e574932CDEe39866aEc86C560B5A0367BA5424F#code  
+https://etherscan.io/address/0x2b2A013EA50859a05aa47724A9067346480d529d#code  
 
 **UBDN ERC20**  
-https://etherscan.io/address/0xdA7d1CA5019D4Ca46fA9E70035a0764C7547cf2c#code  
+https://etherscan.io/address/0x3c388F96D5C698F980C49d31FC48Ef88F90d0d8B#code  
 Initial supply keeper address `0xE206f8AC6067d8253C57D86ac96A789Cd90ed4D4` is UBD project multisig contract
 
 

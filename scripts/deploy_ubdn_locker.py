@@ -22,7 +22,7 @@ ETH_PAYMENT_TOKENS = [
 ]
 
 GOERLI_PAYMENT_TOKENS = [
-'0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844',  #DAI
+'0x3a1A748d061fb00dD3D43c4130713A505be5D5d5',  #DAI
 '0x985190ff075d46e29f863E906122F8faf35aC1Ac'  #test USDT
 ]
 
@@ -34,7 +34,12 @@ CHAIN = {
         'premint_address': '0xE206f8AC6067d8253C57D86ac96A789Cd90ed4D4',
         'timelock': 0
     },
-    5:{'explorer_base':'goerli.etherscan.io', 'enabled_erc20': GOERLI_PAYMENT_TOKENS,'premint_address': accounts[0],'timelock': 700},
+    5:{
+        'explorer_base':'goerli.etherscan.io', 
+        'enabled_erc20': GOERLI_PAYMENT_TOKENS,
+        'premint_address': accounts[0],
+        'timelock': 700
+    },
     56:{'explorer_base':'bscscan.com', },
     97:{'explorer_base':'testnet.bscscan.com', },
     137:{'explorer_base':'polygonscan.com', },
