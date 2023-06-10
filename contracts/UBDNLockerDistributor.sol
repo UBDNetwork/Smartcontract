@@ -194,18 +194,20 @@ contract UBDNLockerDistributor is Ownable {
         uint256 curR = _currenRound();
         uint256 curPrice; 
         uint256 curRest;
+        uint8 payTokenDecimals = IERC20Mint(_paymentToken).decimals();
+        uint8 dstTokenDecimals = distributionToken.decimals();
         while (outA > 0) {
             (curPrice, curRest) = _priceInUnitsAndRemainByRound(curR); 
             if (outA > curRest) {
                 inAmount += curRest 
-                    * curPrice * 10**IERC20Mint(_paymentToken).decimals()
-                    / (10**distributionToken.decimals());
+                    * curPrice * 10**payTokenDecimals
+                    / (10**dstTokenDecimals);
                 outA -= curRest;
                 ++ curR;
             } else {
                 inAmount += outA 
-                    * curPrice * 10**IERC20Mint(_paymentToken).decimals()
-                    / (10**distributionToken.decimals());
+                    * curPrice * 10**payTokenDecimals
+                    / (10**dstTokenDecimals);
                 return inAmount;
             }
         }
@@ -221,13 +223,15 @@ contract UBDNLockerDistributor is Ownable {
         uint256 curR = _currenRound();
         uint256 curPrice; 
         uint256 curRest;
+        uint8 payTokenDecimals = IERC20Mint(_paymentToken).decimals();
+        uint8 dstTokenDecimals = distributionToken.decimals();
         while (inA > 0) {
             (curPrice, curRest) = _priceInUnitsAndRemainByRound(curR); 
             if (
                 // calc out amount
                 inA 
                 * (10**distributionToken.decimals())
-                / (curPrice * 10**IERC20Mint(_paymentToken).decimals())
+                / (curPrice * 10**payTokenDecimals)
                    > curRest
                 ) 
             {
@@ -235,15 +239,15 @@ contract UBDNLockerDistributor is Ownable {
                 // in current round
                 outAmount += curRest;
                 inA -= curRest 
-                       * curPrice * 10**IERC20Mint(_paymentToken).decimals()
-                       / (10**distributionToken.decimals());
+                       * curPrice * 10**payTokenDecimals
+                       / (10**dstTokenDecimals);
                 ++ curR;
             } else {
                 // Case when inAmount less or eqal then price of all tokens 
                 // in current round
                 outAmount += inA 
-                  * 10**distributionToken.decimals()
-                  / (curPrice * 10**IERC20Mint(_paymentToken).decimals());
+                  * 10**dstTokenDecimals
+                  / (curPrice * 10**payTokenDecimals);
                 return outAmount;
             }
         }

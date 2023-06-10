@@ -26,7 +26,7 @@ https://goerli.etherscan.io/address/0xd0F967Fb429C13f14F1910776029D52aa98d2982#c
 https://goerli.etherscan.io/address/0x985190ff075d46e29f863E906122F8faf35aC1Ac#code
 
 #### 2023-05-19 Deployed in Ethereum Mainnet 
-UBDN Token deployed at block 17135062 from addreess 
+UBDN Token deployed at block 17290406 from addreess 
 `0x71373aa15b6d537E70138A39709B50e32C3660Ec` (Keys can be obtain on demand)   
  
 **Locker&Distributor**  
