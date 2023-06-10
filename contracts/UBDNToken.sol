@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract UBDNToken is ERC20 {
 
     uint256 immutable public INITIAL_SUPPLY;
-    address public minter; // sale contract
+    address immutable public minter; // sale contract
 
     constructor(address _initialKeeper, address _minter, uint256 _premintAmount)
         ERC20("UBD Network", "UBDN")
