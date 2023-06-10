@@ -47,10 +47,29 @@ contract UBDNLockerDistributor is Ownable {
     /// @notice Buy distibuting token with stable coins
     /// @dev _inAmount in wei. Don't forget approve
     /// @param _paymentToken stable coin address
-    /// @param _inAmount amount od stable to spent
-    function buyTokensForExactStable(address _paymentToken, uint256 _inAmount) 
+    /// @param _inAmount amount of stable to spent
+    /// @param _outNotLess minimal desired amount of distributed tokens (anti slippage)
+    function buyTokensForExactStableWithSlippage(
+        address _paymentToken, 
+        uint256 _inAmount, 
+        uint256 _outNotLess
+    ) 
         external 
-        returns(uint256) 
+    {
+        require(
+            _calcTokensForExactStable(_paymentToken,_inAmount) >= _outNotLess, 
+            "Slippage occur"
+        );
+        buyTokensForExactStable(_paymentToken, _inAmount); 
+
+    }     
+
+    /// @notice Buy distibuting token with stable coins
+    /// @dev _inAmount in wei. Don't forget approve
+    /// @param _paymentToken stable coin address
+    /// @param _inAmount amount of stable to spent
+    function buyTokensForExactStable(address _paymentToken, uint256 _inAmount) 
+        public 
     {
         require(address(distributionToken) != address(0), 'Distribution not Define');
         require(paymentTokens[_paymentToken], 'This payment token not supported');
