@@ -120,6 +120,7 @@ contract UBDNLockerDistributor is Ownable {
         external 
         onlyOwner 
     {
+        require(distributedAmount == 0, "Cant change after distribution start");
         distributionToken = IERC20Mint(_token);
         emit DistributionTokenSet(_token);
     }
