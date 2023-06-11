@@ -26,21 +26,27 @@ def test_audit(accounts, ubdnlocked, lockerdistributor, dai):
     dai.approve(lockerdistributor, 604557350015191483654609*lockerdistributor.priceInUnitsAndRemainByRound(4)[0], {'from':accounts[0]})
     tx = lockerdistributor.buyTokensForExactStable(dai, 604557350015191483654609*lockerdistributor.priceInUnitsAndRemainByRound(4)[0], {'from':accounts[0]})
 
-    logging.info(lockerdistributor.distributedAmount())
+    logging.info("distributedAmount: {}".format(lockerdistributor.distributedAmount()))
+    logging.info("curRound: {}".format(math.floor(lockerdistributor.distributedAmount() / lockerdistributor.ROUND_VOLUME()) + 1))
+    logging.info("curPrice:  {}".format(lockerdistributor.priceInUnitsAndRemainByRound(4)[0]))
     
 
     assert lockerdistributor.getCurrentRound() == 4
     assert lockerdistributor.priceInUnitsAndRemainByRound(4)[0] == 5 #check price
-    out_amount_calc = inAmount*10**ubdnlocked.decimals()/(lockerdistributor.priceInUnitsAndRemainByRound(4)[0]*10**dai.decimals())
-    logging.info('out_amount_calc = {}'.format(out_amount_calc))
 
-    out_amount_from_contract = lockerdistributor.calcTokensForExactStable(dai.address, inAmount)
-    inAmount_from_contract = lockerdistributor.calcStableForExactTokens(dai.address, out_amount_calc)
-    logging.info('out_amount_from_contract = {}'.format(out_amount_from_contract))
+    #test
+    logging.info('inAmount: {}'.format(inAmount))
+    out_amount_manual_calc = inAmount*10**ubdnlocked.decimals()/(lockerdistributor.priceInUnitsAndRemainByRound(4)[0]*10**dai.decimals())
+    logging.info('out_amount_manual_calc: {}'.format(out_amount_manual_calc))
 
-    logging.info('inAmount = {}'.format(inAmount))
-    logging.info('inAmount_from_contract = {}'.format(inAmount_from_contract))
+    out_amount_contract_calc = lockerdistributor.calcTokensForExactStable(dai.address, inAmount)
+    inAmount_contract_calc = lockerdistributor.calcStableForExactTokens(dai.address, out_amount_contract_calc)
+    logging.info('out_amount_contract_calc: {}'.format(out_amount_contract_calc))
 
-    logging.info("curRound = {}".format(math.floor(lockerdistributor.distributedAmount() / lockerdistributor.ROUND_VOLUME()) + 1))
-    logging.info("curPrice = {}".format(lockerdistributor.priceInUnitsAndRemainByRound(4)[0]))
+    logging.info('inAmount_contract_calc: {}'.format(inAmount_contract_calc))
+
+    diff_ = inAmount - inAmount_contract_calc
+
+    logging.info('diff: {}'.format(diff_))
+    
     
