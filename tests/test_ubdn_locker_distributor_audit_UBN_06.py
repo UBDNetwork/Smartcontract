@@ -31,11 +31,14 @@ def test_audit(accounts, ubdnlocked, lockerdistributor, dai):
 
     assert lockerdistributor.getCurrentRound() == 4
     assert lockerdistributor.priceInUnitsAndRemainByRound(4)[0] == 5 #check price
+
+    #test
     out_amount_calc = inAmount*10**ubdnlocked.decimals()/(lockerdistributor.priceInUnitsAndRemainByRound(4)[0]*10**dai.decimals())
     logging.info('out_amount_calc = {}'.format(out_amount_calc))
 
     out_amount_from_contract = lockerdistributor.calcTokensForExactStable(dai.address, inAmount)
-    inAmount_from_contract = lockerdistributor.calcStableForExactTokens(dai.address, out_amount_calc)
+    #inAmount_from_contract = lockerdistributor.calcStableForExactTokens(dai.address, out_amount_calc)
+    inAmount_from_contract = lockerdistributor.calcStableForExactTokens(dai.address, out_amount_from_contract)
     logging.info('out_amount_from_contract = {}'.format(out_amount_from_contract))
 
     logging.info('inAmount = {}'.format(inAmount))
