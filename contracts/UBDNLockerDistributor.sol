@@ -250,7 +250,7 @@ contract UBDNLockerDistributor is Ownable {
             if (
                 // calc out amount
                 inA 
-                * (10**distributionToken.decimals())
+                * (10**dstTokenDecimals)
                 / (curPrice * 10**payTokenDecimals)
                    > curRest
                 ) 
