@@ -44,6 +44,9 @@ def test_simple_buy(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     assert lockerdistributor.priceInUnitsAndRemainByRound(2)[0] == 3
     assert lockerdistributor.priceInUnitsAndRemainByRound(5)[0] == 6
 
+    with reverts("Cant change after distribution start"):
+        lockerdistributor.setDistributionToken(usdt, {'from':accounts[0]})
+
 def test_locks(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     chain.sleep(3600)
     chain.mine()
