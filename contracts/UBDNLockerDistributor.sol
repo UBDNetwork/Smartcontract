@@ -20,13 +20,17 @@ contract UBDNLockerDistributor is Ownable {
     uint256 constant public PRICE_INCREASE_STEP = 1; // 1 stable coin unit, not decimal. 
     uint256 constant public INCREASE_FROM_ROUND = 1;
     uint256 constant public ROUND_VOLUME = 1_000_000e18; // in wei
+    uint256 constant public ADD_NEW_PAYMENT_TOKEN_TIMELOCK = 48 hours;
+    uint256 constant public EMERGENCY_PAYMENT_PAUSE = 1 hours;
+
     
     uint256 public LOCK_PERIOD = 90 days;
     uint256 public distributedAmount;
 
     IERC20Mint public distributionToken;
-    mapping (address => bool) public paymentTokens;
+    mapping (address => uint256) public paymentTokens;
     mapping (address => Lock[]) public userLocks;
+    mapping (address => bool) public isGuardian;
 
     event DistributionTokenSet(address indexed Token);
     event PaymentTokenStatus(address indexed Token, bool Status);
@@ -37,6 +41,7 @@ contract UBDNLockerDistributor is Ownable {
         uint256 PaymentAmount
     );
     event Claimed(address User, uint256 Amount, uint256 Timestamp);
+    event PaymentTokenPaused(address indexed Token, uint256 Until);
 
     constructor (uint256 _lockPeriod) {
         if (_lockPeriod > 0) {
@@ -72,7 +77,8 @@ contract UBDNLockerDistributor is Ownable {
         public 
     {
         require(address(distributionToken) != address(0), 'Distribution not Define');
-        require(paymentTokens[_paymentToken], 'This payment token not supported');
+
+        require(_isValidForPayment(_paymentToken), 'This payment token not supported');
         
         // 1. Calc distribution tokens
         uint256 outAmount = _calcTokensForExactStable(_paymentToken,_inAmount);
@@ -105,6 +111,15 @@ contract UBDNLockerDistributor is Ownable {
         emit Claimed(msg.sender, claimAmount, block.timestamp);
     }
 
+    /// @notice Temprory disable payments with token
+    /// @param _paymentToken stable coin address
+    function emergencyPause(address _paymentToken) external {
+        if (paymentTokens[_paymentToken] > 0) {
+            paymentTokens[_paymentToken] = block.timestamp + EMERGENCY_PAYMENT_PAUSE;
+        }
+        emit PaymentTokenPaused(_paymentToken, paymentTokens[_paymentToken]);
+    }
+
     ///////////////////////////////////////////////////////////
     ///////    Admin Functions        /////////////////////////
     ///////////////////////////////////////////////////////////
@@ -112,7 +127,12 @@ contract UBDNLockerDistributor is Ownable {
         external 
         onlyOwner 
     {
-        paymentTokens[_token] = _state;
+        if (_state ) {
+            paymentTokens[_token] = block.timestamp + ADD_NEW_PAYMENT_TOKEN_TIMELOCK;    
+        } else {
+            paymentTokens[_token] = 0;
+        }
+        
         emit PaymentTokenStatus(_token, _state);
     }
 
@@ -123,6 +143,13 @@ contract UBDNLockerDistributor is Ownable {
         require(address(distributionToken) == address(0), "Can call only once");
         distributionToken = IERC20Mint(_token);
         emit DistributionTokenSet(_token);
+    }
+
+    function setGuardianStatus(address _guardian, bool _state)
+        external
+        onlyOwner
+    {
+        isGuardian[_guardian] = _state;
     }
 
     ///////////////////////////////////////////////////////////
@@ -306,5 +333,16 @@ contract UBDNLockerDistributor is Ownable {
 
     function _currenRound() internal view virtual returns(uint256){
         return distributedAmount / ROUND_VOLUME + 1;
+    }
+
+    function _isValidForPayment(address _paymentToken) internal view returns(bool){
+        if (paymentTokens[_paymentToken] == 0) {
+            return false;
+        }
+        require(
+            paymentTokens[_paymentToken] < block.timestamp,
+            "Token paused or timelocked"
+        );
+        return true; 
     }
 }
