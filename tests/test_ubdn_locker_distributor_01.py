@@ -19,6 +19,8 @@ def test_simple_buy(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     with reverts("Ownable: caller is not the owner"):
         lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[1]})
     lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[0]})
+    with reverts("Can call only once"):
+        lockerdistributor.setDistributionToken(usdt, {'from':accounts[0]})
     usdt.approve(lockerdistributor, PAY_AMOUNT, {'from':accounts[0]})
     logging.info('Price and rest in round  1:{}'.format(
         lockerdistributor.priceInUnitsAndRemainByRound(1))
