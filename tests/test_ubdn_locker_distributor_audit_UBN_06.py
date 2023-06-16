@@ -7,8 +7,7 @@ LOGGER = logging.getLogger(__name__)
 
 inAmount = 334e18
 
-#check math
-#make 10 rounds. Use payment token with decimals=6
+
 def test_audit(accounts, ubdnlocked, lockerdistributor, dai):
     lockerdistributor.setPaymentTokenStatus(dai, True, {'from':accounts[0]})
     lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[0]})
