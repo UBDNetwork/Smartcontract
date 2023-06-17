@@ -7,7 +7,7 @@ LOGGER = logging.getLogger(__name__)
 
 inAmount = 100e18
 
-def test_audit(accounts, ubdnlocked, lockerdistributor, dai, usdt):
+def test_audit(accounts, ubdnlocked, lockerdistributor, dai, usdt, usdc):
     lockerdistributor.setPaymentTokenStatus(dai, True, {'from':accounts[0]})
     lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[0]})
 
@@ -50,5 +50,15 @@ def test_audit(accounts, ubdnlocked, lockerdistributor, dai, usdt):
     #set pause for not payment token
     tx = lockerdistributor.emergencyPause(usdt.address, {"from": accounts[1]})
     assert lockerdistributor.paymentTokens(usdt.address) == 0
+
+    t = chain.time()
+    logging.info(t)
+    lockerdistributor.setPaymentTokenStatus(usdc, True, {'from':accounts[0]})
+    tx = lockerdistributor.emergencyPause(usdc, {"from": accounts[1]})
+    assert lockerdistributor.paymentTokens(usdc.address) > t + lockerdistributor.EMERGENCY_PAYMENT_PAUSE() + 2
+    assert lockerdistributor.paymentTokens(usdc.address) < t + lockerdistributor.ADD_NEW_PAYMENT_TOKEN_TIMELOCK() + 2
+
+
+
 
     
