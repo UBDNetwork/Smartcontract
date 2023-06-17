@@ -9,6 +9,9 @@ usdt_amount = 23
 def test_first_round(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     lockerdistributor.setPaymentTokenStatus(usdt, True, {'from':accounts[0]})
     lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[0]})
+
+    chain.sleep(lockerdistributor.ADD_NEW_PAYMENT_TOKEN_TIMELOCK()+1)
+    chain.mine()
     
     out_amount_calc = usdt_amount*10**ubdnlocked.decimals()/lockerdistributor.priceInUnitsAndRemainByRound(1)[0]
     #logging.info(out_amount_calc)

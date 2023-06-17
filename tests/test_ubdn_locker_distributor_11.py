@@ -10,6 +10,10 @@ usdt_amount = 23
 def test_odd_number(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     lockerdistributor.setPaymentTokenStatus(usdt, True, {'from':accounts[0]})
     lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[0]})
+
+    chain.sleep(lockerdistributor.ADD_NEW_PAYMENT_TOKEN_TIMELOCK()+1)
+    chain.mine()
+
     for i in range(9):
         in_amount_calc = lockerdistributor.ROUND_VOLUME()*lockerdistributor.priceInUnitsAndRemainByRound(i+1)[0]*10**usdt.decimals()/10**ubdnlocked.decimals()
         usdt.transfer(accounts[1], in_amount_calc, {'from':accounts[0]})
@@ -48,6 +52,9 @@ def test_odd_number(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
 #Use payment token with decimals=12
 def test_odd_number_1(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     lockerdistributor.setPaymentTokenStatus(usdc, True, {'from':accounts[0]})
+
+    chain.sleep(lockerdistributor.ADD_NEW_PAYMENT_TOKEN_TIMELOCK()+1)
+    chain.mine()
     
     assert lockerdistributor.priceInUnitsAndRemainByRound(10)[0] == 11 #check price
     usdc_amount = 23

@@ -12,6 +12,9 @@ def test_audit(accounts, ubdnlocked, lockerdistributor, dai):
     lockerdistributor.setPaymentTokenStatus(dai, True, {'from':accounts[0]})
     lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[0]})
 
+    chain.sleep(lockerdistributor.ADD_NEW_PAYMENT_TOKEN_TIMELOCK()+1)
+    chain.mine()
+
     #prepare data
     dai.approve(lockerdistributor, 2000000*10**dai.decimals(), {'from':accounts[0]})
     tx = lockerdistributor.buyTokensForExactStable(dai, 2000000*10**dai.decimals(), {'from':accounts[0]})

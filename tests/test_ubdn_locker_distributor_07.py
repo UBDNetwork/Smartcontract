@@ -10,6 +10,9 @@ def test_buy(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     lockerdistributor.setPaymentTokenStatus(usdt, True, {'from':accounts[0]})
     lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[0]})
 
+    chain.sleep(lockerdistributor.ADD_NEW_PAYMENT_TOKEN_TIMELOCK()+1)
+    chain.mine()
+
     in_amount_calc = lockerdistributor.calcStableForExactTokens(usdt.address, (PAY_AMOUNT-100)*10**ubdnlocked.decimals())
     in_amount_calc_manual = 0  
     last_price  = lockerdistributor.START_PRICE() +1

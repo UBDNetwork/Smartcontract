@@ -1,12 +1,13 @@
 import pytest
 import logging
-from brownie import Wei, reverts
+from brownie import Wei, reverts, chain
 LOGGER = logging.getLogger(__name__)
 
 PAY_AMOUNT = 100_000e6
 def test_distrib_simple(accounts, ubdn, distributor, usdt, usdc):
     distributor.setPaymentTokenStatus(usdt, True, {'from':accounts[0]})
     distributor.setDistributionToken(ubdn, {'from':accounts[0]})
+    
     usdt.approve(distributor, PAY_AMOUNT, {'from':accounts[0]})
     logging.info('Price and rest in round  1:{}'.format(distributor.priceInUnitsAndRemainByRound(1)))
     logging.info('Price and rest in round 10:{}'.format(

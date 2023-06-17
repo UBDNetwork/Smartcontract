@@ -14,6 +14,10 @@ def pretty_print_locks(locks):
 def test_calc_out(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     lockerdistributor.setPaymentTokenStatus(usdt, True, {'from':accounts[0]})
     lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[0]})
+
+    chain.sleep(lockerdistributor.ADD_NEW_PAYMENT_TOKEN_TIMELOCK()+1)
+    chain.mine()
+    
     logging.info('Price and rest in round  1:{}'.format(
         lockerdistributor.priceInUnitsAndRemainByRound(1))
     )

@@ -14,6 +14,10 @@ def test_audit(accounts, ubdnlocked, lockerdistributor, dai):
     #prepare data
     dai.transfer(accounts[1], inAmount, {"from": accounts[0]})
     dai.approve(lockerdistributor, inAmount, {'from':accounts[1]})
+
+    chain.sleep(lockerdistributor.ADD_NEW_PAYMENT_TOKEN_TIMELOCK()+1)
+    chain.mine()
+
     with reverts("Slippage occur"):
         tx = lockerdistributor.buyTokensForExactStableWithSlippage(dai, inAmount, 51e18, {'from':accounts[1]})
 

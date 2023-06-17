@@ -10,6 +10,9 @@ def test_buy(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     lockerdistributor.setPaymentTokenStatus(usdt, True, {'from':accounts[0]})
     lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[0]})
 
+    chain.sleep(lockerdistributor.ADD_NEW_PAYMENT_TOKEN_TIMELOCK()+1)
+    chain.mine()
+
 
     in_amount_calc = lockerdistributor.calcStableForExactTokens(usdc.address, 100*10**ubdnlocked.decimals())
 
@@ -27,6 +30,10 @@ def test_buy(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     with reverts("This payment token not supported"):
         tx = lockerdistributor.buyTokensForExactStable(usdc, in_amount_calc, {'from':accounts[1]})
     lockerdistributor.setPaymentTokenStatus(usdc, True, {'from':accounts[0]})
+
+    chain.sleep(lockerdistributor.ADD_NEW_PAYMENT_TOKEN_TIMELOCK()+1)
+    chain.mine()
+
     tx = lockerdistributor.buyTokensForExactStable(usdc, in_amount_calc, {'from':accounts[1]})
 
     assert lockerdistributor.distributedAmount() == 100*10**ubdnlocked.decimals()
@@ -86,6 +93,9 @@ def test_buy_1(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
 def test_buy_2(accounts, ubdnlocked, lockerdistributor, usdt, usdc, dai):
     #buy 300 tokens
     lockerdistributor.setPaymentTokenStatus(dai.address, True, {'from':accounts[0]})
+
+    chain.sleep(lockerdistributor.ADD_NEW_PAYMENT_TOKEN_TIMELOCK()+1)
+    chain.mine()
 
     chain.sleep(1000)
     chain.mine()

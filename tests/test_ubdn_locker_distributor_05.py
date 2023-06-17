@@ -13,6 +13,9 @@ def test_buy(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     tx = lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[0]})
     assert tx.events['DistributionTokenSet']['Token'] == ubdnlocked.address
 
+    chain.sleep(lockerdistributor.ADD_NEW_PAYMENT_TOKEN_TIMELOCK()+1)
+    chain.mine()
+
     in_amount_calc = lockerdistributor.calcStableForExactTokens(usdt.address, (PAY_AMOUNT+1)*10**ubdnlocked.decimals())
 
 

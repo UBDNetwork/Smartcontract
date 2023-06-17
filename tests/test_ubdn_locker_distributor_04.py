@@ -9,6 +9,10 @@ PAY_AMOUNT = 1000000
 def test_buy(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
     lockerdistributor.setPaymentTokenStatus(usdt, True, {'from':accounts[0]})
     lockerdistributor.setDistributionToken(ubdnlocked, {'from':accounts[0]})
+
+    chain.sleep(lockerdistributor.ADD_NEW_PAYMENT_TOKEN_TIMELOCK()+1)
+    chain.mine()
+
     usdt.approve(lockerdistributor, PAY_AMOUNT-1, {'from':accounts[0]})
 
 

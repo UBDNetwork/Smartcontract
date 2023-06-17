@@ -33,7 +33,14 @@ def test_simple_buy(accounts, ubdnlocked, lockerdistributor, usdt, usdc):
         Wei(out_amount_calc).to('ether')
     ))
     assert lockerdistributor.getCurrentRound() == 1
+    with reverts("Token paused or timelocked"):
+        tx = lockerdistributor.buyTokensForExactStable(usdt, PAY_AMOUNT, {'from':accounts[0]})
+
+    chain.sleep(lockerdistributor.ADD_NEW_PAYMENT_TOKEN_TIMELOCK()+1)
+    chain.mine()
+
     tx = lockerdistributor.buyTokensForExactStable(usdt, PAY_AMOUNT, {'from':accounts[0]})
+
     distributed = lockerdistributor.distributedAmount()
     logging.info('Total distributed:{:n}'.format(
         Wei(distributed).to('ether')
