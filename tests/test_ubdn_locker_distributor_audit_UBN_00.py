@@ -30,6 +30,9 @@ def test_audit(accounts, ubdnlocked, lockerdistributor, dai, usdt, usdc):
     assert tx.events['PaymentTokenPaused']['Token'] == dai.address
     assert tx.events['PaymentTokenPaused']['Until'] == lockerdistributor.paymentTokens(dai)
 
+    tx = lockerdistributor.emergencyPause(dai, {"from": accounts[1]})
+    assert len(tx.events) == 0
+
     #prepare data
     dai.transfer(accounts[1], inAmount, {"from": accounts[0]})
     dai.approve(lockerdistributor, inAmount, {'from':accounts[1]})

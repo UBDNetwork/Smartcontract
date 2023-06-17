@@ -115,10 +115,14 @@ contract UBDNLockerDistributor is Ownable {
     /// @param _paymentToken stable coin address
     function emergencyPause(address _paymentToken) external {
         require(isGuardian[msg.sender], "Only for approved guardians");
-        if (paymentTokens[_paymentToken] > 0 && paymentTokens[_paymentToken] <= block.timestamp) {
+        if (
+                paymentTokens[_paymentToken] > 0 // token enabled 
+                && paymentTokens[_paymentToken] <= block.timestamp // no timelock 
+            ) 
+        {
             paymentTokens[_paymentToken] = block.timestamp + EMERGENCY_PAYMENT_PAUSE;
+            emit PaymentTokenPaused(_paymentToken, paymentTokens[_paymentToken]);
         }
-        emit PaymentTokenPaused(_paymentToken, paymentTokens[_paymentToken]);
     }
 
     ///////////////////////////////////////////////////////////
