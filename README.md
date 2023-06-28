@@ -25,36 +25,38 @@ https://goerli.etherscan.io/address/0xd0F967Fb429C13f14F1910776029D52aa98d2982#c
 **test USDT**  
 https://goerli.etherscan.io/address/0x985190ff075d46e29f863E906122F8faf35aC1Ac#code
 
-#### 2023-05-19 Deployed in Ethereum Mainnet 
-UBDN Token deployed at block 17290406 from addreess 
+#### 2023-06-27 Deployed in Ethereum Mainnet 
+UBDN Token deployed at block 17570025 from addreess 
 `0x71373aa15b6d537E70138A39709B50e32C3660Ec` (Keys can be obtain on demand)   
  
 **Locker&Distributor**  
-https://etherscan.io/address/0x2b2A013EA50859a05aa47724A9067346480d529d#code  
+https://etherscan.io/address/0x6D8b29c195b9478D678cD9eA7aD870ECfb0A869F#code
 
 **UBDN ERC20**  
-https://etherscan.io/address/0x3c388F96D5C698F980C49d31FC48Ef88F90d0d8B#code  
+https://etherscan.io/address/0xD624E5C89466A15812c1D45Ce1533be1F16C1702#code
 Initial supply keeper address `0xE206f8AC6067d8253C57D86ac96A789Cd90ed4D4` is UBD project multisig contract
 
 
 ---
 #### Gas Consumption Info
 ```bash
-UBDNLockerDistributor
-   ├─ constructor             -  avg: 1460462  avg (confirmed): 1460462  low: 1460462  high: 1460462
-   ├─ buyTokensForExactStable -  avg:  129927  avg (confirmed):  150626  low:   23869  high:  401396
-   ├─ setPaymentTokenStatus   -  avg:   45326  avg (confirmed):   45326  low:   45319  high:   45331
-   ├─ setDistributionToken    -  avg:   44633  avg (confirmed):   44633  low:   44633  high:   44633
-   └─ claimTokens             -  avg:   35455  avg (confirmed):   39741  low:   22303  high:   51643
-UBDNToken 
-   ├─ constructor             -  avg:  735129  avg (confirmed):  735129  low:  735119  high:  735143
-   ├─ transfer                -  avg:   41234  avg (confirmed):   50876  low:   21951  high:   50876
-   ├─ approve                 -  avg:   38614  avg (confirmed):   44169  low:   21953  high:   44217
-   ├─ mint                    -  avg:   37229  avg (confirmed):   51522  low:   22936  high:   51522
-   ├─ increaseAllowance       -  avg:   30242  avg (confirmed):   30242  low:   30242  high:   30242
-   ├─ transferFrom            -  avg:   26865  avg (confirmed):   26014  low:   22264  high:   31836
-   └─ decreaseAllowance       -  avg:   26701  avg (confirmed):   30226  low:   23176  high:   30226
-
+UBDNLockerDistributor <Contract>
+   ├─ constructor                         -  avg: 1526199  avg (confirmed): 1526199  low: 1526199  high: 1526199
+   ├─ buyTokensForExactStable             -  avg:  113110  avg (confirmed):  122152  low:   22952  high:  239710
+   ├─ setPaymentTokenStatus               -  avg:   43666  avg (confirmed):   44606  low:   23027  high:   44611
+   ├─ setDistributionToken                -  avg:   42051  avg (confirmed):   45560  low:   22815  high:   45560
+   ├─ claimTokens                         -  avg:   35438  avg (confirmed):   39723  low:   22292  high:   51621
+   ├─ setGuardianStatus                   -  avg:   33433  avg (confirmed):   43849  low:   23018  high:   43849
+   ├─ buyTokensForExactStableWithSlippage -  avg:   32855  avg (confirmed):       0  low:   32855  high:   32855
+   └─ emergencyPause                      -  avg:   25309  avg (confirmed):   25941  low:   22782  high:   31136
+UBDNToken <Contract>
+   ├─ constructor                         -  avg:  724273  avg (confirmed):  724273  low:  724273  high:  724285
+   ├─ transfer                            -  avg:   41234  avg (confirmed):   50876  low:   21951  high:   50876
+   ├─ approve                             -  avg:   38614  avg (confirmed):   44169  low:   21953  high:   44217
+   ├─ mint                                -  avg:   36429  avg (confirmed):   50722  low:   22136  high:   50722
+   ├─ increaseAllowance                   -  avg:   30242  avg (confirmed):   30242  low:   30242  high:   30242
+   ├─ transferFrom                        -  avg:   26865  avg (confirmed):   26014  low:   22264  high:   31836
+   └─ decreaseAllowance                   -  avg:   26701  avg (confirmed):   30226  low:   23176  high:   30226
 
 ```
 
