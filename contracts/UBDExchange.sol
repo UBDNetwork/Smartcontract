@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
-// UBDNDistributor ERC20 Token Distributor
+// UBDExchange 
 pragma solidity 0.8.21;
 
 
 import '@uniswap/contracts/libraries/TransferHelper.sol';
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+//import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../interfaces/IERC20Mint.sol";
+import "../interfaces/IERC20Burn.sol";
 
 
 contract UBDExchange is Ownable {
-    using SafeERC20 for IERC20Mint;
+    //using SafeERC20 for IERC20Mint;
     
     struct PaymentTokenInfo {
         uint256 validAfter;
@@ -30,7 +30,7 @@ contract UBDExchange is Ownable {
     address public FEE_BENEFICIARY;
 
 
-    IERC20Mint public ubdToken;
+    IERC20Burn public ubdToken;
     // mapping from token address to timestamp of start validity
     mapping (address => PaymentTokenInfo) public paymentTokens;
     mapping (address => bool) public isGuardian;
@@ -71,57 +71,42 @@ contract UBDExchange is Ownable {
         require(address(ubdToken) != address(0), 'UBD address not Define');
 
         address receiver = _receiver;
+        
         if (receiver == address(0)) {
             receiver = msg.sender;
         }
 
-        // Charge fee in inTokenAsset token from sender
+        
+        // Charge fee in inTokenAsset token from sender if enable(FEE_BENEFICIARY != address(0))
+        uint256 feeAmount = _inAmount * paymentTokens[_inAsset].feePercent 
+            / (100 * PERCENT_DENOMINATOR + paymentTokens[_inAsset].feePercent);
+
+        if (FEE_BENEFICIARY != address(0)) {
+            TransferHelper.safeTransferFrom(_inAsset, msg.sender, FEE_BENEFICIARY, feeAmount);
+        }
+
+        // Decrease in amount with charged fee(_inAmountPure)
+        uint256 inAmountPure = _inAmount - feeAmount;
+        
 
         if (_inAsset == address(ubdToken)) {
             // Back swap from UBD to Excange Base Asset
-            // 1. Charge fee in inTokenAsset token from sender
-            // 2. Decrease in amount with charged fee(_inAmountPure)
             // 4. Burn UBD for sender
+            ubdToken.burn(msg.sender, inAmountPure);
+
             // 5. Return BASE ASSET  _inAmountPure to sender
-            return outAmount;
+            outAmount = inAmountPure * IERC20Metadata(EXCHANGE_BASE_ASSET).decimals() / ubdToken.decimals();
+            TransferHelper.safeTransferFrom(EXCHANGE_BASE_ASSET, SANDBOX_1, msg.sender, outAmount);
 
         } else if (_inAsset == EXCHANGE_BASE_ASSET) {
             // Swap from BASE to UBD
-            // 1. Charge fee in inTokenAsset token from sender
-            // 2. DEcrease in amount with charged fee(_inAmountPure)
             // 3. Take BAse Token _inAmountPure
-            // 4. Mint  UBD _inAmountPure to sender 
+            TransferHelper.safeTransferFrom(EXCHANGE_BASE_ASSET, msg.sender, SANDBOX_1,  inAmountPure);
+
+            // 4. Mint  UBD _inAmountPure to sender
+            outAmount = inAmountPure * ubdToken.decimals() / IERC20Metadata(EXCHANGE_BASE_ASSET).decimals();
+            ubdToken.mint(msg.sender, outAmount); 
         }   
-
-        //} else { 
-            //////////////////////////////////////////////////
-            // Move this exchange to SandBox1
-            ///////////////////////////////////////////////////
-            // Swap from inAsset to BASE, and then BASE to UBD    
-            // TODO check  gas!!!   with war
-            // address paymenToken = 
-            //require(_isValidForPayment(_path[0]), 'This payment token not supported');
-            // 0. Swap in Asset to Base Asset (inAmountBASe)
-            // Swap from BASE to UBD
-            // 1. Charge fee in base token from sender
-            // 2. DEcrease in amount with charged fee(_inAmountPure)
-            // 3. Take BAse Token _inAmountPure
-            // 4. Mint  UBD _inAmountPure to sender 
-
-        //}
-        
-        // // 1. Calc distribution tokens
-        // uint256 outAmount = _calcTokensForExactStable(_paymentToken,_inAmount);
-        // require(outAmount > 0, 'Cant buy zero');
-        
-        
-        
-        // // 3. Mint distribution token
-        // distributionToken.mint(address(this), outAmount);
-        // emit Purchase(msg.sender, outAmount, _paymentToken, _inAmount);
-
-        // // 4. Receive payment
-        // IERC20Mint(_paymentToken).safeTransferFrom(msg.sender, owner(),_inAmount);
     }
 
 
@@ -165,7 +150,9 @@ contract UBDExchange is Ownable {
         onlyOwner 
     {
         require(address(ubdToken) == address(0), "Can call only once");
-        ubdToken = IERC20Mint(_token);
+        paymentTokens[_token] 
+            = PaymentTokenInfo(block.timestamp, 50);
+        ubdToken = IERC20Burn(_token);
     }
 
     function setGuardianStatus(address _guardian, bool _state)
@@ -174,6 +161,14 @@ contract UBDExchange is Ownable {
     {
         isGuardian[_guardian] = _state;
     }
+
+    function setBeneficiary(address _addr)
+        external
+        onlyOwner
+    {
+        FEE_BENEFICIARY = _addr;
+    }
+
 
     ///////////////////////////////////////////////////////////
 
