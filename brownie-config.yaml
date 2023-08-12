@@ -2,4 +2,6 @@ dotenv: .env
 compiler:
     solc:
         remappings:
-          - "@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.8.2"
+          - "@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.9.3"
+          - "@uniswap=Uniswap/v3-periphery@1.3.0"
+          - "@uniswapV2=Uniswap/v2-periphery@1.1.0-beta.0"

@@ -2,7 +2,7 @@
 //  UBD ERC20 
 
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.21;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
@@ -22,17 +22,10 @@ contract UBDToken is ERC20 {
          _mint(_to, _amount);
     }
 
-    /**
-     * @dev Burns `_amount` tokens from the caller's account.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * Emits a {Transfer} event.
-     */
-    function burn(uint256 _amount) external returns (bool) {
+    
+    function burn(address _burnFor, uint256 _amount) external {
         require(msg.sender == minter, 'Only exchange contract');
         _burn(msg.sender, _amount);
-        return true;
     }
     
 }

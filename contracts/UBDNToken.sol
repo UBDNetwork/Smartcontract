@@ -3,7 +3,7 @@
 //   UBDN  ERC20 Locker
 
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.21;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 

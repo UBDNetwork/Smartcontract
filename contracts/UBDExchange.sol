@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 // UBDNDistributor ERC20 Token Distributor
-pragma solidity 0.8.19;
+pragma solidity 0.8.21;
 
 
+import '@uniswap/contracts/libraries/TransferHelper.sol';
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../interfaces/IERC20Mint.sol";
@@ -22,6 +23,7 @@ contract UBDExchange is Ownable {
     uint256 constant public EMERGENCY_PAYMENT_PAUSE = 1 hours;
 
     address immutable public EXCHANGE_BASE_ASSET;
+    address immutable public SANDBOX_1;
 
 
     uint256 public FEE_EXCHANGE;
@@ -37,55 +39,82 @@ contract UBDExchange is Ownable {
     event PaymentTokenStatus(address indexed Token, bool Status);
     event PaymentTokenPaused(address indexed Token, uint256 Until);
 
-    constructor (address _baseAsset) {
+    constructor (address _baseAsset, address _sandbox1) {
+        require(_baseAsset != address(0) && _sandbox1 != address(0),'No zero address');
         // Add ETH USDT as default payment asset
         EXCHANGE_BASE_ASSET = _baseAsset;
         paymentTokens[_baseAsset] 
             = PaymentTokenInfo(block.timestamp, 50);
+        SANDBOX_1 = _sandbox1;    
     }
 
 
     /// @notice SWap exact amount of input token for output
     /// @dev Don't forget approvement(s)
-    /// @param _path  The first element of path is the input token address (payment token),
+    /// @param _inAsset  UBD or BASE_TOKEN_ADDRESS,
     /// and  the last is the output token (UniswapV2 style)
     /// @param _inAmount amount of stable to spent
     /// @param _deadline Unix timestamp, Swap can't be executed after
     /// @param _amountOutMin minimum amount of output tokens that must be 
     /// received for the transaction not to revert
     function swapExactInput(
-        address[] memory _path, 
+        //address[] memory _path, 
+        address _inAsset,
         uint256 _inAmount, 
         uint256 _deadline, 
-        uint256 _amountOutMin
+        uint256 _amountOutMin,
+        address _receiver
     ) 
         public 
+        returns (uint256 outAmount)
     {
         require(address(ubdToken) != address(0), 'UBD address not Define');
 
-        
+        address receiver = _receiver;
+        if (receiver == address(0)) {
+            receiver = msg.sender;
+        }
 
-        if (_path[0] == address(ubdToken)) {
+        // Charge fee in inTokenAsset token from sender
+
+        if (_inAsset == address(ubdToken)) {
             // Back swap from UBD to Excange Base Asset
+            // 1. Charge fee in inTokenAsset token from sender
+            // 2. Decrease in amount with charged fee(_inAmountPure)
+            // 4. Burn UBD for sender
+            // 5. Return BASE ASSET  _inAmountPure to sender
+            return outAmount;
 
-        } else if (_path[0] == EXCHANGE_BASE_ASSET) {
-            // Swap from BASE to UBD    
+        } else if (_inAsset == EXCHANGE_BASE_ASSET) {
+            // Swap from BASE to UBD
+            // 1. Charge fee in inTokenAsset token from sender
+            // 2. DEcrease in amount with charged fee(_inAmountPure)
+            // 3. Take BAse Token _inAmountPure
+            // 4. Mint  UBD _inAmountPure to sender 
+        }   
 
-        } else {
+        //} else { 
+            //////////////////////////////////////////////////
+            // Move this exchange to SandBox1
+            ///////////////////////////////////////////////////
             // Swap from inAsset to BASE, and then BASE to UBD    
             // TODO check  gas!!!   with war
             // address paymenToken = 
-            require(_isValidForPayment(_path[0]), 'This payment token not supported');
+            //require(_isValidForPayment(_path[0]), 'This payment token not supported');
+            // 0. Swap in Asset to Base Asset (inAmountBASe)
+            // Swap from BASE to UBD
+            // 1. Charge fee in base token from sender
+            // 2. DEcrease in amount with charged fee(_inAmountPure)
+            // 3. Take BAse Token _inAmountPure
+            // 4. Mint  UBD _inAmountPure to sender 
 
-        }
+        //}
         
         // // 1. Calc distribution tokens
         // uint256 outAmount = _calcTokensForExactStable(_paymentToken,_inAmount);
         // require(outAmount > 0, 'Cant buy zero');
         
-        // // 2. Save lockInfo
-        // _newLock(msg.sender, outAmount);
-        // distributedAmount += outAmount;
+        
         
         // // 3. Mint distribution token
         // distributionToken.mint(address(this), outAmount);
