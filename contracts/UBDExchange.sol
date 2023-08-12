@@ -78,8 +78,7 @@ contract UBDExchange is Ownable {
 
         
         // Charge fee in inTokenAsset token from sender if enable(FEE_BENEFICIARY != address(0))
-        uint256 feeAmount = _inAmount * paymentTokens[_inAsset].feePercent 
-            / (100 * PERCENT_DENOMINATOR + paymentTokens[_inAsset].feePercent);
+        uint256 feeAmount = _getFeeFromInAmount(_inAsset, _inAmount);
 
         if (FEE_BENEFICIARY != address(0)) {
             TransferHelper.safeTransferFrom(_inAsset, msg.sender, FEE_BENEFICIARY, feeAmount);
@@ -172,63 +171,71 @@ contract UBDExchange is Ownable {
 
     ///////////////////////////////////////////////////////////
 
-    /// @notice Returns amount of distributing tokens that will be
+    /// @notice Returns amount of UBD tokens that will be
     /// get by user if he(she) pay given stable coin amount
     /// @dev _inAmount must be with given in wei (eg 1 USDT =1000000)
-    /// @param _paymentToken stable coin address
+    /// @param _inToken stable coin address
     /// @param _inAmount stable coin amount that user want to spend
-    function calcTokensForExactStable(address _paymentToken, uint256 _inAmount) 
+    function calcOutUBDForExactBASE(address _inToken, uint256 _inAmount) 
         external 
         view 
         returns(uint256) 
     {
-        return _calcTokensForExactStable(_paymentToken, _inAmount);
+        return _calcOutForExactIn(_inToken, _inAmount);
     }
 
     /// @notice Returns amount of stable coins that must be spent
-    /// for user get given  amount of distributing token
+    /// for user get given  amount of UBD token
     /// @dev _outAmount must be with given in wei (eg 1 UBDN =1e18)
-    /// @param _paymentToken stable coin address
-    /// @param _outAmount distributing token amount that user want to get
-    function calcStableForExactTokens(address _paymentToken, uint256 _outAmount) 
+    /// @param _inToken stable coin address
+    /// @param _outAmount UBD token amount that user want to get
+    function calcBASEForExactOutUBD(address _inToken, uint256 _outAmount) 
         external 
         view 
         returns(uint256) 
     {
-        return _calcStableForExactTokens(_paymentToken, _outAmount);
+        return _calcInForExactOut(_inToken, _outAmount);
     }
 
 
 
     /////////////////////////////////////////////////////////////////////
 
-    function _calcStableForExactTokens(address _paymentToken, uint256 _outAmount) 
+    function _getFeeFromInAmount(address _inAsset, uint256 _inAmount)
         internal
-        virtual 
-        view 
-        returns(uint256 inAmount) 
+        view
+        returns(uint256)
     {
-        inAmount = _outAmount + (_outAmount * FEE_EXCHANGE / PERCENT_DENOMINATOR);
+        return _inAmount * paymentTokens[_inAsset].feePercent 
+            / (100 * PERCENT_DENOMINATOR + paymentTokens[_inAsset].feePercent);
     }
 
-    function _calcTokensForExactStable(address _paymentToken, uint256 _inAmount) 
+    function _calcOutForExactIn(address _inToken, uint256 _inAmount) 
         internal
         virtual 
         view 
         returns(uint256 outAmount) 
     {
-        // TODO !!!!! INCORRECT
-        outAmount = _inAmount / (1 + FEE_EXCHANGE / PERCENT_DENOMINATOR);
+        uint256 inAmountPure = _inAmount - _getFeeFromInAmount(_inToken, _inAmount);
+        address outToken;
+        if (_inToken == address(ubdToken)){
+            outToken == EXCHANGE_BASE_ASSET;
+        } else {
+            outToken = address(ubdToken);
+        }
+        outAmount = inAmountPure * IERC20Metadata(outToken).decimals() / IERC20Metadata(_inToken).decimals();
     }
 
-   function _getFeePercent(address _paymentToken)
-       internal
-       virtual
-       view
-       returns(uint256)
+    function _calcInForExactOut(address _outToken, uint256 _outAmount) 
+        internal
+        virtual 
+        view 
+        returns(uint256 inAmount) 
     {
-        return 0; 
+        // TODO !!!!! INCORRECT
+        //outAmount = _inAmount / (1 + FEE_EXCHANGE / PERCENT_DENOMINATOR);
     }
+
 
     function _isValidForPayment(address _paymentToken) internal view returns(bool){
         if (paymentTokens[_paymentToken].validAfter == 0) {
