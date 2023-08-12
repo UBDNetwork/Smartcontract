@@ -33,6 +33,10 @@ def erc20(accounts, UBDNToken):
     erc = accounts[0].deploy(UBDNToken, accounts[1], accounts[0], 5_000_000e18)
     yield erc
 
+@pytest.fixture(scope="module")
+def erc20_ubd(accounts, UBDNToken):
+    erc = accounts[0].deploy(UBDToken, accounts[0])
+    yield erc
 
 @pytest.fixture(scope="module")
 def usdt(accounts, MockToken):
