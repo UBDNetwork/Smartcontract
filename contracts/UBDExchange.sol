@@ -4,19 +4,18 @@ pragma solidity 0.8.21;
 
 
 import '@uniswap/contracts/libraries/TransferHelper.sol';
-//import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../interfaces/IERC20Burn.sol";
 
 
 contract UBDExchange is Ownable {
-    //using SafeERC20 for IERC20Mint;
     
     struct PaymentTokenInfo {
         uint256 validAfter;
         uint256 feePercent;  
     }
 
+    uint256 constant public FEE_EXCHANGE_DEFAULT = 5000;      // 0.5 %
     uint256 constant public FEE_EXCHANGE_MAX_PERCENT = 10000; // 1% - 10000, 13% - 130000, etc        
     uint256 constant public PERCENT_DENOMINATOR = 10000;
     uint256 constant public ADD_NEW_PAYMENT_TOKEN_TIMELOCK = 48 hours;
@@ -25,10 +24,7 @@ contract UBDExchange is Ownable {
     address immutable public EXCHANGE_BASE_ASSET;
     address immutable public SANDBOX_1;
 
-
-    uint256 public FEE_EXCHANGE;
     address public FEE_BENEFICIARY;
-
 
     IERC20Burn public ubdToken;
     // mapping from token address to timestamp of start validity
@@ -36,15 +32,17 @@ contract UBDExchange is Ownable {
     mapping (address => bool) public isGuardian;
 
    
-    event PaymentTokenStatus(address indexed Token, bool Status);
+    event PaymentTokenStatus(address indexed Token, bool Status, uint256 FeePercent);
     event PaymentTokenPaused(address indexed Token, uint256 Until);
+
+    error NoDirectSwap(string);
 
     constructor (address _baseAsset, address _sandbox1) {
         require(_baseAsset != address(0) && _sandbox1 != address(0),'No zero address');
         // Add ETH USDT as default payment asset
         EXCHANGE_BASE_ASSET = _baseAsset;
         paymentTokens[_baseAsset] 
-            = PaymentTokenInfo(block.timestamp, 50);
+            = PaymentTokenInfo(block.timestamp, FEE_EXCHANGE_DEFAULT);
         SANDBOX_1 = _sandbox1;    
     }
 
@@ -90,22 +88,24 @@ contract UBDExchange is Ownable {
 
         if (_inAsset == address(ubdToken)) {
             // Back swap from UBD to Excange Base Asset
-            // 4. Burn UBD for sender
+            // Burn UBD for sender
             ubdToken.burn(msg.sender, inAmountPure);
 
-            // 5. Return BASE ASSET  _inAmountPure to sender
+            // Return BASE ASSET  _inAmountPure to sender
             outAmount = inAmountPure * IERC20Metadata(EXCHANGE_BASE_ASSET).decimals() / ubdToken.decimals();
             TransferHelper.safeTransferFrom(EXCHANGE_BASE_ASSET, SANDBOX_1, msg.sender, outAmount);
 
         } else if (_inAsset == EXCHANGE_BASE_ASSET) {
             // Swap from BASE to UBD
-            // 3. Take BAse Token _inAmountPure
+            // Take BAse Token _inAmountPure
             TransferHelper.safeTransferFrom(EXCHANGE_BASE_ASSET, msg.sender, SANDBOX_1,  inAmountPure);
 
-            // 4. Mint  UBD _inAmountPure to sender
+            // Mint  UBD _inAmountPure to sender
             outAmount = inAmountPure * ubdToken.decimals() / IERC20Metadata(EXCHANGE_BASE_ASSET).decimals();
             ubdToken.mint(msg.sender, outAmount); 
-        }   
+        }  else {
+            revert NoDirectSwap(IERC20Metadata(EXCHANGE_BASE_ASSET).symbol());
+        } 
     }
 
 
@@ -141,7 +141,7 @@ contract UBDExchange is Ownable {
             paymentTokens[_token] = PaymentTokenInfo(0, 0);
         }
         
-        emit PaymentTokenStatus(_token, _state);
+        emit PaymentTokenStatus(_token, _state, _feePercent);
     }
 
     function setUBDToken(address _token) 
@@ -150,7 +150,7 @@ contract UBDExchange is Ownable {
     {
         require(address(ubdToken) == address(0), "Can call only once");
         paymentTokens[_token] 
-            = PaymentTokenInfo(block.timestamp, 50);
+            = PaymentTokenInfo(block.timestamp, FEE_EXCHANGE_DEFAULT);
         ubdToken = IERC20Burn(_token);
     }
 
@@ -174,31 +174,52 @@ contract UBDExchange is Ownable {
     /// @notice Returns amount of UBD tokens that will be
     /// get by user if he(she) pay given stable coin amount
     /// @dev _inAmount must be with given in wei (eg 1 USDT =1000000)
-    /// @param _inToken stable coin address
     /// @param _inAmount stable coin amount that user want to spend
-    function calcOutUBDForExactBASE(address _inToken, uint256 _inAmount) 
+    function calcOutUBDForExactInBASE(uint256 _inAmount) 
         external 
         view 
         returns(uint256) 
     {
-        return _calcOutForExactIn(_inToken, _inAmount);
+        return _calcOutForExactIn(EXCHANGE_BASE_ASSET, _inAmount);
     }
 
     /// @notice Returns amount of stable coins that must be spent
     /// for user get given  amount of UBD token
-    /// @dev _outAmount must be with given in wei (eg 1 UBDN =1e18)
-    /// @param _inToken stable coin address
+    /// @dev _outAmount must be in wei (eg 1 UBD =1e18)
     /// @param _outAmount UBD token amount that user want to get
-    function calcBASEForExactOutUBD(address _inToken, uint256 _outAmount) 
+    function calcInBASEForExactOutUBD(uint256 _outAmount) 
         external 
         view 
         returns(uint256) 
     {
-        return _calcInForExactOut(_inToken, _outAmount);
+        return _calcInForExactOut(address(ubdToken), _outAmount);
     }
 
+    /// @notice Returns amount of BASE stable that will be
+    /// get by user if he(she) pay given UBD amount
+    /// @dev _inAmount must be with given in wei (eg 1 USDT =1000000)
+    /// @param _inAmount UBD amount that user want to spend
+    function calcOutBASEForExactInUBD(uint256 _inAmount) 
+        external 
+        view 
+        returns(uint256) 
+    {
+        return _calcOutForExactIn(address(ubdToken), _inAmount);
+    }
 
+    /// @notice Returns amount of UBD that must be spent
+    /// for user get given  amount of BASE token
+    /// @dev _outAmount must be in wei (eg 1 UBD =1e18)
+    /// @param _outAmount BASE token amount that user want to get
+    function calcInUBDForExactOutBASE(uint256 _outAmount) 
+        external 
+        view 
+        returns(uint256) 
+    {
+        return _calcInForExactOut(EXCHANGE_BASE_ASSET, _outAmount);
+    }
 
+    
     /////////////////////////////////////////////////////////////////////
 
     function _getFeeFromInAmount(address _inAsset, uint256 _inAmount)
@@ -232,8 +253,20 @@ contract UBDExchange is Ownable {
         view 
         returns(uint256 inAmount) 
     {
-        // TODO !!!!! INCORRECT
-        //outAmount = _inAmount / (1 + FEE_EXCHANGE / PERCENT_DENOMINATOR);
+       
+        address inToken;
+        if (_outToken == address(ubdToken)){
+            inToken == EXCHANGE_BASE_ASSET;
+        } else {
+            inToken = address(ubdToken);
+        }
+
+         uint256 outAmountWithFee = 
+            _outAmount + _outAmount * paymentTokens[inToken].feePercent  
+                         / (100 * PERCENT_DENOMINATOR);
+
+        inAmount = outAmountWithFee * IERC20Metadata(inToken).decimals() / IERC20Metadata(_outToken).decimals();
+
     }
 
 
