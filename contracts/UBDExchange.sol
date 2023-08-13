@@ -62,7 +62,8 @@ contract UBDExchange is Ownable {
         uint256 _amountOutMin, 
         address _receiver
     ) 
-        public 
+        public
+        virtual 
         returns (uint256 outAmount)
     {
         require(address(ubdToken) != address(0), 'UBD address not Define');
