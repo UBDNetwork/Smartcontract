@@ -56,11 +56,10 @@ contract UBDExchange is Ownable {
     /// @param _amountOutMin minimum amount of output tokens that must be 
     /// received for the transaction not to revert
     function swapExactInput(
-        //address[] memory _path, 
         address _inAsset,
         uint256 _inAmount, 
-        uint256 _deadline, 
-        uint256 _amountOutMin,
+        uint256 _deadline, //TODO
+        uint256 _amountOutMin, 
         address _receiver
     ) 
         public 
@@ -89,22 +88,29 @@ contract UBDExchange is Ownable {
         if (_inAsset == address(ubdToken)) {
             // Back swap from UBD to Excange Base Asset
             // Burn UBD for sender
-            ubdToken.burn(msg.sender, inAmountPure);
+            ubdToken.burn(receiver, inAmountPure);
 
             // Return BASE ASSET  _inAmountPure to sender
-            outAmount = inAmountPure * IERC20Metadata(EXCHANGE_BASE_ASSET).decimals() / ubdToken.decimals();
-            TransferHelper.safeTransferFrom(EXCHANGE_BASE_ASSET, SANDBOX_1, msg.sender, outAmount);
+            outAmount = inAmountPure * 10**IERC20Metadata(EXCHANGE_BASE_ASSET).decimals() / 10**ubdToken.decimals();
+            TransferHelper.safeTransferFrom(EXCHANGE_BASE_ASSET, SANDBOX_1, receiver, outAmount);
 
         } else if (_inAsset == EXCHANGE_BASE_ASSET) {
             // Swap from BASE to UBD
             // Take BAse Token _inAmountPure
-            TransferHelper.safeTransferFrom(EXCHANGE_BASE_ASSET, msg.sender, SANDBOX_1,  inAmountPure);
+            TransferHelper.safeTransferFrom(EXCHANGE_BASE_ASSET, receiver, SANDBOX_1,  inAmountPure);
 
             // Mint  UBD _inAmountPure to sender
-            outAmount = inAmountPure * ubdToken.decimals() / IERC20Metadata(EXCHANGE_BASE_ASSET).decimals();
+            outAmount = inAmountPure * 10**ubdToken.decimals() / 10**IERC20Metadata(EXCHANGE_BASE_ASSET).decimals();
+            // Below not used because GAS +2K
+            //outAmount = _calcOutForExactIn(EXCHANGE_BASE_ASSET, _inAmount);
             ubdToken.mint(msg.sender, outAmount); 
         }  else {
             revert NoDirectSwap(IERC20Metadata(EXCHANGE_BASE_ASSET).symbol());
+        }
+        // Sanity Checks 
+        require(outAmount >= _amountOutMin, "Unexpected Out Amount");
+        if (_deadline > 0) {
+            require(block.timestamp <= _deadline, "Unexpected Transaction time");
         } 
     }
 
@@ -219,7 +225,13 @@ contract UBDExchange is Ownable {
         return _calcInForExactOut(EXCHANGE_BASE_ASSET, _outAmount);
     }
 
-    
+    function getFeeFromInAmount(address _inAsset, uint256 _inAmount)
+        public
+        view
+        returns(uint256)
+    {
+        return _getFeeFromInAmount(_inAsset, _inAmount);
+    }
     /////////////////////////////////////////////////////////////////////
 
     function _getFeeFromInAmount(address _inAsset, uint256 _inAmount)
@@ -227,29 +239,27 @@ contract UBDExchange is Ownable {
         view
         returns(uint256)
     {
-        return _inAmount * paymentTokens[_inAsset].feePercent 
-            / (100 * PERCENT_DENOMINATOR + paymentTokens[_inAsset].feePercent);
+        uint256 feeP = paymentTokens[_inAsset].feePercent;
+        return _inAmount * feeP / (100 * PERCENT_DENOMINATOR + feeP);
     }
 
     function _calcOutForExactIn(address _inToken, uint256 _inAmount) 
         internal
-        virtual 
         view 
         returns(uint256 outAmount) 
     {
         uint256 inAmountPure = _inAmount - _getFeeFromInAmount(_inToken, _inAmount);
         address outToken;
         if (_inToken == address(ubdToken)){
-            outToken == EXCHANGE_BASE_ASSET;
+            outToken = EXCHANGE_BASE_ASSET;
         } else {
             outToken = address(ubdToken);
         }
-        outAmount = inAmountPure * IERC20Metadata(outToken).decimals() / IERC20Metadata(_inToken).decimals();
+        outAmount = inAmountPure * 10**IERC20Metadata(outToken).decimals() / 10**IERC20Metadata(_inToken).decimals();
     }
 
     function _calcInForExactOut(address _outToken, uint256 _outAmount) 
         internal
-        virtual 
         view 
         returns(uint256 inAmount) 
     {
@@ -265,7 +275,7 @@ contract UBDExchange is Ownable {
             _outAmount + _outAmount * paymentTokens[inToken].feePercent  
                          / (100 * PERCENT_DENOMINATOR);
 
-        inAmount = outAmountWithFee * IERC20Metadata(inToken).decimals() / IERC20Metadata(_outToken).decimals();
+        inAmount = outAmountWithFee * 10**IERC20Metadata(inToken).decimals() / 10**IERC20Metadata(_outToken).decimals();
 
     }
 

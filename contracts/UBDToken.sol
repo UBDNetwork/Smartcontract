@@ -25,7 +25,7 @@ contract UBDToken is ERC20 {
     
     function burn(address _burnFor, uint256 _amount) external {
         require(msg.sender == minter, 'Only exchange contract');
-        _burn(msg.sender, _amount);
+        _burn(_burnFor, _amount);
     }
     
 }

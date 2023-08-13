@@ -34,7 +34,7 @@ def erc20(accounts, UBDNToken):
     yield erc
 
 @pytest.fixture(scope="module")
-def erc20_ubd(accounts, UBDNToken):
+def erc20_ubd(accounts, UBDToken):
     erc = accounts[0].deploy(UBDToken, accounts[0])
     yield erc
 
@@ -53,5 +53,14 @@ def dai(accounts, MockToken):
     erc = accounts[0].deploy(MockToken, 'DAI Mock Token', 'DAI', 18)
     yield erc
 
+#------------------------------
+@pytest.fixture(scope="module")
+def exchange_single(accounts, UBDExchange, usdt):
+    exch = accounts[0].deploy(UBDExchange, usdt.address, accounts[9])
+    yield exch
 
+@pytest.fixture(scope="module")
+def ubd_exch(accounts, UBDToken, exchange_single):
+    erc = accounts[0].deploy(UBDToken, exchange_single)
+    yield erc
 
