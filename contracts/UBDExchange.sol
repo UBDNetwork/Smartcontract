@@ -145,6 +145,7 @@ contract UBDExchange is Ownable {
                 _feePercent
             );    
         } else {
+            require (_token != address(ubdToken), "Cant disable UBD");
             paymentTokens[_token] = PaymentTokenInfo(0, 0);
         }
         
@@ -156,7 +157,6 @@ contract UBDExchange is Ownable {
         onlyOwner 
     {
         require(address(ubdToken) == address(0), "Can call only once");
-        //TODO  move to upper function
         paymentTokens[_token] 
             = PaymentTokenInfo(block.timestamp, FEE_EXCHANGE_DEFAULT);
         ubdToken = IERC20Burn(_token);
