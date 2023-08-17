@@ -104,7 +104,7 @@ contract UBDExchange is Ownable {
             outAmount = inAmountPure * 10**ubdToken.decimals() / 10**IERC20Metadata(EXCHANGE_BASE_ASSET).decimals();
             // Below not used because GAS +2K
             //outAmount = _calcOutForExactIn(EXCHANGE_BASE_ASSET, _inAmount);
-            ubdToken.mint(msg.sender, outAmount); 
+            ubdToken.mint(receiver, outAmount); 
         }  else {
             revert NoDirectSwap(IERC20Metadata(EXCHANGE_BASE_ASSET).symbol());
         }
@@ -145,6 +145,7 @@ contract UBDExchange is Ownable {
                 _feePercent
             );    
         } else {
+            require (_token != address(ubdToken), "Cant disable UBD");
             paymentTokens[_token] = PaymentTokenInfo(0, 0);
         }
         
