@@ -104,7 +104,7 @@ contract UBDExchange is Ownable {
             outAmount = inAmountPure * 10**ubdToken.decimals() / 10**IERC20Metadata(EXCHANGE_BASE_ASSET).decimals();
             // Below not used because GAS +2K
             //outAmount = _calcOutForExactIn(EXCHANGE_BASE_ASSET, _inAmount);
-            ubdToken.mint(msg.sender, outAmount); 
+            ubdToken.mint(receiver, outAmount); 
         }  else {
             revert NoDirectSwap(IERC20Metadata(EXCHANGE_BASE_ASSET).symbol());
         }
@@ -156,6 +156,7 @@ contract UBDExchange is Ownable {
         onlyOwner 
     {
         require(address(ubdToken) == address(0), "Can call only once");
+        //TODO  move to upper function
         paymentTokens[_token] 
             = PaymentTokenInfo(block.timestamp, FEE_EXCHANGE_DEFAULT);
         ubdToken = IERC20Burn(_token);
