@@ -79,7 +79,7 @@ contract UBDExchange is Ownable {
         uint256 feeAmount = _getFeeFromInAmount(_inAsset, _inAmount);
 
         if (FEE_BENEFICIARY != address(0)) {
-            TransferHelper.safeTransferFrom(_inAsset, msg.sender, FEE_BENEFICIARY, feeAmount);
+            TransferHelper.safeTransferFrom(_inAsset, receiver, FEE_BENEFICIARY, feeAmount);
         }
 
         // Decrease in amount with charged fee(_inAmountPure)
