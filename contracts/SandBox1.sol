@@ -29,7 +29,7 @@ contract SandBox1 is UBDExchange {
     		// TODO Replace _inAsset, _inAmount bellow with appropriaTE VALUES
     		// 
     	}
-    	super.swapExactInput(_inAsset, _inAmount, _deadline, _amountOutMin, _receiver);
+    	return super.swapExactInput(_inAsset, _inAmount, _deadline, _amountOutMin, _receiver);
 
     }
 

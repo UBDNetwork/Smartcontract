@@ -93,7 +93,14 @@ contract UBDExchange is Ownable {
 
             // Return BASE ASSET  _inAmountPure to sender
             outAmount = inAmountPure * 10**IERC20Metadata(EXCHANGE_BASE_ASSET).decimals() / 10**ubdToken.decimals();
-            TransferHelper.safeTransferFrom(EXCHANGE_BASE_ASSET, SANDBOX_1, receiver, outAmount);
+            if (SANDBOX_1 == address(this)){
+                TransferHelper.safeTransfer(EXCHANGE_BASE_ASSET,  receiver, outAmount);    
+            } else {
+                // This branch can be removed if sandbox always is exchange
+                TransferHelper.safeTransferFrom(EXCHANGE_BASE_ASSET, SANDBOX_1, receiver, outAmount);
+            }
+            
+            
 
         } else if (_inAsset == EXCHANGE_BASE_ASSET) {
             // Swap from BASE to UBD
