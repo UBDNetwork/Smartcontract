@@ -39,6 +39,7 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt, dai):
 
     assert usdt.balanceOf(exchange_single.SANDBOX_1())== round(PAY_AMOUNT*100/(100+fee_percent))
     assert usdt.balanceOf(accounts[1])== PAY_AMOUNT*fee_percent/(100+fee_percent)
+    assert ubd_exch.totalSupply() == round(PAY_AMOUNT*100/(100+fee_percent))*10**ubd_exch.decimals()/10**usdt.decimals()
 
     dai.approve(exchange_single, PAY_AMOUNT, {'from':accounts[2]})
 
@@ -62,7 +63,8 @@ def test_ubd_to_usdt(accounts, ubd_exch, exchange_single, usdt):
     ubd_exch.approve(exchange_single, PAY_AMOUNT, {'from':accounts[2]})
     usdt.approve(exchange_single, PAY_AMOUNT, {'from':accounts[9]})
     before_usdt_sandbox = usdt.balanceOf(exchange_single.SANDBOX_1())
-
+    before_total_supply = ubd_exch.totalSupply()
+    
     #receiver<>msg.sender
     tx = exchange_single.swapExactInput(
         ubd_exch, 
@@ -81,5 +83,8 @@ def test_ubd_to_usdt(accounts, ubd_exch, exchange_single, usdt):
     assert before_usdt_sandbox - usdt.balanceOf(exchange_single.SANDBOX_1()) == round(PAY_AMOUNT*100/(100+fee_percent))*10**usdt.decimals()/10**ubd_exch.decimals()
     assert ubd_exch.balanceOf(accounts[1]) - PAY_AMOUNT*fee_percent/(100+fee_percent) < 1000
     assert ubd_exch.balanceOf(accounts[2]) == 0
+    #check burning
+    assert ubd_exch.totalSupply() == ubd_exch.balanceOf(accounts[1])
+    assert ubd_exch.totalSupply() == ubd_exch.balanceOf(accounts[1])
 
     
