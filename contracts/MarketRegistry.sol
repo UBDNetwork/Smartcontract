@@ -36,6 +36,8 @@ contract MarketRegistry is IMarketRegistry {
     function swapExactBASEInToETH(uint256 _amountIn) external{}
     function swapExactBASEInToWBTC(uint256 _amountIn) external{}
     function redeemSandbox1() external returns(uint256){}
+     function swapTreasuryToDAI(address[] memory _assets, uint256 _stableAmountUnits) external {}
 
     function getCollateralLevelM10() external view returns(uint256){}
+    function getBalanceInStableUnits(address _holder, address[] memory _assets) external view returns(uint256){}
 }

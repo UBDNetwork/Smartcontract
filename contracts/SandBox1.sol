@@ -3,22 +3,22 @@
 pragma solidity 0.8.21;
 
 import "./UBDExchange.sol";
-import "../interfaces/IMarketRegistry.sol";
+import "./MarketConnector.sol";
+//import "../interfaces/IMarketRegistry.sol";
 
 
-contract SandBox1 is UBDExchange {
+contract SandBox1 is UBDExchange, MarketConnector {
 
     uint256 constant TREASURY_TOPUP_PERIOD = 1 days;
     uint256 constant TREASURY_TOPUP_PERCENT = 10000; // 1% - 10000, 13% - 130000, etc 
-    address immutable public marketRegistry;
 
     uint256 public lastTreasuryTopUp;
-    uint256 public MIN_TREASURY_TOPUP_AMOUNT = 100;
+    uint256 public MIN_TREASURY_TOPUP_AMOUNT = 100; // Stable Coin Units (without decimals)
 
     constructor(address _baseAsset, address _markets)
         UBDExchange(_baseAsset, address(this))
+        MarketConnector(_markets)
     {
-        marketRegistry = _markets;
 
     }
 
@@ -58,23 +58,21 @@ contract SandBox1 is UBDExchange {
 
     
     function topupTreasury() public {
-        if (_getCollateralSystemLevelM10() >= 30) {
-            uint256 halfTopupAmount = 
-                IERC20(EXCHANGE_BASE_ASSET).balanceOf(address(this)) / (100 * PERCENT_DENOMINATOR) / 2;
-            require(
-                halfTopupAmount 
-                    >= MIN_TREASURY_TOPUP_AMOUNT * 10**IERC20Metadata(EXCHANGE_BASE_ASSET).decimals(), 
-                'Too small topup amount'
-            );
-            require(
-                lastTreasuryTopUp + TREASURY_TOPUP_PERIOD < block.timestamp, 
-                'Please wait untit TREASURY_TOPUP_PERIOD'
-            );
-            lastTreasuryTopUp = block.timestamp;
-            IERC20(EXCHANGE_BASE_ASSET).approve(marketRegistry, halfTopupAmount *2);
-            IMarketRegistry(marketRegistry).swapExactBASEInToETH(halfTopupAmount);
-            IMarketRegistry(marketRegistry).swapExactBASEInToWBTC(halfTopupAmount);
-        }
+        uint256 halfTopupAmount = 
+            IERC20(EXCHANGE_BASE_ASSET).balanceOf(address(this)) / (100 * PERCENT_DENOMINATOR) / 2;
+        require(
+            halfTopupAmount 
+                >= MIN_TREASURY_TOPUP_AMOUNT * 10**IERC20Metadata(EXCHANGE_BASE_ASSET).decimals(), 
+            'Too small topup amount'
+        );
+        require(
+            lastTreasuryTopUp + TREASURY_TOPUP_PERIOD < block.timestamp, 
+            'Please wait untit TREASURY_TOPUP_PERIOD'
+        );
+        lastTreasuryTopUp = block.timestamp;
+        IERC20(EXCHANGE_BASE_ASSET).approve(marketRegistry, halfTopupAmount *2);
+        IMarketRegistry(marketRegistry).swapExactBASEInToETH(halfTopupAmount);
+        IMarketRegistry(marketRegistry).swapExactBASEInToWBTC(halfTopupAmount);
     }
 
 
@@ -90,21 +88,18 @@ contract SandBox1 is UBDExchange {
      ///////////////////////////////////////////////////////////
     ///////    Admin Functions        /////////////////////////
     ///////////////////////////////////////////////////////////
-    // function setPaymentTokenStatus(address _token, bool _state, uint256 _feePercent) 
-    //     external 
-    //     onlyOwner 
-    // {
-    // }
+    function setMinTopUp(uint256 _amount) 
+        external 
+        onlyOwner 
+    {
+        MIN_TREASURY_TOPUP_AMOUNT = _amount;
+    }
 
     function _redeemSandbox1() internal returns(uint256 newBASEBalance) {
         if (_getCollateralSystemLevelM10() >= 10) {
             IMarketRegistry(marketRegistry).redeemSandbox1();
         }
         newBASEBalance = IERC20(EXCHANGE_BASE_ASSET).balanceOf(address(this));
-    }
-
-    function _getCollateralSystemLevelM10() internal view returns(uint256) {
-        return  IMarketRegistry(marketRegistry).getCollateralLevelM10();
     }
 
 }

@@ -75,6 +75,16 @@ def sandbox1(accounts, SandBox1, usdt, markets):
     yield snb1
 
 @pytest.fixture(scope="module")
+def sandbox2(accounts, SandBox2, markets):
+    snb2 = accounts[0].deploy(SandBox2, markets.address)
+    yield snb2
+
+@pytest.fixture(scope="module")
+def treasury(accounts, Treasury, markets):
+    snb1 = accounts[0].deploy(Treasury, , markets.address)
+    yield snb1
+
+@pytest.fixture(scope="module")
 def ubd(accounts, UBDToken, sandbox1):
     erc = accounts[0].deploy(UBDToken, sandbox1)
     yield erc
