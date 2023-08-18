@@ -65,8 +65,13 @@ def ubd_exch(accounts, UBDToken, exchange_single):
     yield erc
 
 @pytest.fixture(scope="module")
-def sandbox1(accounts, SandBox1, usdt):
-    snb1 = accounts[0].deploy(SandBox1, usdt.address)
+def markets(accounts, MarketRegistry):
+    m = accounts[0].deploy(MarketRegistry)
+    yield m
+
+@pytest.fixture(scope="module")
+def sandbox1(accounts, SandBox1, usdt, markets):
+    snb1 = accounts[0].deploy(SandBox1, usdt.address, markets.address)
     yield snb1
 
 @pytest.fixture(scope="module")

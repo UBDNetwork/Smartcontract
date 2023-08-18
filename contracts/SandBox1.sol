@@ -13,6 +13,7 @@ contract SandBox1 is UBDExchange {
     address immutable public marketRegistry;
 
     uint256 public lastTreasuryTopUp;
+    uint256 public MIN_TREASURY_TOPUP_AMOUNT = 100;
 
     constructor(address _baseAsset, address _markets)
         UBDExchange(_baseAsset, address(this))
@@ -60,6 +61,16 @@ contract SandBox1 is UBDExchange {
         if (_getCollateralSystemLevelM10() >= 30) {
             uint256 halfTopupAmount = 
                 IERC20(EXCHANGE_BASE_ASSET).balanceOf(address(this)) / (100 * PERCENT_DENOMINATOR) / 2;
+            require(
+                halfTopupAmount 
+                    >= MIN_TREASURY_TOPUP_AMOUNT * 10**IERC20Metadata(EXCHANGE_BASE_ASSET).decimals(), 
+                'Too small topup amount'
+            );
+            require(
+                lastTreasuryTopUp + TREASURY_TOPUP_PERIOD < block.timestamp, 
+                'Please wait untit TREASURY_TOPUP_PERIOD'
+            );
+            lastTreasuryTopUp = block.timestamp;
             IERC20(EXCHANGE_BASE_ASSET).approve(marketRegistry, halfTopupAmount *2);
             IMarketRegistry(marketRegistry).swapExactBASEInToETH(halfTopupAmount);
             IMarketRegistry(marketRegistry).swapExactBASEInToWBTC(halfTopupAmount);

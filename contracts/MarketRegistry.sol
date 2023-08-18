@@ -3,6 +3,7 @@
 pragma solidity 0.8.21;
 
 import "../interfaces/IMarketRegistry.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 
 contract MarketRegistry is IMarketRegistry {
@@ -31,4 +32,10 @@ contract MarketRegistry is IMarketRegistry {
     {
 
     }
+
+    function swapExactBASEInToETH(uint256 _amountIn) external{}
+    function swapExactBASEInToWBTC(uint256 _amountIn) external{}
+    function redeemSandbox1() external returns(uint256){}
+
+    function getCollateralLevelM10() external view returns(uint256){}
 }
