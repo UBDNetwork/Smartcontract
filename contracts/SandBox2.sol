@@ -22,7 +22,7 @@ contract Sandboxd2 is MarketConnector {
         SANDBOX_2_BASE_ASSET = _asset;
     }
 
-    function topupTreasury() public returns(bool) {
+    function topupTreasury() external returns(bool) {
         if (_getCollateralSystemLevelM10() >= 5 && _getCollateralSystemLevelM10() < 10) {
             uint256 topupAmount = 
                 IERC20(SANDBOX_2_BASE_ASSET).balanceOf(address(this)) / (100 * 2);
@@ -37,8 +37,8 @@ contract Sandboxd2 is MarketConnector {
             );
             lastTreasuryTopUp = block.timestamp;
             IERC20(SANDBOX_2_BASE_ASSET).approve(marketRegistry, topupAmount);
-            IMarketRegistry(marketRegistry).swapExactBASEInToETH(topupAmount);
-            IMarketRegistry(marketRegistry).swapExactBASEInToWBTC(topupAmount);
+            IMarket(marketRegistry).swapExactBASEInToETH(topupAmount);
+            IMarket(marketRegistry).swapExactBASEInToWBTC(topupAmount);
             return true;
         } else {
             return false;

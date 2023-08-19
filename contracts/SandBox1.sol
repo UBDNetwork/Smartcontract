@@ -43,7 +43,7 @@ contract SandBox1 is UBDExchange, MarketConnector {
         if (_inAsset != EXCHANGE_BASE_ASSET && _inAsset != address(ubdToken)) {
             address[] memory path = new address[](2);
 
-            uint256 amountBASE = IMarketRegistry(marketRegistry).swapExactInToBASEOut(
+            uint256 amountBASE = IMarket(marketRegistry).swapExactInToBASEOut(
                 _inAmount,
                 _amountOutMin,
                 _inAsset,
@@ -71,8 +71,8 @@ contract SandBox1 is UBDExchange, MarketConnector {
         );
         lastTreasuryTopUp = block.timestamp;
         IERC20(EXCHANGE_BASE_ASSET).approve(marketRegistry, halfTopupAmount *2);
-        IMarketRegistry(marketRegistry).swapExactBASEInToETH(halfTopupAmount);
-        IMarketRegistry(marketRegistry).swapExactBASEInToWBTC(halfTopupAmount);
+        IMarket(marketRegistry).swapExactBASEInToETH(halfTopupAmount);
+        IMarket(marketRegistry).swapExactBASEInToWBTC(halfTopupAmount);
     }
 
 
@@ -82,7 +82,7 @@ contract SandBox1 is UBDExchange, MarketConnector {
         address[] memory path
     ) external view returns (uint256 amountOut) 
     {
-        return IMarketRegistry(marketRegistry).getAmountsOut(amountIn, path);
+        return IMarket(marketRegistry).getAmountsOut(amountIn, path);
     }
 
      ///////////////////////////////////////////////////////////
@@ -97,7 +97,7 @@ contract SandBox1 is UBDExchange, MarketConnector {
 
     function _redeemSandbox1() internal returns(uint256 newBASEBalance) {
         if (_getCollateralSystemLevelM10() >= 10) {
-            IMarketRegistry(marketRegistry).redeemSandbox1();
+            IMarket(marketRegistry).redeemSandbox1();
         }
         newBASEBalance = IERC20(EXCHANGE_BASE_ASSET).balanceOf(address(this));
     }

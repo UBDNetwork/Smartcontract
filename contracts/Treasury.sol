@@ -8,7 +8,7 @@ import "../interfaces/IERC20Burn.sol";
 contract Treasury is MarketConnector {
 
 	uint256 constant SANDBOX2_TOPUP_SHARE_DENOMINATOR = 3;
-    uint256 constant SANDBOX2_TOPUP_MIN_AMOUNT = 100; // Stable Coin Units (without decimals)
+    uint256 constant SANDBOX2_TOPUP_MIN_AMOUNT = 1000; // Stable Coin Units (without decimals)
     address immutable public TEAM_WALLET;
 
     address[] public treasuryAssets;
@@ -40,10 +40,10 @@ contract Treasury is MarketConnector {
             for (uint8 i = 0; i < treasuryAssets.length; ++ i){
                 IERC20(treasuryAssets[i]).approve(
                     marketRegistry, 
-                    IERC20(treasuryAssets[i]).balanceOf(address(this))  / SANDBOX2_TOPUP_SHARE_DENOMINATOR * 2
+                    IERC20(treasuryAssets[i]).balanceOf(address(this))  / SANDBOX2_TOPUP_SHARE_DENOMINATOR
                 );
             }
-            IMarketRegistry(marketRegistry).swapTreasuryToDAI(treasuryAssets, sandbox2TopupAmount);
+            IMarket(marketRegistry).swapTreasuryToDAI(treasuryAssets, sandbox2TopupAmount);
         }
     }
 

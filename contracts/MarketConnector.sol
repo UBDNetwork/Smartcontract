@@ -2,7 +2,7 @@
 // MarketConnector 
 pragma solidity 0.8.21;
 
-import "../interfaces/IMarketRegistry.sol";
+import "../interfaces/IMarket.sol";
 
 contract MarketConnector {
 
@@ -14,7 +14,7 @@ contract MarketConnector {
     }
 
     function _getCollateralSystemLevelM10() internal view returns(uint256) {
-        return  IMarketRegistry(marketRegistry).getCollateralLevelM10();
+        return  IMarket(marketRegistry).getCollateralLevelM10();
     }
     
     function _getBalanceInStableUnits(address _holder, address[] memory _assets) 
@@ -22,6 +22,6 @@ contract MarketConnector {
         view 
         returns(uint256)
     {
-        return IMarketRegistry(marketRegistry).getBalanceInStableUnits(_holder, _assets);
+        return IMarket(marketRegistry).getBalanceInStableUnits(_holder, _assets);
     }
 }
