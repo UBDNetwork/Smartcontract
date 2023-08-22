@@ -12,7 +12,6 @@ interface IMarket  {
         uint deadline
     ) external returns (uint256 amountOut);
 
-    
 
     function swapExactBASEInToETH(uint256 _amountIn) external;
     function swapExactBASEInToWBTC(uint256 _amountIn) external;
