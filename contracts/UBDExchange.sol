@@ -21,10 +21,11 @@ contract UBDExchange is Ownable {
     uint256 constant public ADD_NEW_PAYMENT_TOKEN_TIMELOCK = 48 hours;
     uint256 constant public EMERGENCY_PAYMENT_PAUSE = 1 hours;
 
-    address immutable public EXCHANGE_BASE_ASSET;
+    
     address immutable public SANDBOX_1;
 
     address public FEE_BENEFICIARY;
+    address public EXCHANGE_BASE_ASSET;
 
     IERC20Burn public ubdToken;
     // mapping from token address to timestamp of start validity
@@ -67,6 +68,7 @@ contract UBDExchange is Ownable {
         returns (uint256 outAmount)
     {
         require(address(ubdToken) != address(0), 'UBD address not Define');
+        require(_isValidForPayment(_inAsset), 'Token not enabled');
 
         address receiver = _receiver;
         
@@ -84,6 +86,7 @@ contract UBDExchange is Ownable {
 
         // Decrease in amount with charged fee(_inAmountPure)
         uint256 inAmountPure = _inAmount - feeAmount;
+        address baseAsset = EXCHANGE_BASE_ASSET;
         
 
         if (_inAsset == address(ubdToken)) {
@@ -92,28 +95,28 @@ contract UBDExchange is Ownable {
             ubdToken.burn(receiver, inAmountPure);
 
             // Return BASE ASSET  _inAmountPure to sender
-            outAmount = inAmountPure * 10**IERC20Metadata(EXCHANGE_BASE_ASSET).decimals() / 10**ubdToken.decimals();
+            outAmount = inAmountPure * 10**IERC20Metadata(baseAsset).decimals() / 10**ubdToken.decimals();
             if (SANDBOX_1 == address(this)){
-                TransferHelper.safeTransfer(EXCHANGE_BASE_ASSET,  receiver, outAmount);    
+                TransferHelper.safeTransfer(baseAsset,  receiver, outAmount);    
             } else {
                 // This branch can be removed if sandbox always is exchange
-                TransferHelper.safeTransferFrom(EXCHANGE_BASE_ASSET, SANDBOX_1, receiver, outAmount);
+                TransferHelper.safeTransferFrom(baseAsset, SANDBOX_1, receiver, outAmount);
             }
             
             
 
-        } else if (_inAsset == EXCHANGE_BASE_ASSET) {
+        } else if (_inAsset == baseAsset) {
             // Swap from BASE to UBD
             // Take BAse Token _inAmountPure
-            TransferHelper.safeTransferFrom(EXCHANGE_BASE_ASSET, receiver, SANDBOX_1,  inAmountPure);
+            TransferHelper.safeTransferFrom(baseAsset, receiver, SANDBOX_1,  inAmountPure);
 
             // Mint  UBD _inAmountPure to sender
-            outAmount = inAmountPure * 10**ubdToken.decimals() / 10**IERC20Metadata(EXCHANGE_BASE_ASSET).decimals();
+            outAmount = inAmountPure * 10**ubdToken.decimals() / 10**IERC20Metadata(baseAsset).decimals();
             // Below not used because GAS +2K
             //outAmount = _calcOutForExactIn(EXCHANGE_BASE_ASSET, _inAmount);
             ubdToken.mint(receiver, outAmount); 
         }  else {
-            revert NoDirectSwap(IERC20Metadata(EXCHANGE_BASE_ASSET).symbol());
+            revert NoDirectSwap(IERC20Metadata(baseAsset).symbol());
         }
         // Sanity Checks 
         require(outAmount >= _amountOutMin, "Unexpected Out Amount");
@@ -150,7 +153,8 @@ contract UBDExchange is Ownable {
             paymentTokens[_token] = PaymentTokenInfo(
                 block.timestamp + ADD_NEW_PAYMENT_TOKEN_TIMELOCK,
                 _feePercent
-            );    
+            );
+            EXCHANGE_BASE_ASSET = _token;    
         } else {
             require (_token != address(ubdToken), "Cant disable UBD");
             paymentTokens[_token] = PaymentTokenInfo(0, 0);
@@ -290,13 +294,11 @@ contract UBDExchange is Ownable {
 
 
     function _isValidForPayment(address _paymentToken) internal view returns(bool){
-        if (paymentTokens[_paymentToken].validAfter == 0) {
+        uint256 validAfterTime = paymentTokens[_paymentToken].validAfter;
+        if ( validAfterTime == 0) {
             return false;
         }
-        require(
-            paymentTokens[_paymentToken].validAfter < block.timestamp,
-            "Token paused or timelocked"
-        );
+        require( validAfterTime < block.timestamp, "Token paused or timelocked");
         return true; 
     }
 }

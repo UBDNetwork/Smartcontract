@@ -13,7 +13,7 @@ contract SandBox1 is UBDExchange, MarketConnector {
     uint256 constant TREASURY_TOPUP_PERCENT = 10000; // 1% - 10000, 13% - 130000, etc 
 
     uint256 public lastTreasuryTopUp;
-    uint256 public MIN_TREASURY_TOPUP_AMOUNT = 100; // Stable Coin Units (without decimals)
+    uint256 public MIN_TREASURY_TOPUP_AMOUNT = 1000; // Stable Coin Units (without decimals)
 
     constructor(address _baseAsset, address _markets)
         UBDExchange(_baseAsset, address(this))
@@ -57,11 +57,13 @@ contract SandBox1 is UBDExchange, MarketConnector {
     }
 
     
-    function topupTreasury() public {
-        uint256 halfTopupAmount = 
-            IERC20(EXCHANGE_BASE_ASSET).balanceOf(address(this)) / (100 * PERCENT_DENOMINATOR) / 2;
+    function topupTreasury() external {
+        uint256 topupAmount = 
+            IERC20(EXCHANGE_BASE_ASSET).balanceOf(address(this)) 
+            * TREASURY_TOPUP_PERCENT 
+            / (100 * PERCENT_DENOMINATOR);
         require(
-            halfTopupAmount 
+            topupAmount 
                 >= MIN_TREASURY_TOPUP_AMOUNT * 10**IERC20Metadata(EXCHANGE_BASE_ASSET).decimals(), 
             'Too small topup amount'
         );
@@ -70,11 +72,16 @@ contract SandBox1 is UBDExchange, MarketConnector {
             'Please wait untit TREASURY_TOPUP_PERIOD'
         );
         lastTreasuryTopUp = block.timestamp;
-        IERC20(EXCHANGE_BASE_ASSET).approve(marketRegistry, halfTopupAmount *2);
-        IMarket(marketRegistry).swapExactBASEInToETH(halfTopupAmount);
-        IMarket(marketRegistry).swapExactBASEInToWBTC(halfTopupAmount);
+        IERC20(EXCHANGE_BASE_ASSET).approve(marketRegistry, topupAmount);
+        IMarket(marketRegistry).swapExactBASEInToTreasuryAssets(topupAmount);
     }
 
+    function topupTreasuryEmergency(address _token) external onlyOwner {
+        require(_token != EXCHANGE_BASE_ASSET && _token != address(ubdToken), 'Only for other assets');
+        uint256 topupAmount = IERC20(_token).balanceOf(address(this));
+        IERC20(_token).approve(marketRegistry, topupAmount);
+        IMarket(marketRegistry).swapExactBASEInToTreasuryAssets(topupAmount);
+    }
 
 
     function getAmountsOut(

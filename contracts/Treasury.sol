@@ -9,22 +9,17 @@ contract Treasury is MarketConnector {
 
 	uint256 constant SANDBOX2_TOPUP_SHARE_DENOMINATOR = 3;
     uint256 constant SANDBOX2_TOPUP_MIN_AMOUNT = 1000; // Stable Coin Units (without decimals)
-    address immutable public TEAM_WALLET;
+    //address immutable public TEAM_WALLET;
 
     address[] public treasuryAssets;
 
-    constructor(address _markets, address _teamWallet, address[] memory _assets)
+    constructor(address _markets, address  _wbtc)
         MarketConnector(_markets)
     {
         require(_markets != address(0), 'No zero markets');
-        require(_teamWallet != address(0), 'No zero team address');
-        TEAM_WALLET = _teamWallet;
-        for (uint8 i = 0; i < _assets.length; ++ i){
-            require(_assets[i] != address(0), 'No zero address assets');
-            treasuryAssets.push(_assets[i]);
-        }
-        
-
+        require(_wbtc != address(0), 'No zero address assets');
+        // TODO add Native Asset
+        treasuryAssets.push(_wbtc);
     }
 
     function topupSandBox2() external {

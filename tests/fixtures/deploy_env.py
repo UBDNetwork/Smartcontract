@@ -53,6 +53,11 @@ def dai(accounts, MockToken):
     erc = accounts[0].deploy(MockToken, 'DAI Mock Token', 'DAI', 18)
     yield erc
 
+@pytest.fixture(scope="module")
+def wbtc(accounts, MockToken):
+    erc = accounts[0].deploy(MockToken, 'Wrapped BTC Token', 'WBTC', 8)
+    yield erc
+
 #------------------------------
 @pytest.fixture(scope="module")
 def exchange_single(accounts, UBDExchange, usdt):
@@ -80,8 +85,8 @@ def sandbox2(accounts, SandBox2, markets):
     yield snb2
 
 @pytest.fixture(scope="module")
-def treasury(accounts, Treasury, markets):
-    snb1 = accounts[0].deploy(Treasury, , markets.address)
+def treasury(accounts, Treasury, markets, wbts):
+    snb1 = accounts[0].deploy(Treasury,  markets.address, wbts.address)
     yield snb1
 
 @pytest.fixture(scope="module")

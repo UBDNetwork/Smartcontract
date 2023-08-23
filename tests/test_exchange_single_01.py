@@ -14,6 +14,9 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt):
     logging.info('Calculated UBD amount: {}'.format(
         exchange_single.calcOutUBDForExactInBASE(PAY_AMOUNT))
     )
+    logging.info('paymentTokens(usdt): {}, chain.time {}'.format(
+        exchange_single.paymentTokens(usdt), chain.time() 
+    ))
     
     tx = exchange_single.swapExactInput(
         usdt, 
