@@ -150,11 +150,22 @@ contract UBDExchange is Ownable {
     {
         if (_state ) {
             require(_feePercent <= FEE_EXCHANGE_MAX_PERCENT, 'Fee is too much');
+
+            // Timelock for all new tokens but exclude UBD 
+            // and current EXCHANGE_BASE_ASSET
+            uint256 newValidAfter;
+            if (_token != address(ubdToken) && _token != EXCHANGE_BASE_ASSET) {
+                EXCHANGE_BASE_ASSET = _token;
+                newValidAfter = block.timestamp + ADD_NEW_PAYMENT_TOKEN_TIMELOCK;
+            } else {
+                newValidAfter = block.timestamp;
+            }
+
             paymentTokens[_token] = PaymentTokenInfo(
-                block.timestamp + ADD_NEW_PAYMENT_TOKEN_TIMELOCK,
+                newValidAfter,
                 _feePercent
             );
-            EXCHANGE_BASE_ASSET = _token;    
+                
         } else {
             require (_token != address(ubdToken), "Cant disable UBD");
             paymentTokens[_token] = PaymentTokenInfo(0, 0);

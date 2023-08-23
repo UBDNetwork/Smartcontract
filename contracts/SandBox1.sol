@@ -101,6 +101,7 @@ contract SandBox1 is UBDExchange, MarketConnector {
     {
         MIN_TREASURY_TOPUP_AMOUNT = _amount;
     }
+    ///////////////////////////////////////////////////////////
 
     function _redeemSandbox1() internal returns(uint256 newBASEBalance) {
         if (_getCollateralSystemLevelM10() >= 10) {
