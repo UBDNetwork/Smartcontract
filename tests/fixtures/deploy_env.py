@@ -71,22 +71,22 @@ def ubd_exch(accounts, UBDToken, exchange_single):
 
 @pytest.fixture(scope="module")
 def markets(accounts, MarketRegistry):
-    m = accounts[0].deploy(MarketRegistry)
+    m = accounts[0].deploy(MarketRegistry, 1)
     yield m
 
 @pytest.fixture(scope="module")
 def sandbox1(accounts, SandBox1, usdt, markets):
-    snb1 = accounts[0].deploy(SandBox1, usdt.address, markets.address)
+    snb1 = accounts[0].deploy(SandBox1, markets.address, usdt.address)
     yield snb1
 
 @pytest.fixture(scope="module")
 def sandbox2(accounts, SandBox2, markets):
-    snb2 = accounts[0].deploy(SandBox2, markets.address)
+    snb2 = accounts[0].deploy(SandBox2, markets.address, dai.address)
     yield snb2
 
 @pytest.fixture(scope="module")
 def treasury(accounts, Treasury, markets, wbts):
-    snb1 = accounts[0].deploy(Treasury,  markets.address, wbts.address)
+    snb1 = accounts[0].deploy(Treasury,  markets.address)
     yield snb1
 
 @pytest.fixture(scope="module")

@@ -14,6 +14,11 @@ def test_usdt_to_ubd(accounts, ubd, sandbox1, usdt):
     logging.info('Calculated UBD amount: {}'.format(
         sandbox1.calcOutUBDForExactInBASE(PAY_AMOUNT))
     )
+
+    chain.sleep(10)
+    logging.info('paymentTokens(usdt): {}, chain.time {}'.format(
+        sandbox1.paymentTokens(usdt), chain.time() 
+    ))
     
     tx = sandbox1.swapExactInput(
         usdt, 
@@ -61,10 +66,30 @@ def test_ubd_to_usdt(accounts, ubd, sandbox1, usdt):
         {'from':accounts[0]}
     )
     logging.info('tx.return_value: {}'.format(tx.return_value))
-    usdt_balance = usdt.balanceOf(accounts[9])
+    usdt_balance = usdt.balanceOf(sandbox1)
     logging.info('USDT.balanceOf(SANDBOX1): {}'.format(
         usdt_balance
     ))
+    assert ubd.balanceOf(accounts[0]) == 0
 
+def test_usdt_to_ubd_100k(accounts, ubd, sandbox1, usdt):
+    usdt.approve(sandbox1, PAY_AMOUNT * 100, {'from':accounts[0]})
+    logging.info('Calculated UBD amount: {}'.format(
+        sandbox1.calcOutUBDForExactInBASE(PAY_AMOUNT * 100))
+    )
+    
+    
+    tx = sandbox1.swapExactInput(
+        usdt, 
+        PAY_AMOUNT * 100,
+        0,
+        0,
+        ZERO_ADDRESS, 
+        {'from':accounts[0]}
+    )
+    #logging.info('tx: {}'.format(tx.infwo()))
+    assert tx.return_value == MINT_UBD_AMOUNT * 100
+    assert ubd.balanceOf(accounts[0]) == MINT_UBD_AMOUNT * 100
 
-
+def test_topup_treasury(accounts, ubd, sandbox1, usdt):
+    tx = sandbox1.topupTreasury({'from':accounts[1]})

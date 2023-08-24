@@ -8,20 +8,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract MarketRegistry is IMarket, Ownable{
 
-    struct UBDNetwork {
-        address sandbox1;
-        address treasury;
-        address sandbox2;
-        address marketAdapter;
-        address oracleAdapter;
-        address UBDToken;
-    }
-
+    uint8 immutable public MIN_NATIVE_PERCENT;
     UBDNetwork public ubdNetwork;
 
-    constructor()
+    constructor(uint8 _minNativePercent)
     {
-
+        MIN_NATIVE_PERCENT = _minNativePercent;
     }
 
     function swapExactInToBASEOut(
@@ -40,7 +32,8 @@ contract MarketRegistry is IMarket, Ownable{
     function swapExactBASEInToETH(uint256 _amountIn) external{}
     function swapExactBASEInToWBTC(uint256 _amountIn) external{}
     function redeemSandbox1() external returns(uint256){}
-    function swapTreasuryToDAI(address[] memory _assets, uint256 _stableAmountUnits) external {}
+    function swapTreasuryToDAI(uint256 _stableAmountUnits) external {}
+    function swapExactBASEInToTreasuryAssets(uint256 _amountIn) external {}
 
     
     ///////////////////////////////////////////////////////////
@@ -59,8 +52,59 @@ contract MarketRegistry is IMarket, Ownable{
     {
         ubdNetwork.oracleAdapter = _oracle;
     }
+    function setSandbox1(address _adr) 
+        external 
+        onlyOwner 
+    {
+        ubdNetwork.sandbox1 = _adr;
+    }
+    function setSandbox2(address _adr) 
+        external 
+        onlyOwner 
+    {
+        ubdNetwork.sandbox2 = _adr;
+    }
 
+    function setTreasury(address _adr) 
+        external 
+        onlyOwner 
+    {
+        ubdNetwork.treasury = _adr;
+    }
 
+    function addERC20AssetToTreasury(AsssetShare memory _assetShare) 
+        external 
+        onlyOwner 
+    {
+        for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
+            require(ubdNetwork.treasuryERC20Assets[i].asset != _assetShare.asset, 'Asset already exist');
+        }
+        ubdNetwork.treasuryERC20Assets.push(_assetShare);
+        
+        //check sum percent
+        uint8 sumPercent;
+        for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
+            sumPercent += ubdNetwork.treasuryERC20Assets[i].percent;
+        }
+        require(sumPercent + MIN_NATIVE_PERCENT < 100, 'Sum percent to much');
+    }
+
+    function removeERC20AssetFromTreasury(address _erc20) 
+        external 
+        onlyOwner 
+    {
+        uint256 assetsCount = ubdNetwork.treasuryERC20Assets.length;
+        for (uint256 i; i < assetsCount; ++ i){
+            if (ubdNetwork.treasuryERC20Assets[i].asset == _erc20){
+                // if not last then replace last  to this position
+                if (i != assetsCount - 1){
+                    ubdNetwork.treasuryERC20Assets[i] = ubdNetwork.treasuryERC20Assets[assetsCount-1];
+                }
+                ubdNetwork.treasuryERC20Assets.pop();
+
+            } 
+        }
+    }
     ///////////////////////////////////////////////////////////////
 
     function getAmountsOut(
@@ -72,4 +116,21 @@ contract MarketRegistry is IMarket, Ownable{
     }
     function getCollateralLevelM10() external view returns(uint256){}
     function getBalanceInStableUnits(address _holder, address[] memory _assets) external view returns(uint256){}
+    function treasuryERC20Assets() external view returns(address[] memory assets) {}
+    function getUBDNetworkTeamAddress() external view returns(address) {}
+    function getUBDNetworkInfo() external view returns(UBDNetwork memory) {}
+    
+    function isInitialized() public view returns(bool){
+        UBDNetwork memory _ubdnetwork = ubdNetwork;
+        if (_ubdnetwork.sandbox1 != address(0) &&
+            _ubdnetwork.sandbox2 != address(0) &&
+            _ubdnetwork.treasury != address(0) &&
+            _ubdnetwork.marketAdapter != address(0) &&
+            _ubdnetwork.oracleAdapter != address(0) &&
+            _ubdnetwork.treasuryERC20Assets.length > 0 
+        ) {
+            return true; 
+        }
+    }
+
 }

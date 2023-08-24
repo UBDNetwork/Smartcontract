@@ -15,7 +15,7 @@ contract SandBox1 is UBDExchange, MarketConnector {
     uint256 public lastTreasuryTopUp;
     uint256 public MIN_TREASURY_TOPUP_AMOUNT = 1000; // Stable Coin Units (without decimals)
 
-    constructor(address _baseAsset, address _markets)
+    constructor(address _markets, address _baseAsset)
         UBDExchange(_baseAsset, address(this))
         MarketConnector(_markets)
     {

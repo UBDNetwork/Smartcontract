@@ -14,12 +14,14 @@ contract Sandboxd2 is MarketConnector {
     uint256 public lastTreasuryTopUp;
     uint256 public MIN_TREASURY_TOPUP_AMOUNT = 100; // Stable Coin Units (without decimals)
 
-	constructor(address _markets, address _asset)
+    event TeamShareIncreased(uint256 Income, uint256 TeamLimit);
+
+	constructor(address _markets, address _baseAsset)
         MarketConnector(_markets)
     {
         require(_markets != address(0), 'No zero markets');
-        require(_asset != address(0),'No zero address assets');
-        SANDBOX_2_BASE_ASSET = _asset;
+        require(_baseAsset != address(0),'No zero address assets');
+        SANDBOX_2_BASE_ASSET = _baseAsset;
     }
 
     function topupTreasury() external returns(bool) {
@@ -37,11 +39,19 @@ contract Sandboxd2 is MarketConnector {
             );
             lastTreasuryTopUp = block.timestamp;
             IERC20(SANDBOX_2_BASE_ASSET).approve(marketRegistry, topupAmount);
-            IMarket(marketRegistry).swapExactBASEInToETH(topupAmount);
-            IMarket(marketRegistry).swapExactBASEInToWBTC(topupAmount);
+            IMarket(marketRegistry).swapExactBASEInToTreasuryAssets(topupAmount);
             return true;
         } else {
             return false;
         }
+    }
+
+    /// Approve 30% from DAI in to Team wallet
+    function increaseApproveForTEAM(uint256 _incAmount) external {
+        require(msg.sender == marketRegistry, 'Only for market registry contract');
+        address team = IMarket(marketRegistry).getUBDNetworkTeamAddress();
+        uint256 newApprove = IERC20(SANDBOX_2_BASE_ASSET).allowance(address(this),team) + _incAmount;
+        IERC20(SANDBOX_2_BASE_ASSET).approve(team, newApprove);
+        emit TeamShareIncreased(_incAmount, newApprove);
     }
 }

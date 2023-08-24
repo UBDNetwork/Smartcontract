@@ -9,47 +9,46 @@ contract Treasury is MarketConnector {
 
 	uint256 constant SANDBOX2_TOPUP_SHARE_DENOMINATOR = 3;
     uint256 constant SANDBOX2_TOPUP_MIN_AMOUNT = 1000; // Stable Coin Units (without decimals)
-    //address immutable public TEAM_WALLET;
 
-    address[] public treasuryAssets;
-
-    constructor(address _markets, address  _wbtc)
+    constructor(address _markets)
         MarketConnector(_markets)
     {
         require(_markets != address(0), 'No zero markets');
-        require(_wbtc != address(0), 'No zero address assets');
-        // TODO add Native Asset
-        treasuryAssets.push(_wbtc);
+    }
+    event ReceivedEther(address, uint);
+    
+    receive() external payable {
+        emit ReceivedEther(msg.sender, msg.value);
     }
 
     function topupSandBox2() external {
         if (_getCollateralSystemLevelM10() >= 30) {
             uint256 sandbox2TopupAmount = _getBalanceInStableUnits(
-                address(this),  treasuryAssets
+                address(this),  treasuryERC20Assets()
             ) / SANDBOX2_TOPUP_SHARE_DENOMINATOR;
             
             require(
                 sandbox2TopupAmount >= SANDBOX2_TOPUP_MIN_AMOUNT, 
                 'Too small topup amount'
             );
-            for (uint8 i = 0; i < treasuryAssets.length; ++ i){
-                IERC20(treasuryAssets[i]).approve(
-                    marketRegistry, 
-                    IERC20(treasuryAssets[i]).balanceOf(address(this))  / SANDBOX2_TOPUP_SHARE_DENOMINATOR
-                );
-            }
-            IMarket(marketRegistry).swapTreasuryToDAI(treasuryAssets, sandbox2TopupAmount);
+            IMarket(marketRegistry).swapTreasuryToDAI(sandbox2TopupAmount);
         }
     }
 
     /// Approve 1 percent
     function approveForRedeem() external {
-        for (uint8 i = 0; i < treasuryAssets.length; ++ i){
-                IERC20(treasuryAssets[i]).approve(
+        uint256 treasuryERC20AssetsCount = treasuryERC20Assets().length;
+        address[] memory _treasuryERC20Assets = new address[](treasuryERC20AssetsCount);
+        _treasuryERC20Assets = treasuryERC20Assets();
+        for (uint8 i = 0; i < _treasuryERC20Assets.length; ++ i){
+                IERC20(_treasuryERC20Assets[i]).approve(
                     marketRegistry, 
-                    IERC20(treasuryAssets[i]).balanceOf(address(this))  / 100
+                    IERC20(_treasuryERC20Assets[i]).balanceOf(address(this))  / 100
                 );
             }
+    }
 
+    function treasuryERC20Assets() public view returns(address[] memory assets) {
+         return IMarket(marketRegistry).treasuryERC20Assets();
     }
 }

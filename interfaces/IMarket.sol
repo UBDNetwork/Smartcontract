@@ -3,7 +3,24 @@ pragma solidity 0.8.21;
 
 //import "./IERC20Mint.sol";
 
+
 interface IMarket  {
+
+    struct AsssetShare {
+        address asset;
+        uint8 percent;
+    }
+
+    struct UBDNetwork {
+        address sandbox1;
+        address treasury;
+        address sandbox2;
+        address marketAdapter;
+        address oracleAdapter;
+        AsssetShare[] treasuryERC20Assets;
+
+    }
+
     function swapExactInToBASEOut(
         uint256 amountIn,
         uint256 amountOutMin,
@@ -17,7 +34,7 @@ interface IMarket  {
     function swapExactBASEInToWBTC(uint256 _amountIn) external;
     function swapExactBASEInToTreasuryAssets(uint256 _amountIn) external;
     function redeemSandbox1() external returns(uint256);
-    function swapTreasuryToDAI(address[] memory _assets, uint256 _stableAmountUnits) external;
+    function swapTreasuryToDAI(uint256 _stableAmountUnits) external;
 
     function getAmountsOut(
         uint amountIn, 
@@ -25,4 +42,7 @@ interface IMarket  {
     ) external view returns (uint256 amountOut);
     function getCollateralLevelM10() external view returns(uint256);
     function getBalanceInStableUnits(address _holder, address[] memory _assets) external view returns(uint256);
+    function treasuryERC20Assets() external view returns(address[] memory assets);
+    function getUBDNetworkTeamAddress() external view returns(address);
+    function getUBDNetworkInfo() external view returns(UBDNetwork memory);
 }
