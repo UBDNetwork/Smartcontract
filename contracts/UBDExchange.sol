@@ -31,6 +31,7 @@ contract UBDExchange is Ownable {
     // mapping from token address to timestamp of start validity
     mapping (address => PaymentTokenInfo) public paymentTokens;
     mapping (address => bool) public isGuardian;
+    mapping (address => bool) public isStakingContract;
 
    
     event PaymentTokenStatus(address indexed Token, bool Status, uint256 FeePercent);
@@ -123,6 +124,11 @@ contract UBDExchange is Ownable {
         if (_deadline > 0) {
             require(block.timestamp <= _deadline, "Unexpected Transaction time");
         } 
+    }
+
+    function mintReward(address _for, uint256 _amount) external {
+        require(isStakingContract[msg.sender], 'Only for staking reward');
+        ubdToken.mint(_for, _amount); 
     }
 
 

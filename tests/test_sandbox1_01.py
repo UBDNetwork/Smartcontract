@@ -91,5 +91,7 @@ def test_usdt_to_ubd_100k(accounts, ubd, sandbox1, usdt):
     assert tx.return_value == MINT_UBD_AMOUNT * 100
     assert ubd.balanceOf(accounts[0]) == MINT_UBD_AMOUNT * 100
 
+#def test_init_market(accounts, ubd, sandbox1, sandbox2, treasury, usdt):
+
 def test_topup_treasury(accounts, ubd, sandbox1, usdt):
     tx = sandbox1.topupTreasury({'from':accounts[1]})

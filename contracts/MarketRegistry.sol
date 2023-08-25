@@ -3,13 +3,18 @@
 pragma solidity 0.8.21;
 
 import "../interfaces/IMarket.sol";
+import "../interfaces/IMarketAdapter.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import '@uniswap/contracts/libraries/TransferHelper.sol';
 
 
 contract MarketRegistry is IMarket, Ownable{
 
     uint8 immutable public MIN_NATIVE_PERCENT;
     UBDNetwork public ubdNetwork;
+    mapping(address => address) public marketAdapterForAsset;
+    mapping(address => address) public oracleAdapterForAsset;
+
 
     constructor(uint8 _minNativePercent)
     {
@@ -33,7 +38,31 @@ contract MarketRegistry is IMarket, Ownable{
     function swapExactBASEInToWBTC(uint256 _amountIn) external{}
     function redeemSandbox1() external returns(uint256){}
     function swapTreasuryToDAI(uint256 _stableAmountUnits) external {}
-    function swapExactBASEInToTreasuryAssets(uint256 _amountIn) external {}
+
+    function swapExactBASEInToTreasuryAssets(uint256 _amountIn, address _baseAsset) external {
+        // Prepare all parameters: percenet of native and erc20 assets for swap
+        // Call adapter swap methods
+        // 1. First define shares of Native asset
+        address mrktAdapter = marketAdapterForAsset[address(0)];
+        uint256 amountInForNative = _amountIn * _getNativeTreasurePercent() / 100;
+        // 2. Transfer assets from sandbox1 to adapter
+        TransferHelper.safeTransferFrom(
+            _baseAsset, msg.sender, mrktAdapter, 
+            amountInForNative
+        );
+        // 3. Call Swap
+        address[] memory path = new address[](2);
+        path[0] = _baseAsset;
+        path[1] = address(0); // Native asset
+        IMarketAdapter(mrktAdapter).swapExactERC20InToNativeOut(
+            amountInForNative,
+            0, // TODO add value from oracle
+            path,
+            msg.sender,
+            0
+        );
+
+    }
 
     
     ///////////////////////////////////////////////////////////
@@ -131,6 +160,15 @@ contract MarketRegistry is IMarket, Ownable{
         ) {
             return true; 
         }
+    }
+
+    function _getNativeTreasurePercent() internal view returns(uint256) {
+        uint8 sumPercent;
+        for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
+            sumPercent += ubdNetwork.treasuryERC20Assets[i].percent;
+        }
+        return uint256(100 - sumPercent);
+
     }
 
 }

@@ -92,4 +92,5 @@ def treasury(accounts, Treasury, markets, wbts):
 @pytest.fixture(scope="module")
 def ubd(accounts, UBDToken, sandbox1):
     erc = accounts[0].deploy(UBDToken, sandbox1)
+    #sandbox1.setUBDToken(erc.address, {'from':accounts[0]})
     yield erc

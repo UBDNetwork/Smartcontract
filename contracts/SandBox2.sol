@@ -39,7 +39,7 @@ contract Sandboxd2 is MarketConnector {
             );
             lastTreasuryTopUp = block.timestamp;
             IERC20(SANDBOX_2_BASE_ASSET).approve(marketRegistry, topupAmount);
-            IMarket(marketRegistry).swapExactBASEInToTreasuryAssets(topupAmount);
+            IMarket(marketRegistry).swapExactBASEInToTreasuryAssets(topupAmount, SANDBOX_2_BASE_ASSET);
             return true;
         } else {
             return false;
