@@ -154,12 +154,15 @@ contract MockSwapRouter is IUniswapV2Router02 {
         address[] calldata path,
         address to,
         uint deadline
-    ) external virtual override ensure(deadline) returns (uint[] memory amounts) {
+    ) external virtual override 
+      //ensure(deadline) 
+      returns (uint[] memory amounts) {
         Rate memory rt = rates[path[0]][path[1]];
         TransferHelper.safeTransferFrom(path[0], msg.sender, address(this), amountIn);
         uint256 amountOut = amountIn * rt.nominatot / rt.denominator 
             * 10**IERC20Metadata(path[1]).decimals()
             / 10**IERC20Metadata(path[0]).decimals(); 
+        IERC20Mint(path[1]).mint(address(this), amountOut);    
         TransferHelper.safeTransfer(path[1], to, amountOut);
         
     }
