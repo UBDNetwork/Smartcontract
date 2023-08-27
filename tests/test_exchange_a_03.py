@@ -33,7 +33,6 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt, dai):
                 accounts[2], 
                 {'from':accounts[0]}
             )
-        logging.info(tx.return_value)
 
     #try to switch ubd token
     with reverts("Cant disable UBD"):
@@ -52,7 +51,6 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt, dai):
 
     #check swap with new fee
     fee_percent = exchange_single.paymentTokens(usdt.address)[1]/exchange_single.PERCENT_DENOMINATOR()
-    logging.info(fee_percent)
 
     tx = exchange_single.swapExactInput(
                 usdt, 
@@ -62,7 +60,6 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt, dai):
                 accounts[2], 
                 {'from':accounts[0]}
             )
-    logging.info(tx.return_value)
 
     assert tx.return_value == round(PAY_AMOUNT*100/(100+fee_percent))*10**ubd_exch.decimals()/10**usdt.decimals()
 
@@ -98,15 +95,16 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt, dai):
     with reverts("Fee is too much"):
         exchange_single.setPaymentTokenStatus(ubd_exch.address, True, exchange_single.FEE_EXCHANGE_DEFAULT()*4, {"from": accounts[0]})
 
-    #add new paymentToken and check pause
+    #add new paymentToken and check pause - change BASE_EXCHANGE_TOKEN
     exchange_single.setPaymentTokenStatus(dai.address, True, exchange_single.FEE_EXCHANGE_DEFAULT()+4000, {"from": accounts[0]})
 
     assert exchange_single.paymentTokens(dai)[1] == exchange_single.FEE_EXCHANGE_DEFAULT()+4000
     assert exchange_single.paymentTokens(dai)[0] <= chain.time() + exchange_single.ADD_NEW_PAYMENT_TOKEN_TIMELOCK()
     assert exchange_single.paymentTokens(dai)[0] > chain.time() + exchange_single.ADD_NEW_PAYMENT_TOKEN_TIMELOCK() - 10
+    assert exchange_single.EXCHANGE_BASE_ASSET() == dai.address
 
 
-    usdt.approve(exchange_single, PAY_AMOUNT, {'from':accounts[0]})
+    dai.approve(exchange_single, PAY_AMOUNT, {'from':accounts[0]})
 
     with reverts("Token paused or timelocked"):
         tx = exchange_single.swapExactInput(
@@ -117,3 +115,29 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt, dai):
             ZERO_ADDRESS, 
             {'from':accounts[0]}
         )
+
+    usdt.approve(exchange_single, PAY_AMOUNT, {'from':accounts[0]})
+    
+    with reverts(""):
+        tx = exchange_single.swapExactInput(
+                usdt, 
+                PAY_AMOUNT,
+                0,
+                0,
+                ZERO_ADDRESS, 
+                {'from':accounts[0]}
+            )
+
+    chain.sleep(exchange_single.ADD_NEW_PAYMENT_TOKEN_TIMELOCK() + 1)
+    chain.mine()
+
+    tx = exchange_single.swapExactInput(
+            dai, 
+            PAY_AMOUNT,
+            0,
+            0,
+            ZERO_ADDRESS, 
+            {'from':accounts[0]}
+        )
+
+
