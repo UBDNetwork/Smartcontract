@@ -106,6 +106,7 @@ def mockuniv2(accounts, MockSwapRouter, dai, usdt, wbtc, weth):
     uni = accounts[0].deploy(MockSwapRouter, weth, weth)
     uni.setRate(weth.address, usdt.address, (1800, 1))
     uni.setRate(wbtc.address, usdt.address, (28000, 1))
+    uni.setRate(usdt.address, wbtc.address, (28000, 1))
     # uni.setRate(weth.address, usdt.address, (1800, 1))
     # uni.setRate(weth.address, usdt.address, (1800, 1))
     # #sandbox1.setUBDToken(erc.address, {'from':accounts[0]})
