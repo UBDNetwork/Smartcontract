@@ -93,5 +93,6 @@ def test_usdt_to_ubd_100k(accounts, ubd, sandbox1, usdt):
 
 #def test_init_market(accounts, ubd, sandbox1, sandbox2, treasury, usdt):
 
-def test_topup_treasury(accounts, ubd, sandbox1, usdt):
+def test_topup_treasury(accounts, ubd, sandbox1, usdt, weth, wbtc, markets, treasury):
+
     tx = sandbox1.topupTreasury({'from':accounts[1]})
