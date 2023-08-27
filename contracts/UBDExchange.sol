@@ -296,16 +296,19 @@ contract UBDExchange is Ownable {
        
         address inToken;
         if (_outToken == address(ubdToken)){
-            inToken == EXCHANGE_BASE_ASSET;
+            inToken = EXCHANGE_BASE_ASSET;
         } else {
             inToken = address(ubdToken);
         }
 
          uint256 outAmountWithFee = 
             _outAmount + _outAmount * paymentTokens[inToken].feePercent  
-                         / (100 * PERCENT_DENOMINATOR);
+                / (100 * PERCENT_DENOMINATOR);
 
-        inAmount = outAmountWithFee * 10**IERC20Metadata(inToken).decimals() / 10**IERC20Metadata(_outToken).decimals();
+        inAmount = _outAmount 
+            / (10**IERC20Metadata(_outToken).decimals())
+            * (10**IERC20Metadata(inToken).decimals()); 
+            
 
     }
 

@@ -24,12 +24,20 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt, dai):
 
     assert outAmount_ubd == calcOutAmount_ubd
 
-    #check calcInBASEForExactOutUBD
 
-    #!!!!REVERT
+    chain.sleep(10)
     
+    logging.info('paymentTokens(usdt): {}, chain.time {}'.format(
+        exchange_single.paymentTokens(usdt), chain.time() 
+    ))
+    logging.info('paymentTokens(ubd): {}, chain.time {}'.format(
+        exchange_single.paymentTokens(ubd_exch), chain.time() 
+    ))
+    
+    #check calcInBASEForExactOutUBD
+    #!!!!REVERT
     calcInAmount_usdt = exchange_single.calcInBASEForExactOutUBD(outAmount_ubd)
-    assert USDT_AMOUNT == calcOutAmount_usdt
+    assert USDT_AMOUNT == calcInAmount_usdt
 
     #check calcOutBASEForExactInUBD
     fee_percent = exchange_single.paymentTokens(ubd_exch.address)[1]/exchange_single.PERCENT_DENOMINATOR()
