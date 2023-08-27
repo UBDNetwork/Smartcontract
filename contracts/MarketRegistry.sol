@@ -44,23 +44,39 @@ contract MarketRegistry is IMarket, Ownable{
         // Call adapter swap methods
         // 1. First define shares of Native asset
         address mrktAdapter = marketAdapterForAsset[address(0)];
-        uint256 amountInForNative = _amountIn * _getNativeTreasurePercent() / 100;
-        // 2. Transfer assets from sandbox1 to adapter
+        //uint256 amountInForNative = _amountIn * _getNativeTreasurePercent() / 100;
+        // 2. Transfer all in assets from sandbox1 to adapter
         TransferHelper.safeTransferFrom(
             _baseAsset, msg.sender, mrktAdapter, 
-            amountInForNative
+            _amountIn // all base asset - to adapter
         );
         // 3. Call Swap
         address[] memory path = new address[](2);
         path[0] = _baseAsset;
-        path[1] = address(0); // Native asset
+        path[1] = IMarketAdapter(mrktAdapter).WETH(); // Native asset
         IMarketAdapter(mrktAdapter).swapExactERC20InToNativeOut(
-            amountInForNative,
+            _amountIn * _getNativeTreasurePercent() / 100,
             0, // TODO add value from oracle
             path,
             msg.sender,
-            0
+            block.timestamp
         );
+
+        // 4. Call Swap for other Treasuru assets
+        uint256 inSwap;
+        for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
+            inSwap = _amountIn * uint256(ubdNetwork.treasuryERC20Assets[i].percent) / 100;
+            path[0] = _baseAsset;
+            path[1] = ubdNetwork.treasuryERC20Assets[i].asset; // TODO replace with internal var for gas safe
+            IMarketAdapter(mrktAdapter).swapExactERC20InToERC20Out(
+                inSwap,
+                0, // TODO add value from oracle
+                path,
+                msg.sender,
+                block.timestamp
+            );
+        }
+
 
     }
 

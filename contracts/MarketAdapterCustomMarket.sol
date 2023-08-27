@@ -6,26 +6,41 @@ pragma solidity 0.8.21;
 import '@uniswap/contracts/libraries/TransferHelper.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../interfaces/IMarketAdapter.sol";
+import '../interfaces/IUniswapV2Router02.sol';
 
 /// @dev Adapter for MockMarket based on Uniswap2
 /// @dev must be called from ???
 contract MarketAdapterCustomMarket is IMarketAdapter {
 
-	string public name;
+    string public name;
+    address immutable public ROUTERV2;
+    address immutable public WETH;
 
-	constructor(string memory _name)
-	{
-		name = _name;
+    constructor(string memory _name, address _routerV2)
+    {
+        WETH = IUniswapV2Router02(_routerV2).WETH();
+        require(WETH != address(0), 'Seems like bad router');
+        name = _name;
+        ROUTERV2 = _routerV2;
 
-	}
+    }
 
-	function swapExactERC20InToERC20Out(
+    function swapExactERC20InToERC20Out(
         uint256 amountIn,
         uint256 amountOutMin,
         address[] memory path,
         address recipient,
         uint deadline
-    ) external returns (uint256 amountOut){}
+    ) external returns (uint256 amountOut){
+        TransferHelper.safeApprove(path[0], ROUTERV2, amountIn);
+        IUniswapV2Router02(ROUTERV2).swapExactTokensForTokens(
+            amountIn, 
+            amountOutMin, 
+            path, 
+            recipient, 
+            deadline
+        );
+    }
 
     function swapExactERC20InToNativeOut(
         uint256 amountIn,
@@ -33,7 +48,17 @@ contract MarketAdapterCustomMarket is IMarketAdapter {
         address[] memory path,
         address recipient,
         uint deadline
-    ) external payable returns (uint256 amountOut){}
+    ) external returns (uint256 amountOut){
+        TransferHelper.safeApprove(path[0], ROUTERV2, amountIn);
+        IUniswapV2Router02(ROUTERV2).swapExactTokensForETH(
+            amountIn, 
+            amountOutMin, 
+            path, 
+            recipient, 
+            deadline
+        );
+
+    }
 
     function swapERC20InToExactNativeOut(
         uint256 amountInMax,
@@ -57,6 +82,6 @@ contract MarketAdapterCustomMarket is IMarketAdapter {
         address[] memory path
     ) external view returns (uint256 amountOut){}
 
-	
+    
 
 }

@@ -9,8 +9,14 @@ import '../../interfaces/IERC20Mint.sol';
 
 contract MockSwapRouter is IUniswapV2Router02 {
 
+    struct Rate {
+        uint256 nominatot;
+        uint256 denominator;
+    }
     address public immutable override factory;
     address public immutable override WETH;
+
+    mapping(address => mapping(address => Rate)) public rates;
 
     modifier ensure(uint deadline) {
         require(deadline >= block.timestamp, 'UniswapV2Router: EXPIRED');
@@ -24,6 +30,10 @@ contract MockSwapRouter is IUniswapV2Router02 {
 
     receive() external payable {
         assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
+    }
+
+    function setRate(address asset1, address asset2, Rate memory _rate) external {
+        rates[asset1][asset2] = _rate;
     }
 
     // **** ADD LIQUIDITY ****
@@ -145,6 +155,10 @@ contract MockSwapRouter is IUniswapV2Router02 {
         address to,
         uint deadline
     ) external virtual override ensure(deadline) returns (uint[] memory amounts) {
+        Rate memory rt = rates[path[0]][path[1]];
+        TransferHelper.safeTransferFrom(path[0], msg.sender, address(this), amountIn);
+        uint256 amountOut = amountIn * rt.nominatot / rt.denominator; 
+        TransferHelper.safeTransfer(path[1], to, amountOut);
         
     }
     function swapTokensForExactTokens(
@@ -182,6 +196,10 @@ contract MockSwapRouter is IUniswapV2Router02 {
         ensure(deadline)
         returns (uint[] memory amounts)
     {
+        Rate memory rt = rates[path[0]][path[1]];
+        TransferHelper.safeTransferFrom(path[0], msg.sender, address(this), amountIn);
+        uint256 amountOut = amountIn * rt.nominatot / rt.denominator; 
+        TransferHelper.safeTransfer(path[1], to, amountOut);
         
     }
     function swapETHForExactTokens(uint amountOut, address[] calldata path, address to, uint deadline)

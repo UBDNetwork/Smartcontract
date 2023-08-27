@@ -35,7 +35,7 @@ interface IMarketAdapter  {
         address[] memory path,
         address recipient,
         uint deadline
-    ) external payable returns (uint256 amountOut);
+    ) external  returns (uint256 amountOut);
 
     function swapERC20InToExactNativeOut(
         uint256 amountInMax,
@@ -58,4 +58,6 @@ interface IMarketAdapter  {
         uint amountIn, 
         address[] memory path
     ) external view returns (uint256 amountOut);
+
+    function WETH() external view returns(address);
 }
