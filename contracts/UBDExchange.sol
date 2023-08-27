@@ -305,7 +305,7 @@ contract UBDExchange is Ownable {
             _outAmount + _outAmount * paymentTokens[inToken].feePercent  
                 / (100 * PERCENT_DENOMINATOR);
 
-        inAmount = _outAmount 
+        inAmount = outAmountWithFee 
             / (10**IERC20Metadata(_outToken).decimals())
             * (10**IERC20Metadata(inToken).decimals()); 
             
