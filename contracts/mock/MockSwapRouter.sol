@@ -16,6 +16,9 @@ contract MockSwapRouter is IUniswapV2Router02 {
     address public immutable override factory;
     address public immutable override WETH;
 
+    /// @dev Mapping from addres1 from address2 to rate
+    /// @dev rate is price of address2 asset expressed in address1 asset units
+    /// @dev Example WBTC/USDT pair: address1 - usdt, address2 - wbtc, rate (28_000, 1)
     mapping(address => mapping(address => Rate)) public rates;
 
     modifier ensure(uint deadline) {
@@ -29,7 +32,7 @@ contract MockSwapRouter is IUniswapV2Router02 {
     }
 
     receive() external payable {
-        assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
+       // assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
     }
 
     function setRate(address asset1, address asset2, Rate memory _rate) external {
@@ -159,7 +162,8 @@ contract MockSwapRouter is IUniswapV2Router02 {
       returns (uint[] memory amounts) {
         Rate memory rt = rates[path[0]][path[1]];
         TransferHelper.safeTransferFrom(path[0], msg.sender, address(this), amountIn);
-        uint256 amountOut = amountIn * rt.nominatot / rt.denominator 
+        // so we need devide inAmount by rate
+        uint256 amountOut = amountIn * rt.denominator / rt.nominatot
             * 10**IERC20Metadata(path[1]).decimals()
             / 10**IERC20Metadata(path[0]).decimals(); 
         IERC20Mint(path[1]).mint(address(this), amountOut);    
@@ -203,7 +207,7 @@ contract MockSwapRouter is IUniswapV2Router02 {
     {
         Rate memory rt = rates[path[0]][path[1]];
         TransferHelper.safeTransferFrom(path[0], msg.sender, address(this), amountIn);
-        uint256 amountOut = amountIn * rt.nominatot / rt.denominator
+        uint256 amountOut = amountIn * rt.denominator / rt.nominatot
             * 10**IERC20Metadata(path[1]).decimals()
             / 10**IERC20Metadata(path[0]).decimals();  
         address payable toPayable = payable(to);
