@@ -6,21 +6,6 @@ pragma solidity 0.8.21;
 
 interface IMarketAdapter  {
 
-    // struct AsssetShare {
-    //     address asset;
-    //     uint8 percent;
-    // }
-
-    // struct UBDNetwork {
-    //     address sandbox1;
-    //     address treasury;
-    //     address sandbox2;
-    //     address marketAdapter;
-    //     address oracleAdapter;
-    //     AsssetShare[] treasuryERC20Assets;
-
-    // }
-
     function swapExactERC20InToERC20Out(
         uint256 amountIn,
         uint256 amountOutMin,
@@ -53,11 +38,14 @@ interface IMarketAdapter  {
         uint deadline
     ) external returns (uint256 amountIn);
 
+    function swapERC20InToExactERC20Out(
+        uint256 amountInMax,
+        uint256 amountOut,
+        address[] memory path,
+        address recipient,
+        uint deadline
+    ) external returns (uint256 amountIn);
 
-    function getAmountsOut(
-        uint amountIn, 
-        address[] memory path
-    ) external view returns (uint256 amountOut);
 
     function WETH() external view returns(address);
 }

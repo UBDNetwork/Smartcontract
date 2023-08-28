@@ -6,11 +6,12 @@ pragma solidity 0.8.21;
 import '@uniswap/contracts/libraries/TransferHelper.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../interfaces/IMarketAdapter.sol";
+import "../interfaces/IOracleAdapter.sol";
 import '../interfaces/IUniswapV2Router02.sol';
 
 /// @dev Adapter for MockMarket based on Uniswap2
 /// @dev must be called from ???
-contract MarketAdapterCustomMarket is IMarketAdapter {
+contract MarketAdapterCustomMarket is IMarketAdapter, IOracleAdapter {
 
     string public name;
     address immutable public ROUTERV2;
@@ -76,11 +77,33 @@ contract MarketAdapterCustomMarket is IMarketAdapter {
         uint deadline
     ) external returns (uint256 amountIn){}
 
+    function swapERC20InToExactERC20Out(
+        uint256 amountInMax,
+        uint256 amountOut,
+        address[] memory path,
+        address recipient,
+        uint deadline
+    ) external returns (uint256 amountIn){}
 
-    function getAmountsOut(
-        uint amountIn, 
-        address[] memory path
-    ) external view returns (uint256 amountOut){}
+    //////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    ///                       Oracle Adpater Featrures                     ///
+    //////////////////////////////////////////////////////////////////////////
+    function getAmountOut(uint amountIn,  address[] memory path ) 
+        external 
+        view 
+        returns (uint256 amountOut)
+    {
+        uint256[] memory amts = new uint256[](path.length); 
+         amts = IUniswapV2Router02(ROUTERV2).getAmountsOut(amountIn, path);
+         amountOut = amts[amts.length-1];
+    }
+
+    function getAmountIn(uint amountOut, address[] memory path)
+        external
+        view
+        returns (uint256 amountIn)
+    {}
 
     
 

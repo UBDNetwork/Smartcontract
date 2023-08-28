@@ -4,6 +4,9 @@ pragma solidity 0.8.21;
 
 import "../interfaces/IMarket.sol";
 import "../interfaces/IMarketAdapter.sol";
+import "../interfaces/IOracleAdapter.sol";
+import "../interfaces/ISandbox1.sol";
+import '../interfaces/IERC20Mint.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
 import '@uniswap/contracts/libraries/TransferHelper.sol';
 
@@ -36,7 +39,64 @@ contract MarketRegistry is IMarket, Ownable{
 
     function swapExactBASEInToETH(uint256 _amountIn) external{}
     function swapExactBASEInToWBTC(uint256 _amountIn) external{}
-    function redeemSandbox1() external returns(uint256){}
+    function redeemSandbox1() external returns(uint256){
+        //В случае наступления двух данных условий, средства могут переходить 
+        // из Сокровищницы в Песочницу 1 на закупку cтейбла на BTC и
+        // ETH ровно на 1% от общей суммы, находящейся на данный момент в Сокровищнице.
+
+        // Get Treasury balance in sandbox1 base_asset
+        // 1. Native asset
+        uint256 trsrNativeBalanceInBaseAsset;
+        uint256 trsrERC20BalanceInBaseAsset;
+        address mrktAdapter = marketAdapterForAsset[address(0)];
+        address orclAdapter = oracleAdapterForAsset[address(0)];
+        address[] memory path = new address[](2);
+        path[1] = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
+        path[0] = IMarketAdapter(mrktAdapter).WETH();
+        trsrNativeBalanceInBaseAsset = IOracleAdapter(orclAdapter).getAmountOut(
+            ubdNetwork.treasury.balance,
+            path
+        );
+
+        // 2. ERC20 Asset
+        for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
+            orclAdapter = oracleAdapterForAsset[ubdNetwork.treasuryERC20Assets[i].asset];
+            path[0] = ubdNetwork.treasuryERC20Assets[i].asset; 
+            trsrERC20BalanceInBaseAsset += IOracleAdapter(orclAdapter).getAmountOut(
+                IERC20(ubdNetwork.treasuryERC20Assets[i].asset).balanceOf(ubdNetwork.treasury),
+                path
+            );
+        }
+        uint256 redeemSandbox1Amount = (trsrNativeBalanceInBaseAsset + trsrERC20BalanceInBaseAsset) / 100; //1%
+
+        // Swap treasure asssets on market for Sandbox1 redeem
+        // Swap some native asset
+        path[1] = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
+        path[0] = IMarketAdapter(mrktAdapter).WETH();
+        IMarketAdapter(mrktAdapter).swapNativeInToExactERC20Out(
+            0, // TODO add value from oracle
+            redeemSandbox1Amount / (ubdNetwork.treasuryERC20Assets.length + 1), // erc20 count + 1 native  
+            path,
+            ubdNetwork.treasury,
+            block.timestamp
+        );
+        
+        // Swap erc20 treasure assets on market for Sandbox1 redeem
+        for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
+            path[0] =ubdNetwork.treasuryERC20Assets[i].asset;
+            IMarketAdapter(mrktAdapter).swapERC20InToExactERC20Out(
+                0, // TODO add value from oracle
+                redeemSandbox1Amount / (ubdNetwork.treasuryERC20Assets.length + 1), // erc20 count + 1 native  
+                path,
+                ubdNetwork.treasury,
+                block.timestamp
+            );
+
+        }
+
+
+
+    }
     function swapTreasuryToDAI(uint256 _stableAmountUnits) external {}
 
     function swapExactBASEInToTreasuryAssets(uint256 _amountIn, address _baseAsset) external {
@@ -65,6 +125,7 @@ contract MarketRegistry is IMarket, Ownable{
         // 4. Call Swap for other Treasuru assets
         uint256 inSwap;
         for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
+            mrktAdapter = marketAdapterForAsset[ubdNetwork.treasuryERC20Assets[i].asset];
             inSwap = _amountIn * uint256(ubdNetwork.treasuryERC20Assets[i].percent) / 100;
             path[0] = _baseAsset;
             path[1] = ubdNetwork.treasuryERC20Assets[i].asset; // TODO replace with internal var for gas safe
