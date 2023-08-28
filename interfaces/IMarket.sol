@@ -15,8 +15,8 @@ interface IMarket  {
         address sandbox1;
         address treasury;
         address sandbox2;
-        address marketAdapter;
-        address oracleAdapter;
+        //address marketAdapter;
+        //address oracleAdapter;
         AsssetShare[] treasuryERC20Assets;
 
     }

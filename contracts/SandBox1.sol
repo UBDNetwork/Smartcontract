@@ -66,7 +66,7 @@ contract SandBox1 is UBDExchange, MarketConnector {
             topupAmount 
                 >= MIN_TREASURY_TOPUP_AMOUNT * 10**IERC20Metadata(EXCHANGE_BASE_ASSET).decimals(), 
             'Too small topup amount'
-        );
+        ); //TODO CHECK this
         require(
             lastTreasuryTopUp + TREASURY_TOPUP_PERIOD < block.timestamp, 
             'Please wait untit TREASURY_TOPUP_PERIOD'

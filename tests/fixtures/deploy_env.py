@@ -85,12 +85,12 @@ def sandbox1(accounts, SandBox1, usdt, markets):
     yield snb1
 
 @pytest.fixture(scope="module")
-def sandbox2(accounts, SandBox2, markets):
-    snb2 = accounts[0].deploy(SandBox2, markets.address, dai.address)
+def sandbox2(accounts, Sandbox2, markets, dai):
+    snb2 = accounts[0].deploy(Sandbox2, markets.address, dai.address)
     yield snb2
 
 @pytest.fixture(scope="module")
-def treasury(accounts, Treasury, markets, wbts):
+def treasury(accounts, Treasury, markets):
     snb1 = accounts[0].deploy(Treasury,  markets.address)
     yield snb1
 
@@ -114,5 +114,10 @@ def mockuniv2(accounts, MockSwapRouter, dai, usdt, wbtc, weth):
     # #sandbox1.setUBDToken(erc.address, {'from':accounts[0]})
     yield uni
 
+@pytest.fixture(scope="module")
+def market_adapter(accounts, MarketAdapterCustomMarket, mockuniv2):
+    ma = accounts[0].deploy(MarketAdapterCustomMarket, 'Mock UniSwapV2 adapter', mockuniv2)
+    yield ma
+#MarketAdapterCustomMarket
 #28_000_000 00000000
 #1000 000000

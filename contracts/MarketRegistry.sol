@@ -58,7 +58,7 @@ contract MarketRegistry is IMarket, Ownable{
             _amountIn * _getNativeTreasurePercent() / 100,
             0, // TODO add value from oracle
             path,
-            msg.sender,
+            ubdNetwork.treasury,
             block.timestamp
         );
 
@@ -72,7 +72,7 @@ contract MarketRegistry is IMarket, Ownable{
                 inSwap,
                 0, // TODO add value from oracle
                 path,
-                msg.sender,
+                ubdNetwork.treasury,
                 block.timestamp
             );
         }
@@ -84,19 +84,24 @@ contract MarketRegistry is IMarket, Ownable{
     ///////////////////////////////////////////////////////////
     ///////    Admin Functions        /////////////////////////
     ///////////////////////////////////////////////////////////
-    function setMarket(address _market) 
+    function setMarket(address _asset, address _market) 
         external 
         onlyOwner 
     {
-        ubdNetwork.marketAdapter = _market;
+        require(_market != address(0), 'No zero address');
+        marketAdapterForAsset[_asset] = _market; 
+        //ubdNetwork.marketAdapter = _market;
     }
 
-    function setOracle(address _oracle) 
+    function setOracle(address _asset, address _oracle) 
         external 
         onlyOwner 
     {
-        ubdNetwork.oracleAdapter = _oracle;
+        //ubdNetwork.oracleAdapter = _oracle;
+        require(_oracle != address(0), 'No zero address');
+        oracleAdapterForAsset[_asset] = _oracle;
     }
+
     function setSandbox1(address _adr) 
         external 
         onlyOwner 
@@ -163,15 +168,17 @@ contract MarketRegistry is IMarket, Ownable{
     function getBalanceInStableUnits(address _holder, address[] memory _assets) external view returns(uint256){}
     function treasuryERC20Assets() external view returns(address[] memory assets) {}
     function getUBDNetworkTeamAddress() external view returns(address) {}
-    function getUBDNetworkInfo() external view returns(UBDNetwork memory) {}
+    function getUBDNetworkInfo() external view returns(UBDNetwork memory) {
+        return ubdNetwork;
+    }
     
     function isInitialized() public view returns(bool){
         UBDNetwork memory _ubdnetwork = ubdNetwork;
         if (_ubdnetwork.sandbox1 != address(0) &&
             _ubdnetwork.sandbox2 != address(0) &&
             _ubdnetwork.treasury != address(0) &&
-            _ubdnetwork.marketAdapter != address(0) &&
-            _ubdnetwork.oracleAdapter != address(0) &&
+            //_ubdnetwork.marketAdapter != address(0) &&
+            //_ubdnetwork.oracleAdapter != address(0) &&
             _ubdnetwork.treasuryERC20Assets.length > 0 
         ) {
             return true; 

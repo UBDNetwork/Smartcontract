@@ -1,6 +1,7 @@
 import pytest
 import logging
 from brownie import Wei, reverts, chain
+from help_init_registry import init_market_registry
 LOGGER = logging.getLogger(__name__)
 
 PAY_AMOUNT = 1005e6
@@ -93,6 +94,31 @@ def test_usdt_to_ubd_100k(accounts, ubd, sandbox1, usdt):
 
 #def test_init_market(accounts, ubd, sandbox1, sandbox2, treasury, usdt):
 
-def test_topup_treasury(accounts, ubd, sandbox1, usdt, weth, wbtc, markets, treasury):
+def test_topup_treasury(
+        accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
+        treasury, ubd, markets, wbtc, market_adapter):
+    logging.info(
+        '\nSandbox1.balance(usdt):{}'
+        '\ntreasury.balance(wbtc):{}'
+        '\ntreasury.balance(eth):{}'.format(
+            usdt.balanceOf(sandbox1),
+            wbtc.balanceOf(treasury),
+            treasury.balance()
+    ))
+    logging.info('UBDNetwork.state:{}'.format(markets.ubdNetwork()))
+    init_market_registry(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, treasury, ubd, markets, wbtc, market_adapter)
+    logging.info('UBDNetwork.state:{}'.format(markets.getUBDNetworkInfo()))
+    accounts[9].transfer(mockuniv2, accounts[9].balance()-1e18)
 
     tx = sandbox1.topupTreasury({'from':accounts[1]})
+    logging.info('Ether transfer:{}'.format(tx.events['ReceivedEther']))
+    [logging.info('\nfrom:{} to:{} value:{}'.format(x['from'],x['to'],x['value'])) for x in tx.events['Transfer']]
+    logging.info(
+        '\nSandbox1.balance(usdt):{}'
+        '\ntreasury.balance(wbtc):{}'
+        '\ntreasury.balance(eth):{}'.format(
+            usdt.balanceOf(sandbox1),
+            wbtc.balanceOf(treasury),
+            treasury.balance()
+    ))
+
