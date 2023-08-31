@@ -4,11 +4,13 @@ pragma solidity 0.8.21;
 
 import "./MarketConnector.sol";
 import "../interfaces/IERC20Burn.sol";
+import '@uniswap/contracts/libraries/TransferHelper.sol';
 
 contract Treasury is MarketConnector {
 
-	uint256 constant SANDBOX2_TOPUP_SHARE_DENOMINATOR = 3;
+	uint256 constant SANDBOX2_TOPUP_PERCENT = 33;
     uint256 constant SANDBOX2_TOPUP_MIN_AMOUNT = 1000; // Stable Coin Units (without decimals)
+    uint256 constant SANDBOX1_REDEEM_PERCENT = 1;
 
     constructor(address _markets)
         MarketConnector(_markets)
@@ -20,35 +22,72 @@ contract Treasury is MarketConnector {
     receive() external payable {
         emit ReceivedEther(msg.sender, msg.value);
     }
-
-    function topupSandBox2() external {
+    
+    function isReadyForTopupSandBox2() public view returns(bool) {
         if (_getCollateralSystemLevelM10() >= 30) {
             uint256 sandbox2TopupAmount = _getBalanceInStableUnits(
                 address(this),  treasuryERC20Assets()
-            ) / SANDBOX2_TOPUP_SHARE_DENOMINATOR;
+            ) * SANDBOX2_TOPUP_PERCENT / 100;
             
-            require(
-                sandbox2TopupAmount >= SANDBOX2_TOPUP_MIN_AMOUNT, 
-                'Too small topup amount'
-            );
-            IMarket(marketRegistry).swapTreasuryToDAI(sandbox2TopupAmount);
+            if (sandbox2TopupAmount >= SANDBOX2_TOPUP_MIN_AMOUNT) {
+                return true;    
+            }
         }
     }
 
     /// Approve 1 percent
-    function approveForRedeem() external {
+    function approveForRedeem(address _marketAdapter) external {
+        require(msg.sender == marketRegistry, 'Only for market regisrty');
         uint256 treasuryERC20AssetsCount = treasuryERC20Assets().length;
         address[] memory _treasuryERC20Assets = new address[](treasuryERC20AssetsCount);
         _treasuryERC20Assets = treasuryERC20Assets();
         for (uint8 i = 0; i < _treasuryERC20Assets.length; ++ i){
+                // TODO thibk about more correct approve amount
                 IERC20(_treasuryERC20Assets[i]).approve(
-                    marketRegistry, 
-                    IERC20(_treasuryERC20Assets[i]).balanceOf(address(this))  / 100
+                    _marketAdapter, 
+                    IERC20(_treasuryERC20Assets[i]).balanceOf(address(this)) * SANDBOX1_REDEEM_PERCENT / 100 // 1 %
                 );
             }
     }
 
+    function sendForRedeem(address _marketAdapter) external returns(uint256[] memory){
+        require(msg.sender == marketRegistry, 'Only for market regisrty');
+
+        return _sendPercentOfTreasuryTokens(_marketAdapter, SANDBOX1_REDEEM_PERCENT);
+    }
+
+    function sendForTopup(address _marketAdapter) external returns(uint256[] memory){
+        require(msg.sender == marketRegistry, 'Only for market regisrty');
+        
+        return _sendPercentOfTreasuryTokens(_marketAdapter, SANDBOX2_TOPUP_PERCENT);
+    }
+
+    function sendEtherForRedeem(uint256 _percent) external returns (uint256 amount){
+        require(msg.sender == marketRegistry, 'Only for market regisrty');
+        amount = address(this).balance * _percent / 100; 
+        // TODO  check gas with TransferHelper
+        address payable toPayable = payable(marketRegistry);
+        toPayable.transfer(amount);
+    }
+
     function treasuryERC20Assets() public view returns(address[] memory assets) {
          return IMarket(marketRegistry).treasuryERC20Assets();
+    }
+
+    function _sendPercentOfTreasuryTokens(address _to, uint256 _percent) internal returns(uint256[] memory){
+        uint256 treasuryERC20AssetsCount = treasuryERC20Assets().length;
+        address[] memory _treasuryERC20Assets = new address[](treasuryERC20AssetsCount);
+        uint256[] memory _treasuryERC20sended = new uint256[](treasuryERC20AssetsCount);
+        _treasuryERC20Assets = treasuryERC20Assets();
+        for (uint8 i = 0; i < _treasuryERC20Assets.length; ++ i){
+            _treasuryERC20sended[i] = IERC20(_treasuryERC20Assets[i]).balanceOf(address(this)) * _percent / 100; 
+            TransferHelper.safeTransfer(
+                _treasuryERC20Assets[i],
+                _to, 
+                _treasuryERC20sended[i]
+            );
+        }
+        return _treasuryERC20sended;
+
     }
 }

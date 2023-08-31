@@ -6,6 +6,8 @@ import "../interfaces/IMarket.sol";
 import "../interfaces/IMarketAdapter.sol";
 import "../interfaces/IOracleAdapter.sol";
 import "../interfaces/ISandbox1.sol";
+import "../interfaces/ISandbox2.sol";
+import "../interfaces/ITreasury.sol";
 import '../interfaces/IERC20Mint.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
 import '@uniswap/contracts/libraries/TransferHelper.sol';
@@ -13,7 +15,9 @@ import '@uniswap/contracts/libraries/TransferHelper.sol';
 
 contract MarketRegistry is IMarket, Ownable{
 
+    uint8 constant public TEAM_PERCENT = 3;
     uint8 immutable public MIN_NATIVE_PERCENT;
+    address public UBD_TEAM_ADDRESS;
     UBDNetwork public ubdNetwork;
     mapping(address => address) public marketAdapterForAsset;
     mapping(address => address) public oracleAdapterForAsset;
@@ -39,56 +43,79 @@ contract MarketRegistry is IMarket, Ownable{
 
     function swapExactBASEInToETH(uint256 _amountIn) external{}
     function swapExactBASEInToWBTC(uint256 _amountIn) external{}
-    function redeemSandbox1() external returns(uint256){
+    function redeemSandbox1() external payable returns(uint256){
+        // Двумя главными условиями перехода средств из Cокровищницы в Песочницу 1,
+        // является: обеспеченность 1:1 и выше, а также поступление запроса на 
+        // вывод денег (aka пользователь возвращает UBD и хочет свои стейблы 
+        // или выплаты от стейкинга), а денег в Песочнице 1 не хватает, чтобы 
+        // покрыть сумму вывода. Только при этих двух условиях, а не какого-нибудь 
+        // из них, происходит анлок средств в Сокровищнице для пополнения Песочницы 1!
         //В случае наступления двух данных условий, средства могут переходить 
         // из Сокровищницы в Песочницу 1 на закупку cтейбла на BTC и
         // ETH ровно на 1% от общей суммы, находящейся на данный момент в Сокровищнице.
 
+        require(msg.sender == ubdNetwork.sandbox1, 'For SandBox1 only');
         // Get Treasury balance in sandbox1 base_asset
         // 1. Native asset
-        uint256 trsrNativeBalanceInBaseAsset;
-        uint256 trsrERC20BalanceInBaseAsset;
+        // uint256 trsrNativeBalanceInBaseAsset;
+        // uint256 trsrERC20BalanceInBaseAsset;
         address mrktAdapter = marketAdapterForAsset[address(0)];
         address orclAdapter = oracleAdapterForAsset[address(0)];
         address[] memory path = new address[](2);
-        path[1] = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
-        path[0] = IMarketAdapter(mrktAdapter).WETH();
-        trsrNativeBalanceInBaseAsset = IOracleAdapter(orclAdapter).getAmountOut(
-            ubdNetwork.treasury.balance,
-            path
-        );
+        // path[1] = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
+        // path[0] = IMarketAdapter(mrktAdapter).WETH();
+        // trsrNativeBalanceInBaseAsset = IOracleAdapter(orclAdapter).getAmountOut(
+        //     ubdNetwork.treasury.balance,
+        //     path
+        // );
 
         // 2. ERC20 Asset
-        for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
-            orclAdapter = oracleAdapterForAsset[ubdNetwork.treasuryERC20Assets[i].asset];
-            path[0] = ubdNetwork.treasuryERC20Assets[i].asset; 
-            trsrERC20BalanceInBaseAsset += IOracleAdapter(orclAdapter).getAmountOut(
-                IERC20(ubdNetwork.treasuryERC20Assets[i].asset).balanceOf(ubdNetwork.treasury),
-                path
-            );
-        }
-        uint256 redeemSandbox1Amount = (trsrNativeBalanceInBaseAsset + trsrERC20BalanceInBaseAsset) / 100; //1%
+        // for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
+        //     orclAdapter = oracleAdapterForAsset[ubdNetwork.treasuryERC20Assets[i].asset];
+        //     path[0] = ubdNetwork.treasuryERC20Assets[i].asset; 
+        //     trsrERC20BalanceInBaseAsset += IOracleAdapter(orclAdapter).getAmountOut(
+        //         IERC20(ubdNetwork.treasuryERC20Assets[i].asset).balanceOf(ubdNetwork.treasury),
+        //         path
+        //     );
+        // }
+        // uint256 redeemSandbox1Amount = (trsrNativeBalanceInBaseAsset + trsrERC20BalanceInBaseAsset) / 100; //1%
 
         // Swap treasure asssets on market for Sandbox1 redeem
         // Swap some native asset
         path[1] = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
         path[0] = IMarketAdapter(mrktAdapter).WETH();
-        IMarketAdapter(mrktAdapter).swapNativeInToExactERC20Out(
+        // First need withdraw ether to this contracr from treasury
+        uint256 etherFromTreasuryAmount = ITreasury(ubdNetwork.treasury).sendEtherForRedeem(
+            ITreasury(ubdNetwork.treasury).SANDBOX1_REDEEM_PERCENT()
+        );
+        //TODO check with amount from just msg.value 
+        IMarketAdapter(mrktAdapter).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount} (
+            etherFromTreasuryAmount, 
             0, // TODO add value from oracle
-            redeemSandbox1Amount / (ubdNetwork.treasuryERC20Assets.length + 1), // erc20 count + 1 native  
             path,
-            ubdNetwork.treasury,
+            ubdNetwork.sandbox1,
             block.timestamp
         );
         
+        // TODO    Approve treasure assets
+        //ITreasury(ubdNetwork.treasury).approveForRedeem(mrktAdapter);
+        uint256[] memory sended = new uint256[](ubdNetwork.treasuryERC20Assets.length);
+        sended = ITreasury(ubdNetwork.treasury).sendForRedeem(mrktAdapter);
+
         // Swap erc20 treasure assets on market for Sandbox1 redeem
-        for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
-            path[0] =ubdNetwork.treasuryERC20Assets[i].asset;
-            IMarketAdapter(mrktAdapter).swapERC20InToExactERC20Out(
+        for (uint256 i; i < sended.length; ++ i){
+            // 2. Transfer all in assets from sandbox1 to adapter
+        // TransferHelper.safeTransferFrom(
+        //     _baseAsset, msg.sender, mrktAdapter, 
+        //     _amountIn // all base asset - to adapter
+        // );
+
+            path[0] = ubdNetwork.treasuryERC20Assets[i].asset;
+            IMarketAdapter(mrktAdapter).swapExactERC20InToERC20Out(
+                sended[i],
                 0, // TODO add value from oracle
-                redeemSandbox1Amount / (ubdNetwork.treasuryERC20Assets.length + 1), // erc20 count + 1 native  
                 path,
-                ubdNetwork.treasury,
+                ubdNetwork.sandbox1,
                 block.timestamp
             );
 
@@ -97,7 +124,65 @@ contract MarketRegistry is IMarket, Ownable{
 
 
     }
-    function swapTreasuryToDAI(uint256 _stableAmountUnits) external {}
+
+    // Если обеспечение UBD 3:1 и выше, то Сокровищница меняет  
+    // 1/3 своих средств на DAI и переводит их в Песочницу 2.
+    function topupSandBox2() external payable {
+        require( ITreasury(ubdNetwork.treasury).isReadyForTopupSandBox2(), 'Too less for Sandbox2 TopUp');
+        // Native asset
+        // 1. Ether transfer o this contract
+        uint256 etherFromTreasuryAmount = ITreasury(ubdNetwork.treasury).sendEtherForRedeem(
+            ITreasury(ubdNetwork.treasury).SANDBOX2_TOPUP_PERCENT()
+        );
+        
+        uint256 totalDAITopup;
+        address[] memory path = new address[](2);
+        path[1] = ISandbox2(ubdNetwork.sandbox2).SANDBOX_2_BASE_ASSET();
+        address mrktAdapter = marketAdapterForAsset[path[1]];
+        address orclAdapter = oracleAdapterForAsset[path[1]];
+        path[0] = IMarketAdapter(mrktAdapter).WETH();
+        //TODO check with amount from just msg.value 
+        totalDAITopup = IMarketAdapter(mrktAdapter).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount} (
+            etherFromTreasuryAmount, 
+            0, // TODO add value from oracle
+            path,
+            ubdNetwork.sandbox2,
+            block.timestamp
+        );
+
+        // Swap ERC20 Treasury assets on DAI 
+        uint256[] memory sended = new uint256[](ubdNetwork.treasuryERC20Assets.length);
+        sended = ITreasury(ubdNetwork.treasury).sendForTopup(mrktAdapter);
+        for (uint256 i; i < sended.length; ++ i){
+            path[0] = ubdNetwork.treasuryERC20Assets[i].asset;
+            totalDAITopup += IMarketAdapter(mrktAdapter).swapExactERC20InToERC20Out(
+                sended[i],
+                0, // TODO add value from oracle
+                path,
+                ubdNetwork.sandbox2,
+                block.timestamp
+            );
+
+        }
+        ISandbox2(ubdNetwork.sandbox2).increaseApproveForTEAM(totalDAITopup * TEAM_PERCENT / 100);
+    }
+
+    function swapTreasuryToDAI(uint256[] memory _stableAmounts) external {
+        // address[] memory path = new address[](2);
+        // path[1] = ISandbox2(ubdNetwork.sandbox2).SANDBOX_2_BASE_ASSET();
+        // // Swap erc20 treasure assets on market for Sandbox2 topup
+        // for (uint256 i; i < _stableAmounts.length; ++ i){
+        //     path[0] = ubdNetwork.treasuryERC20Assets[i].asset;
+        //     IMarketAdapter(mrktAdapter).swapExactERC20InToERC20Out(
+        //         _stableAmounts[i],
+        //         0, // TODO add value from oracle
+        //         path,
+        //         ubdNetwork.sandbox1,
+        //         block.timestamp
+        //     );
+        // }
+
+    }
 
     function swapExactBASEInToTreasuryAssets(uint256 _amountIn, address _baseAsset) external {
         // Prepare all parameters: percenet of native and erc20 assets for swap
@@ -216,6 +301,13 @@ contract MarketRegistry is IMarket, Ownable{
             } 
         }
     }
+
+     function setTeamAddress(address _adr) 
+        external 
+        onlyOwner 
+    {
+        UBD_TEAM_ADDRESS = _adr;
+    }
     ///////////////////////////////////////////////////////////////
 
     function getAmountsOut(
@@ -228,7 +320,9 @@ contract MarketRegistry is IMarket, Ownable{
     function getCollateralLevelM10() external view returns(uint256){}
     function getBalanceInStableUnits(address _holder, address[] memory _assets) external view returns(uint256){}
     function treasuryERC20Assets() external view returns(address[] memory assets) {}
-    function getUBDNetworkTeamAddress() external view returns(address) {}
+    function getUBDNetworkTeamAddress() external view returns(address) {
+        return UBD_TEAM_ADDRESS;
+    }
     function getUBDNetworkInfo() external view returns(UBDNetwork memory) {
         return ubdNetwork;
     }

@@ -30,7 +30,7 @@ contract Sandbox2 is MarketConnector {
                 IERC20(SANDBOX_2_BASE_ASSET).balanceOf(address(this)) / (100 * 2);
             require(
                 topupAmount 
-                    >= MIN_TREASURY_TOPUP_AMOUNT * 10**IERC20Metadata(SANDBOX_2_BASE_ASSET).decimals(), 
+                    >= MIN_TREASURY_TOPUP_AMOUNT * 10**IERC20Metadata(SANDBOX_2_BASE_ASSET).decimals(),// ??? 
                 'Too small topup amount'
             );
             require(

@@ -33,8 +33,8 @@ interface IMarket  {
     function swapExactBASEInToETH(uint256 _amountIn) external;
     function swapExactBASEInToWBTC(uint256 _amountIn) external;
     function swapExactBASEInToTreasuryAssets(uint256 _amountIn, address _baseAsset) external;
-    function redeemSandbox1() external returns(uint256);
-    function swapTreasuryToDAI(uint256 _stableAmountUnits) external;
+    function redeemSandbox1() external payable returns(uint256);
+    function swapTreasuryToDAI(uint256[] memory _stableAmounts) external;
 
     function getAmountsOut(
         uint amountIn, 

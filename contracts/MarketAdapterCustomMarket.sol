@@ -26,6 +26,22 @@ contract MarketAdapterCustomMarket is IMarketAdapter, IOracleAdapter {
 
     }
 
+    function swapExactNativeInToERC20Out(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] memory path,
+        address recipient,
+        uint deadline
+    ) external payable returns (uint256 amountOut){
+        IUniswapV2Router02(ROUTERV2).swapExactETHForTokens{value: amountIn}(
+            amountOutMin,
+            path,
+            recipient,
+            deadline   
+        );
+    }
+
+
     function swapExactERC20InToERC20Out(
         uint256 amountIn,
         uint256 amountOutMin,
@@ -75,7 +91,7 @@ contract MarketAdapterCustomMarket is IMarketAdapter, IOracleAdapter {
         address[] memory path,
         address recipient,
         uint deadline
-    ) external returns (uint256 amountIn){}
+    ) external payable returns (uint256 amountIn){}
 
     function swapERC20InToExactERC20Out(
         uint256 amountInMax,
