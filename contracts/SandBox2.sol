@@ -39,7 +39,7 @@ contract Sandbox2 is MarketConnector {
             );
             lastTreasuryTopUp = block.timestamp;
             IERC20(SANDBOX_2_BASE_ASSET).approve(marketRegistry, topupAmount);
-            IMarket(marketRegistry).swapExactBASEInToTreasuryAssets(topupAmount, SANDBOX_2_BASE_ASSET);
+            IMarketRegistry(marketRegistry).swapExactBASEInToTreasuryAssets(topupAmount, SANDBOX_2_BASE_ASSET);
             return true;
         } else {
             return false;
@@ -49,7 +49,7 @@ contract Sandbox2 is MarketConnector {
     /// Approve 30% from DAI in to Team wallet
     function increaseApproveForTEAM(uint256 _incAmount) external {
         require(msg.sender == marketRegistry, 'Only for market registry contract');
-        address team = IMarket(marketRegistry).getUBDNetworkTeamAddress();
+        address team = IMarketRegistry(marketRegistry).getUBDNetworkTeamAddress();
         uint256 newApprove = IERC20(SANDBOX_2_BASE_ASSET).allowance(address(this),team) + _incAmount;
         IERC20(SANDBOX_2_BASE_ASSET).approve(team, newApprove);
         emit TeamShareIncreased(_incAmount, newApprove);

@@ -4,7 +4,7 @@ pragma solidity 0.8.21;
 //import "./IERC20Mint.sol";
 
 
-interface IMarket  {
+interface IMarketRegistry  {
 
     struct AsssetShare {
         address asset;

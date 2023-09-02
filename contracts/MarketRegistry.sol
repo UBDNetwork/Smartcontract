@@ -2,7 +2,7 @@
 // SandBox1 
 pragma solidity 0.8.21;
 
-import "../interfaces/IMarket.sol";
+import "../interfaces/IMarketRegistry.sol";
 import "../interfaces/IMarketAdapter.sol";
 import "../interfaces/IOracleAdapter.sol";
 import "../interfaces/ISandbox1.sol";
@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import '@uniswap/contracts/libraries/TransferHelper.sol';
 
 
-contract MarketRegistry is IMarket, Ownable{
+contract MarketRegistry is IMarketRegistry, Ownable{
 
     uint8 constant public TEAM_PERCENT = 3;
     uint8 immutable public MIN_NATIVE_PERCENT;
@@ -315,8 +315,8 @@ contract MarketRegistry is IMarket, Ownable{
         address[] memory path
     ) external view returns (uint256 amountOut)
     {
-        address mrktAdapter = marketAdapterForAsset[path[path.length - 1]];
-        return IMarketAdapter(mrktAdapter).getAmountOut(amountIn, path);
+        address orclAdapter = oracleAdapterForAsset[path[path.length - 1]];
+        return IOracleAdapter(orclAdapter).getAmountOut(amountIn, path);
 
     }
 

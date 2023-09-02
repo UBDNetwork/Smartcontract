@@ -43,7 +43,7 @@ contract SandBox1 is UBDExchange, MarketConnector {
         if (_inAsset != EXCHANGE_BASE_ASSET && _inAsset != address(ubdToken)) {
             address[] memory path = new address[](2);
 
-            uint256 amountBASE = IMarket(marketRegistry).swapExactInToBASEOut(
+            uint256 amountBASE = IMarketRegistry(marketRegistry).swapExactInToBASEOut(
                 _inAmount,
                 _amountOutMin,
                 _inAsset,
@@ -73,23 +73,23 @@ contract SandBox1 is UBDExchange, MarketConnector {
         );
         lastTreasuryTopUp = block.timestamp;
         IERC20(EXCHANGE_BASE_ASSET).approve(marketRegistry, topupAmount);
-        IMarket(marketRegistry).swapExactBASEInToTreasuryAssets(topupAmount, EXCHANGE_BASE_ASSET);
+        IMarketRegistry(marketRegistry).swapExactBASEInToTreasuryAssets(topupAmount, EXCHANGE_BASE_ASSET);
     }
 
     function topupTreasuryEmergency(address _token) external onlyOwner {
         require(_token != EXCHANGE_BASE_ASSET && _token != address(ubdToken), 'Only for other assets');
         uint256 topupAmount = IERC20(_token).balanceOf(address(this));
         IERC20(_token).approve(marketRegistry, topupAmount);
-        IMarket(marketRegistry).swapExactBASEInToTreasuryAssets(topupAmount, EXCHANGE_BASE_ASSET);
+        IMarketRegistry(marketRegistry).swapExactBASEInToTreasuryAssets(topupAmount, EXCHANGE_BASE_ASSET);
     }
 
 
-    function getAmountsOut(
+    function getAmountOut(
         uint amountIn, 
         address[] memory path
     ) external view returns (uint256 amountOut) 
     {
-        return IMarket(marketRegistry).getAmountsOut(amountIn, path);
+        return IMarketRegistry(marketRegistry).getAmountOut(amountIn, path);
     }
 
      ///////////////////////////////////////////////////////////
@@ -105,7 +105,7 @@ contract SandBox1 is UBDExchange, MarketConnector {
 
     function _redeemSandbox1() internal returns(uint256 newBASEBalance) {
         if (_getCollateralSystemLevelM10() >= 10) {
-            IMarket(marketRegistry).redeemSandbox1();
+            IMarketRegistry(marketRegistry).redeemSandbox1();
         }
         newBASEBalance = IERC20(EXCHANGE_BASE_ASSET).balanceOf(address(this));
     }
