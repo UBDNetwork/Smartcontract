@@ -36,7 +36,7 @@ interface IMarket  {
     function redeemSandbox1() external payable returns(uint256);
     function swapTreasuryToDAI(uint256[] memory _stableAmounts) external;
 
-    function getAmountsOut(
+    function getAmountOut(
         uint amountIn, 
         address[] memory path
     ) external view returns (uint256 amountOut);

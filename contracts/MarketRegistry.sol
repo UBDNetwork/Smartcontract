@@ -310,16 +310,20 @@ contract MarketRegistry is IMarket, Ownable{
     }
     ///////////////////////////////////////////////////////////////
 
-    function getAmountsOut(
+    function getAmountOut(
         uint amountIn, 
         address[] memory path
     ) external view returns (uint256 amountOut)
     {
+        address mrktAdapter = marketAdapterForAsset[path[path.length - 1]];
+        return IMarketAdapter(mrktAdapter).getAmountOut(amountIn, path);
 
     }
+
     function getCollateralLevelM10() external view returns(uint256){}
     function getBalanceInStableUnits(address _holder, address[] memory _assets) external view returns(uint256){}
     function treasuryERC20Assets() external view returns(address[] memory assets) {}
+    
     function getUBDNetworkTeamAddress() external view returns(address) {
         return UBD_TEAM_ADDRESS;
     }

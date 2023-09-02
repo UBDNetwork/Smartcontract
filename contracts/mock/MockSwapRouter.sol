@@ -173,7 +173,6 @@ contract MockSwapRouter is IUniswapV2Router02 {
         amounts = new uint[](path.length);
         amounts[0] = amountIn;
         amounts[1] =  amountOut;
-        //TODO  populate amounts 
         
     }
     function swapTokensForExactTokens(
@@ -314,6 +313,7 @@ contract MockSwapRouter is IUniswapV2Router02 {
         
     }
 
+    // tested
     function getAmountsOut(uint amountIn, address[] memory path)
         public
         view

@@ -96,7 +96,7 @@ def test_usdt_to_ubd_100k(accounts, ubd, sandbox1, usdt):
 
 def test_topup_treasury(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
-        treasury, ubd, markets, wbtc, market_adapter):
+        treasury, ubd, markets, wbtc, market_adapter, weth):
     logging.info(
         '\nSandbox1.balance(usdt):{}'
         '\ntreasury.balance(wbtc):{}'
@@ -106,7 +106,7 @@ def test_topup_treasury(
             treasury.balance()
     ))
     logging.info('UBDNetwork.state:{}'.format(markets.ubdNetwork()))
-    init_market_registry(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, treasury, ubd, markets, wbtc, market_adapter)
+    init_market_registry(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, treasury, ubd, markets, wbtc, market_adapter, weth)
     logging.info('UBDNetwork.state:{}'.format(markets.getUBDNetworkInfo()))
     accounts[9].transfer(mockuniv2, accounts[9].balance()-1e18)
 
