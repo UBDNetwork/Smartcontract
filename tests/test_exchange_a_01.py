@@ -56,7 +56,7 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt, dai):
 
 def test_ubd_to_usdt(accounts, ubd_exch, exchange_single, usdt):
     #prepare data
-    fee_percent = exchange_single.paymentTokens(usdt.address)[1]/exchange_single.PERCENT_DENOMINATOR()
+    fee_percent = exchange_single.paymentTokens(ubd_exch.address)[1]/exchange_single.PERCENT_DENOMINATOR()
     PAY_AMOUNT = ubd_exch.balanceOf(accounts[2])
     usdt_out_amount = round(PAY_AMOUNT*100/(100+fee_percent))*10**usdt.decimals()/10**ubd_exch.decimals()
 
@@ -84,7 +84,6 @@ def test_ubd_to_usdt(accounts, ubd_exch, exchange_single, usdt):
     assert ubd_exch.balanceOf(accounts[1]) - PAY_AMOUNT*fee_percent/(100+fee_percent) < 1000
     assert ubd_exch.balanceOf(accounts[2]) == 0
     #check burning
-    assert ubd_exch.totalSupply() == ubd_exch.balanceOf(accounts[1])
     assert ubd_exch.totalSupply() == ubd_exch.balanceOf(accounts[1])
 
     

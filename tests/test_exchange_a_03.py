@@ -16,9 +16,14 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt, dai):
 
     with reverts("Ownable: caller is not the owner"):
         exchange_single.setPaymentTokenStatus(usdt.address, False, 0, {"from": accounts[1]})
-    exchange_single.setPaymentTokenStatus(usdt.address, False, 0, {"from": accounts[0]})
+    tx = exchange_single.setPaymentTokenStatus(usdt.address, False, 0, {"from": accounts[0]})
     assert exchange_single.paymentTokens(usdt.address)[0] == 0
     assert exchange_single.paymentTokens(usdt.address)[1] == 0
+    assert tx.events['PaymentTokenStatus']['Token'] == usdt.address
+    assert tx.events['PaymentTokenStatus']['Status'] == False
+    assert tx.events['PaymentTokenStatus']['FeePercent'] == 0
+
+
 
     usdt.transfer(accounts[2], PAY_AMOUNT, {'from':accounts[0]})
     usdt.approve(exchange_single.address, PAY_AMOUNT, {'from':accounts[2]})
@@ -139,5 +144,8 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt, dai):
             ZERO_ADDRESS, 
             {'from':accounts[0]}
         )
+
+    assert tx.return_value > 0
+
 
 
