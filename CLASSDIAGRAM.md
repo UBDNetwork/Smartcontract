@@ -1,5 +1,11 @@
 ```mermaid
+
 classDiagram
+
+note for MarketRegistry "Incapsulate logic UBD main components interaction"
+note for MarketAdapterCustomMarket1 "Incapsulate logic logic of exact DEX (UniswapV2)"
+note for MarketAdapterCustomMarket2 "Incapsulate logic logic of exact DEX (UniswapV3)"
+note for MarketConnector "Connect all markets functionality to main UBDNetwork components: Sandbox1, Treasury abd Sanbox2"
 
 MarketAdapterCustomMarket1 ..|> IMarketAdapter: implement
 MarketAdapterCustomMarket1 ..|> IOracleAdapter: implement
@@ -21,8 +27,14 @@ MarketRegistry --> IOracleAdapter: call
 MarketRegistry --> ISandbox1: call
 MarketRegistry --> ITreasury: call
 MarketRegistry --> ISandbox2: call
+
+MarketConnector <|-- Sandbox1: Inherit
+MarketConnector <|-- Treasury: Inherit
+MarketConnector <|-- Sandbox2: Inherit
+MarketConnector -- IMarketRegistry
 direction LR
 namespace UBDNetwork {
+class MarketConnector
 class ISandbox1 {
    «interface» I
    I: EXCHANGE_BASE_ASSET
@@ -56,6 +68,7 @@ class IMarketRegistry {
     I: topupSandBox2()
     I: swapExactBASEInToTreasuryAssets() 
 }
+
 
 class MarketRegistry
 
@@ -101,4 +114,5 @@ namespace ExternalDEX {
     }
     class OtherDex
 }
+
 ```
