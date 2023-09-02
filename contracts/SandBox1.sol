@@ -84,13 +84,13 @@ contract SandBox1 is UBDExchange, MarketConnector {
     }
 
 
-    function getAmountOut(
-        uint amountIn, 
-        address[] memory path
-    ) external view returns (uint256 amountOut) 
-    {
-        return IMarketRegistry(marketRegistry).getAmountOut(amountIn, path);
-    }
+    // function getAmountOut(
+    //     uint amountIn, 
+    //     address[] memory path
+    // ) external view returns (uint256 amountOut) 
+    // {
+    //     return IMarketRegistry(marketRegistry).getAmountOut(amountIn, path);
+    // }
 
      ///////////////////////////////////////////////////////////
     ///////    Admin Functions        /////////////////////////
