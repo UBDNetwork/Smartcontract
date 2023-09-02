@@ -4,7 +4,7 @@ pragma solidity 0.8.21;
 //import "./IERC20Mint.sol";
 
 interface IOracle  {
-    function getAmountsOut(
+    function getAmountOut(
         uint amountIn, 
         address[] memory path
     ) external view returns (uint256 amountOut);

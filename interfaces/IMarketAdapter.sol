@@ -57,8 +57,8 @@ interface IMarketAdapter  {
 
     function WETH() external view returns(address);
 
-    function getAmountOut(uint amountIn,  address[] memory path ) 
-        external 
-        view 
-        returns (uint256 amountOut);
+    // function getAmountOut(uint amountIn,  address[] memory path ) 
+    //     external 
+    //     view 
+    //     returns (uint256 amountOut);
 }
