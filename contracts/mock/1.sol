@@ -151,8 +151,6 @@ contract MockSwapRouter is IUniswapV2Router02 {
     function _swap(uint[] memory amounts, address[] memory path, address _to) internal virtual {
         
     }
-
-    // Tested
     function swapExactTokensForTokens(
         uint amountIn,
         uint amountOutMin,
@@ -170,9 +168,6 @@ contract MockSwapRouter is IUniswapV2Router02 {
             / 10**IERC20Metadata(path[0]).decimals(); 
         IERC20Mint(path[1]).mint(address(this), amountOut);    
         TransferHelper.safeTransfer(path[1], to, amountOut);
-        amounts = new uint[](path.length);
-        amounts[0] = amountIn;
-        amounts[1] =  amountOut;
         //TODO  populate amounts 
         
     }
@@ -185,8 +180,6 @@ contract MockSwapRouter is IUniswapV2Router02 {
     ) external virtual override ensure(deadline) returns (uint[] memory amounts) {
         
     }
-
-    // Tested 
     function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline)
         external
         virtual
@@ -196,15 +189,11 @@ contract MockSwapRouter is IUniswapV2Router02 {
         returns (uint[] memory amounts)
     {
          Rate memory rt = rates[path[0]][path[1]];
-         uint256 amountOut = msg.value * rt.denominator / rt.nominatot
+         uint256 amountOut = msg.value * rt.nominatot / rt.denominator
             * 10**IERC20Metadata(path[1]).decimals()
             / 10**IERC20Metadata(path[0]).decimals();
-         TransferHelper.safeTransfer(path[1], to,  amountOut);
-        amounts = new uint[](path.length);
-        amounts[0] = msg.value;
-        amounts[1] =  amountOut;
+         TransferHelper.safeTransfer(path[0], to,  amountOut);
     }
-
     function swapTokensForExactETH(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline)
         external
         virtual
@@ -214,7 +203,6 @@ contract MockSwapRouter is IUniswapV2Router02 {
     {
         
     }
-    // Tested
     function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
         external
         virtual
@@ -229,9 +217,6 @@ contract MockSwapRouter is IUniswapV2Router02 {
             / 10**IERC20Metadata(path[0]).decimals();  
         address payable toPayable = payable(to);
         toPayable.transfer(amountOut);
-        amounts = new uint[](path.length);
-        amounts[0] = amountIn;
-        amounts[1] =  amountOut;
         //TransferHelper.safeTransfer(path[1], to, amountOut);
         
     }
@@ -325,13 +310,11 @@ contract MockSwapRouter is IUniswapV2Router02 {
         // !!!!! 1-0 vs 0-1 TODO check crossrate case!!
         Rate memory rt = rates[path[1]][path[0]];
         // so we need devide inAmount by rate
-        uint256 amountOut = amountIn * rt.nominatot / rt.denominator 
+        uint256 amountOut = amountIn * rt.denominator / rt.nominatot
             * 10**IERC20Metadata(path[1]).decimals()
             / 10**IERC20Metadata(path[0]).decimals(); 
         
-        amounts = new uint[](path.length);
-        amounts[0] = amountIn;
-        amounts[1] =  amountOut;
+        amounts[0] = amountOut;
     }
 
     function getAmountsIn(uint amountOut, address[] memory path)
@@ -344,3 +327,4 @@ contract MockSwapRouter is IUniswapV2Router02 {
         
     }
 }
+same potato mushroom limb share name quote oppose culture traffic private rocket

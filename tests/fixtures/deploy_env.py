@@ -91,8 +91,8 @@ def sandbox2(accounts, Sandbox2, markets, dai):
 
 @pytest.fixture(scope="module")
 def treasury(accounts, Treasury, markets):
-    snb1 = accounts[0].deploy(Treasury,  markets.address)
-    yield snb1
+    tr = accounts[0].deploy(Treasury,  markets.address)
+    yield tr
 
 @pytest.fixture(scope="module")
 def ubd(accounts, UBDToken, sandbox1):
@@ -111,6 +111,10 @@ def mockuniv2(accounts, MockSwapRouter, dai, usdt, wbtc, weth):
     uni.setRate(usdt.address, weth.address, (1400, 1))
     uni.setRate(wbtc.address, usdt.address, (1, 28000))
     uni.setRate(weth.address, usdt.address, (1,  1400))
+    uni.setRate(wbtc.address, dai.address, (1, 28000))
+    uni.setRate(weth.address, dai.address, (1,  1400))
+    uni.setRate(dai.address, wbtc.address, (28000, 1))
+    uni.setRate(dai.address, weth.address, (1400, 1))
    
     # uni.setRate(weth.address, usdt.address, (1800, 1))
     # uni.setRate(weth.address, usdt.address, (1800, 1))
