@@ -37,7 +37,24 @@ contract MarketRegistry is IMarketRegistry, Ownable{
     ) external returns (uint256 amountOut) 
 
     {
+        require(msg.sender == ubdNetwork.sandbox1, 'For SandBox1 only');
+        address mrktAdapter = marketAdapterForAsset[assetIn];
+        address orclAdapter = oracleAdapterForAsset[assetIn];
+        address[] memory path = new address[](2);
+        path[0] = assetIn;
+        path[1] = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
 
+        TransferHelper.safeTransferFrom(
+            assetIn, to, mrktAdapter, 
+            amountIn // 
+        );
+        amountOut = IMarketAdapter(mrktAdapter).swapExactERC20InToERC20Out(
+                amountIn,
+                0, // TODO add value from oracle
+                path,
+                to,
+                block.timestamp
+            );
     }
 
 

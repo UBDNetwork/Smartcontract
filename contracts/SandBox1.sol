@@ -9,8 +9,8 @@ import "./MarketConnector.sol";
 
 contract SandBox1 is UBDExchange, MarketConnector {
 
-    uint256 constant TREASURY_TOPUP_PERIOD = 1 days;
-    uint256 constant TREASURY_TOPUP_PERCENT = 10000; // 1% - 10000, 13% - 130000, etc 
+    uint256 constant public TREASURY_TOPUP_PERIOD = 1 days;
+    uint256 constant public TREASURY_TOPUP_PERCENT = 10000; // 1% - 10000, 13% - 130000, etc 
 
     uint256 public lastTreasuryTopUp;
     uint256 public MIN_TREASURY_TOPUP_AMOUNT = 1000; // Stable Coin Units (without decimals)
@@ -35,6 +35,7 @@ contract SandBox1 is UBDExchange, MarketConnector {
         // Check system balance and redeem sandbox_1 if  need
         if (_inAsset == address(ubdToken) &&
             IERC20(EXCHANGE_BASE_ASSET).balanceOf(address(this)) < _amountOutMin){
+            // TODO расмотроеть возмость случая  частичной продажи своих UBD
             if (_redeemSandbox1() < _amountOutMin ) {
                 return 0;
             }
@@ -42,7 +43,8 @@ contract SandBox1 is UBDExchange, MarketConnector {
 
         if (_inAsset != EXCHANGE_BASE_ASSET && _inAsset != address(ubdToken)) {
             address[] memory path = new address[](2);
-
+            
+            // Swap any to BASE asset
             uint256 amountBASE = IMarketRegistry(marketRegistry).swapExactInToBASEOut(
                 _inAmount,
                 _amountOutMin,

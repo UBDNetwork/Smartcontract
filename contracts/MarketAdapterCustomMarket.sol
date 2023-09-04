@@ -33,12 +33,15 @@ contract MarketAdapterCustomMarket is IMarketAdapter, IOracleAdapter {
         address recipient,
         uint deadline
     ) external payable returns (uint256 amountOut){
-        IUniswapV2Router02(ROUTERV2).swapExactETHForTokens{value: amountIn}(
+        uint256[] memory amts = new uint256[](path.length); 
+        amountOut = amts[amts.length-1];
+        amts = IUniswapV2Router02(ROUTERV2).swapExactETHForTokens{value: amountIn}(
             amountOutMin,
             path,
             recipient,
             deadline   
         );
+        amountOut = amts[amts.length-1];
     }
 
 
@@ -50,13 +53,16 @@ contract MarketAdapterCustomMarket is IMarketAdapter, IOracleAdapter {
         uint deadline
     ) external returns (uint256 amountOut){
         TransferHelper.safeApprove(path[0], ROUTERV2, amountIn);
-        IUniswapV2Router02(ROUTERV2).swapExactTokensForTokens(
+        uint256[] memory amts = new uint256[](path.length); 
+        amountOut = amts[amts.length-1];
+        amts = IUniswapV2Router02(ROUTERV2).swapExactTokensForTokens(
             amountIn, 
             amountOutMin, 
             path, 
             recipient, 
             deadline
         );
+        amountOut = amts[amts.length-1];
     }
 
     function swapExactERC20InToNativeOut(
@@ -67,14 +73,16 @@ contract MarketAdapterCustomMarket is IMarketAdapter, IOracleAdapter {
         uint deadline
     ) external returns (uint256 amountOut){
         TransferHelper.safeApprove(path[0], ROUTERV2, amountIn);
-        IUniswapV2Router02(ROUTERV2).swapExactTokensForETH(
+        uint256[] memory amts = new uint256[](path.length); 
+        amountOut = amts[amts.length-1];
+        amts = IUniswapV2Router02(ROUTERV2).swapExactTokensForETH(
             amountIn, 
             amountOutMin, 
             path, 
             recipient, 
             deadline
         );
-
+        amountOut = amts[amts.length-1];
     }
 
     function swapERC20InToExactNativeOut(
@@ -111,8 +119,8 @@ contract MarketAdapterCustomMarket is IMarketAdapter, IOracleAdapter {
         returns (uint256 amountOut)
     {
         uint256[] memory amts = new uint256[](path.length); 
-         amts = IUniswapV2Router02(ROUTERV2).getAmountsOut(amountIn, path);
-         amountOut = amts[amts.length-1];
+        amts = IUniswapV2Router02(ROUTERV2).getAmountsOut(amountIn, path);
+        amountOut = amts[amts.length-1];
     }
 
     function getAmountIn(uint amountOut, address[] memory path)
