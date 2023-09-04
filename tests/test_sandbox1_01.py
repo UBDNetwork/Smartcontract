@@ -128,8 +128,10 @@ def test_topup_treasury(
 
 def test_buy_ubd_with_USDC(accounts, sandbox1, markets, ubd, usdt, usdc):
     usdc_amount = 100_000*10**usdc.decimals()
+    usdt_amount = 100_000*10**usdt.decimals()
     usdc.transfer(accounts[1], usdc_amount, {'from':accounts[0]})
     usdc.approve(markets, usdc_amount, {'from':accounts[1]})
+    usdt.approve(sandbox1, usdt_amount, {'from':accounts[1]})
     tx = sandbox1.swapExactInput(
         usdc, 
         usdc_amount,
@@ -138,4 +140,4 @@ def test_buy_ubd_with_USDC(accounts, sandbox1, markets, ubd, usdt, usdc):
         {'from':accounts[1]}
     )
     [logging.info('\nfrom:{} to:{} value:{}'.format(x['from'],x['to'],x['value'])) for x in tx.events['Transfer']]
-    p=w
+    assert ubd.balanceOf(accounts[1]) == 99502487563000000000000
