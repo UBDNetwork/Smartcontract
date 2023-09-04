@@ -14,7 +14,12 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt, dai):
     exchange_single.setUBDToken(ubd_exch, {'from':accounts[0]})
     exchange_single.setBeneficiary(accounts[1], {'from':accounts[0]})
 
-    #switch of usdt
+    logging.info(exchange_single.paymentTokens(ubd_exch))
+    logging.info(exchange_single.paymentTokens(usdt))\
+
+    chain.sleep(10)
+    chain.mine()
+
     tx = exchange_single.swapExactInput(
             usdt, 
             0,
@@ -23,3 +28,14 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt, dai):
             accounts[2], 
             {'from':accounts[0]}
         )
+
+    tx = exchange_single.swapExactInput(
+            ubd_exch, 
+            0,
+            0,
+            0,
+            accounts[2], 
+            {'from':accounts[0]}
+        )
+    
+    logging.info(exchange_single.paymentTokens(ubd_exch))

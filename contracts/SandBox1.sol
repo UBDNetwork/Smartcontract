@@ -9,8 +9,8 @@ import "./MarketConnector.sol";
 
 contract SandBox1 is UBDExchange, MarketConnector {
 
-    uint256 constant TREASURY_TOPUP_PERIOD = 1 days;
-    uint256 constant TREASURY_TOPUP_PERCENT = 10000; // 1% - 10000, 13% - 130000, etc 
+    uint256 public constant TREASURY_TOPUP_PERIOD = 1 days;
+    uint256 public constant TREASURY_TOPUP_PERCENT = 10000; // 1% - 10000, 13% - 130000, etc 
 
     uint256 public lastTreasuryTopUp;
     uint256 public MIN_TREASURY_TOPUP_AMOUNT = 1000; // Stable Coin Units (without decimals)
