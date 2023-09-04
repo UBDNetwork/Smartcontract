@@ -102,7 +102,7 @@ def ubd(accounts, UBDToken, sandbox1):
 
 ##############################################################
 @pytest.fixture(scope="module")
-def mockuniv2(accounts, MockSwapRouter, dai, usdt, wbtc, weth):
+def mockuniv2(accounts, MockSwapRouter, dai, usdt, wbtc, weth, usdc):
     uni = accounts[0].deploy(MockSwapRouter, weth, weth)
     #accounts[9].transfer(uni.address, accounts[9].balance()-1e18)
     #uni.setRate(weth.address, usdt.address, (1800, 1))
@@ -115,6 +115,8 @@ def mockuniv2(accounts, MockSwapRouter, dai, usdt, wbtc, weth):
     uni.setRate(weth.address, dai.address, (1,  1400))
     uni.setRate(dai.address, wbtc.address, (28000, 1))
     uni.setRate(dai.address, weth.address, (1400, 1))
+    uni.setRate(usdc.address, usdt.address, (1, 1))
+    uni.setRate(usdt.address, usdc.address, (1, 1))
    
     # uni.setRate(weth.address, usdt.address, (1800, 1))
     # uni.setRate(weth.address, usdt.address, (1800, 1))

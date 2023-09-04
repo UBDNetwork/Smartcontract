@@ -9,7 +9,7 @@ MINT_UBD_AMOUNT = 1000e18
 ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 def test_usdt_to_ubd(accounts, ubd, sandbox1, usdt):
     sandbox1.setUBDToken(ubd, {'from':accounts[0]})
-    sandbox1.setBeneficiary(accounts[1], {'from':accounts[0]})
+    sandbox1.setBeneficiary(accounts[2], {'from':accounts[0]})
     
     usdt.approve(sandbox1, PAY_AMOUNT, {'from':accounts[0]})
     logging.info('Calculated UBD amount: {}'.format(
@@ -96,7 +96,7 @@ def test_usdt_to_ubd_100k(accounts, ubd, sandbox1, usdt):
 
 def test_topup_treasury(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
-        treasury, ubd, markets, wbtc, market_adapter, weth):
+        treasury, ubd, markets, wbtc, market_adapter, weth, usdc):
     logging.info(
         '\nSandbox1.balance(usdt):{}'
         '\ntreasury.balance(wbtc):{}'
@@ -106,7 +106,11 @@ def test_topup_treasury(
             treasury.balance()
     ))
     logging.info('UBDNetwork.state:{}'.format(markets.ubdNetwork()))
-    init_market_registry(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, treasury, ubd, markets, wbtc, market_adapter, weth)
+    init_market_registry(
+        accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, treasury, 
+        ubd, markets, wbtc, market_adapter, weth, usdc
+    )
+
     logging.info('UBDNetwork.state:{}'.format(markets.getUBDNetworkInfo()))
     accounts[9].transfer(mockuniv2, accounts[9].balance()-1e18)
 
@@ -122,3 +126,18 @@ def test_topup_treasury(
             treasury.balance()
     ))
 
+def test_buy_ubd_with_USDC(accounts, sandbox1, markets, ubd, usdt, usdc):
+    usdc_amount = 100_000*10**usdc.decimals()
+    usdt_amount = 100_000*10**usdt.decimals()
+    usdc.transfer(accounts[1], usdc_amount, {'from':accounts[0]})
+    usdc.approve(markets, usdc_amount, {'from':accounts[1]})
+    usdt.approve(sandbox1, usdt_amount, {'from':accounts[1]})
+    tx = sandbox1.swapExactInput(
+        usdc, 
+        usdc_amount,
+        0,
+        0,
+        {'from':accounts[1]}
+    )
+    [logging.info('\nfrom:{} to:{} value:{}'.format(x['from'],x['to'],x['value'])) for x in tx.events['Transfer']]
+    assert ubd.balanceOf(accounts[1]) == 99502487563000000000000
