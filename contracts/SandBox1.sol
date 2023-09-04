@@ -105,6 +105,10 @@ contract SandBox1 is UBDExchange, MarketConnector {
     }
     ///////////////////////////////////////////////////////////
 
+    function ubdTokenAddress() external view returns(address) {
+        return address(ubdToken);
+    }
+    
     function _redeemSandbox1() internal returns(uint256 newBASEBalance) {
         if (_getCollateralSystemLevelM10() >= 10) {
             IMarketRegistry(marketRegistry).redeemSandbox1();

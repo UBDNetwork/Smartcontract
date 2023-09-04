@@ -16,6 +16,7 @@ import '@uniswap/contracts/libraries/TransferHelper.sol';
 contract MarketRegistry is IMarketRegistry, Ownable{
 
     uint8 constant public TEAM_PERCENT = 3;
+    uint8 constant public NATIVE_TOKEN_DECIMALS = 18;
     uint8 immutable public MIN_NATIVE_PERCENT;
     address public UBD_TEAM_ADDRESS;
     UBDNetwork public ubdNetwork;
@@ -330,14 +331,55 @@ contract MarketRegistry is IMarketRegistry, Ownable{
     function getAmountOut(
         uint amountIn, 
         address[] memory path
-    ) external view returns (uint256 amountOut)
+    ) public view returns (uint256 amountOut)
     {
         address orclAdapter = oracleAdapterForAsset[path[path.length - 1]];
         return IOracleAdapter(orclAdapter).getAmountOut(amountIn, path);
 
     }
+    // TODO check gas with replaced bdNetwork.treasuryERC20Assets[i].asset
+    function getCollateralLevelM10() external view returns(uint256 level){
+        // Sandbox 1
+        address sandbox1BaseAsset = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
+        uint256 s1BalanceInBaseAsset = 
+            IERC20(sandbox1BaseAsset).balanceOf(
+                ubdNetwork.sandbox1
+            );
+        s1BalanceInBaseAsset = _bringAmountToNativeDecimals(
+            sandbox1BaseAsset,
+            s1BalanceInBaseAsset
+        );
 
-    function getCollateralLevelM10() external view returns(uint256){}
+        uint256 ubdTotalSupply = IERC20Metadata(ISandbox1(ubdNetwork.sandbox1).ubdTokenAddress()).totalSupply();
+        ubdTotalSupply = _bringAmountToNativeDecimals(
+            ISandbox1(ubdNetwork.sandbox1).ubdTokenAddress(),
+            ubdTotalSupply
+        );
+        //uint8 ubdDecimals = IERC20Metadata(ISandbox1(ubdNetwork.sandbox1).ubdTokenAddress()).decimals();
+
+        uint256 tBalanceNative = ubdNetwork.treasury.balance;
+
+        uint256 erc20Balance;
+        uint256 erc20BalanceCommonDecimals;
+        address[] memory path = new address[](2);
+        for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
+            //bring to a common denominator
+            path[0] = sandbox1BaseAsset;
+            path[1] = ubdNetwork.treasuryERC20Assets[i].asset; // TODO replace with internal var for gas safe
+            erc20Balance = getAmountOut(
+                IERC20(ubdNetwork.treasuryERC20Assets[i].asset).balanceOf(ubdNetwork.treasury), 
+                path
+            );
+            erc20BalanceCommonDecimals += _bringAmountToNativeDecimals(
+                ubdNetwork.treasuryERC20Assets[i].asset, 
+                erc20Balance
+            );
+        }
+
+        return (s1BalanceInBaseAsset + erc20BalanceCommonDecimals) * 10 / ubdTotalSupply;
+
+    }
+
     function getBalanceInStableUnits(address _holder, address[] memory _assets) external view returns(uint256){}
     function treasuryERC20Assets() external view returns(address[] memory assets) {}
     
@@ -367,6 +409,18 @@ contract MarketRegistry is IMarketRegistry, Ownable{
             sumPercent += ubdNetwork.treasuryERC20Assets[i].percent;
         }
         return uint256(100 - sumPercent);
+
+    }
+
+    function _bringAmountToNativeDecimals(address _erc20, uint256 _amount) internal view returns(uint256 amount){
+        uint8 decimals = IERC20Metadata(_erc20).decimals(); 
+        if (decimals < NATIVE_TOKEN_DECIMALS) {
+           amount = amount * (NATIVE_TOKEN_DECIMALS - decimals);
+        } else if (decimals > NATIVE_TOKEN_DECIMALS) {
+            amount = amount / (decimals - NATIVE_TOKEN_DECIMALS);
+        } else {
+            amount = _amount;
+        }
 
     }
 
