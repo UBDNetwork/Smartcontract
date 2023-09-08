@@ -28,9 +28,9 @@ def test_usdt_to_ubd(accounts, ubd, sandbox1, usdt):
 
 def test_topup_treasury1(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
-        treasury, ubd, markets, wbtc, market_adapter, weth):
+        treasury, ubd, markets, wbtc, market_adapter, weth, usdc):
     logging.info('UBDNetwork.state:{}'.format(markets.ubdNetwork()))
-    init_market_registry(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, treasury, ubd, markets, wbtc, market_adapter, weth)
+    init_market_registry(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, treasury, ubd, markets, wbtc, market_adapter, weth, usdc)
     logging.info('UBDNetwork.state:{}'.format(markets.getUBDNetworkInfo()))
     accounts[9].transfer(mockuniv2, accounts[9].balance()-1e18)
 
@@ -117,19 +117,31 @@ def test_topup_sandbox2(
         chain.sleep(sandbox1.TREASURY_TOPUP_PERIOD()+1)
         sandbox1.topupTreasury()
 
+    #try to topup Treasury second time in day - expect revert 
+    usdt.approve(sandbox1, PAY_AMOUNT, {'from':accounts[0]})
+    tx = sandbox1.swapExactInput(
+        usdt, 
+        PAY_AMOUNT,
+        0,
+        0,
+        ZERO_ADDRESS, 
+        {'from':accounts[0]}
+    )
+
+    with reverts('Please wait untit TREASURY_TOPUP_PERIOD'):
+        sandbox1.topupTreasury()
+
     #bullrun
     mockuniv2.setRate(usdt.address, wbtc.address, (100000, 1))
     mockuniv2.setRate(usdt.address, weth.address, (10000, 1))
 
     #assert treasury.isReadyForTopupSandBox2() == True
-    logging.info(mockuniv2.getAmountsOut(wbtc.balanceOf(treasury), [wbtc.address,usdt.address]))
-    logging.info(mockuniv2.getAmountsOut(treasury.balance(), [weth.address,usdt.address]))
-    logging.info(usdt.balanceOf(sandbox1.address))
-    logging.info(ubd.totalSupply())
-
-
-
-
+    logging.info('getCollateralLevelM10 = {}'.format(markets.getCollateralLevelM10()))
+    logging.info('treasury_wbtc_usdt = {}'.format(mockuniv2.getAmountsOut(wbtc.balanceOf(treasury), [wbtc.address,usdt.address])))
+    logging.info('treasury_eth_usdt = {}'.format(mockuniv2.getAmountsOut(treasury.balance(), [weth.address,usdt.address])))
+    logging.info('sandbox1_usdt_amount = {}'.format(usdt.balanceOf(sandbox1.address)))
+    logging.info('ubd_amount = {}'.format(ubd.totalSupply()))
+    
     '''logging.info(
         '\nSandbox1.balance(usdt):{}'
         '\ntreasury.balance(wbtc):{}'
