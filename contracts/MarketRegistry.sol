@@ -339,6 +339,8 @@ contract MarketRegistry is IMarketRegistry, Ownable{
     }
     // TODO check gas with replaced bdNetwork.treasuryERC20Assets[i].asset
     function getCollateralLevelM10() external view returns(uint256 level){
+        address mrktAdapter = marketAdapterForAsset[address(0)];
+        
         // Sandbox 1
         address sandbox1BaseAsset = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
         uint256 s1BalanceInBaseAsset = 
@@ -359,24 +361,36 @@ contract MarketRegistry is IMarketRegistry, Ownable{
 
         uint256 tBalanceNative = ubdNetwork.treasury.balance;
 
+
         uint256 erc20Balance;
         uint256 erc20BalanceCommonDecimals;
         address[] memory path = new address[](2);
         for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
             //bring to a common denominator
-            path[0] = sandbox1BaseAsset;
-            path[1] = ubdNetwork.treasuryERC20Assets[i].asset; // TODO replace with internal var for gas safe
+            path[0] = ubdNetwork.treasuryERC20Assets[i].asset; // TODO replace with internal var for gas safe
+            path[1] = sandbox1BaseAsset;
             erc20Balance = getAmountOut(
                 IERC20(ubdNetwork.treasuryERC20Assets[i].asset).balanceOf(ubdNetwork.treasury), 
                 path
             );
             erc20BalanceCommonDecimals += _bringAmountToNativeDecimals(
-                ubdNetwork.treasuryERC20Assets[i].asset, 
+                sandbox1BaseAsset,
+                //ubdNetwork.treasuryERC20Assets[i].asset, 
                 erc20Balance
             );
         }
 
-        return (s1BalanceInBaseAsset + erc20BalanceCommonDecimals) * 10 / ubdTotalSupply;
+        path[0] = IMarketAdapter(mrktAdapter).WETH();
+        path[1] = sandbox1BaseAsset;
+        
+        tBalanceNative = getAmountOut(tBalanceNative, path);
+        tBalanceNative = _bringAmountToNativeDecimals(
+                sandbox1BaseAsset,
+                tBalanceNative
+            );
+
+
+        return (s1BalanceInBaseAsset + erc20BalanceCommonDecimals + tBalanceNative) * 10 / ubdTotalSupply;
 
     }
 
@@ -415,9 +429,9 @@ contract MarketRegistry is IMarketRegistry, Ownable{
     function _bringAmountToNativeDecimals(address _erc20, uint256 _amount) internal view returns(uint256 amount){
         uint8 decimals = IERC20Metadata(_erc20).decimals(); 
         if (decimals < NATIVE_TOKEN_DECIMALS) {
-           amount = amount * (NATIVE_TOKEN_DECIMALS - decimals);
+            amount = _amount * 10 ** (NATIVE_TOKEN_DECIMALS - decimals);
         } else if (decimals > NATIVE_TOKEN_DECIMALS) {
-            amount = amount / (decimals - NATIVE_TOKEN_DECIMALS);
+            amount = _amount /10 ** (decimals - NATIVE_TOKEN_DECIMALS);
         } else {
             amount = _amount;
         }
