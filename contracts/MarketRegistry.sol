@@ -138,9 +138,6 @@ contract MarketRegistry is IMarketRegistry, Ownable{
             );
 
         }
-
-
-
     }
 
     // Если обеспечение UBD 3:1 и выше, то Сокровищница меняет  

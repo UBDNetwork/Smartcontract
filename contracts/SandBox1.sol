@@ -82,19 +82,11 @@ contract SandBox1 is UBDExchange, MarketConnector {
         require(_token != EXCHANGE_BASE_ASSET && _token != address(ubdToken), 'Only for other assets');
         uint256 topupAmount = IERC20(_token).balanceOf(address(this));
         IERC20(_token).approve(marketRegistry, topupAmount);
-        IMarketRegistry(marketRegistry).swapExactBASEInToTreasuryAssets(topupAmount, EXCHANGE_BASE_ASSET);
+        IMarketRegistry(marketRegistry).swapExactBASEInToTreasuryAssets(topupAmount, _token);
     }
 
 
-    // function getAmountOut(
-    //     uint amountIn, 
-    //     address[] memory path
-    // ) external view returns (uint256 amountOut) 
-    // {
-    //     return IMarketRegistry(marketRegistry).getAmountOut(amountIn, path);
-    // }
-
-     ///////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////
     ///////    Admin Functions        /////////////////////////
     ///////////////////////////////////////////////////////////
     function setMinTopUp(uint256 _amount) 

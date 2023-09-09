@@ -141,3 +141,15 @@ def test_buy_ubd_with_USDC(accounts, sandbox1, markets, ubd, usdt, usdc):
     )
     [logging.info('\nfrom:{} to:{} value:{}'.format(x['from'],x['to'],x['value'])) for x in tx.events['Transfer']]
     assert ubd.balanceOf(accounts[1]) == 99502487563000000000000
+
+def test_topupTreasuryEmergency(accounts, sandbox1, markets, ubd, usdt, usdc, dai, treasury, wbtc):
+    dai_amount = 100_000*10**dai.decimals()
+    dai.transfer(sandbox1, dai_amount, {'from':accounts[0]})
+    assert dai.balanceOf(sandbox1) == dai_amount
+    treasury_wbtc_before = wbtc.balanceOf(treasury)
+    treasury_eth_befroe = treasury.balance()
+    tx = sandbox1.topupTreasuryEmergency(dai)
+
+    [logging.info('\nfrom:{} to:{} value:{}'.format(x['from'],x['to'],x['value'])) for x in tx.events['Transfer']]
+    assert wbtc.balanceOf(treasury) > treasury_wbtc_before
+    assert treasury.balance() > treasury_eth_befroe
