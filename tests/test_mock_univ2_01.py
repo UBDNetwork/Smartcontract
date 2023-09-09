@@ -121,3 +121,20 @@ def test_mock_univ2_getAmountsOut(accounts, mockuniv2, dai, usdt, wbtc, weth, ub
 
     assert mockuniv2.getAmountsOut(AMOUNT_IB_WBTC, [wbtc, dai]) == (AMOUNT_IB_WBTC, 28_000e18)
     assert mockuniv2.getAmountsOut(AMOUNT_IN_DAI , [dai, wbtc]) == (AMOUNT_IN_DAI, 1e8)
+
+def test_mock_univ2_getAmountsIn(accounts, mockuniv2, dai, usdt, wbtc, weth, ubd):
+    # swap ETH for other
+    AMOUNT_OUT_USDT = 28_000e6
+    AMOUNT_IN_WBTS = 1e8
+    assert mockuniv2.getAmountsIn(AMOUNT_OUT_WBTC, [usdt, wbtc]) == (AMOUNT_IN_USDT , AMOUNT_OUT_WBTC)
+    assert mockuniv2.getAmountsIn(AMOUNT_OUT_USDT, [wbtc, usdt]) == (AMOUNT_IN_WBTS , AMOUNT_OUT_USDT)
+    
+    AMOUNT_OUT_DAI = AMOUNT_IN_DAI
+    assert mockuniv2.getAmountsIn(AMOUNT_OUT_WBTC, [dai, wbtc]) == (AMOUNT_IN_DAI , AMOUNT_OUT_WBTC)
+    assert mockuniv2.getAmountsIn(AMOUNT_OUT_DAI, [wbtc, dai]) == (AMOUNT_IN_WBTS , AMOUNT_OUT_DAI)
+
+    assert mockuniv2.getAmountsIn(AMOUNT_OUT_ETH, [dai, weth]) == (AMOUNT_IN_DAI , AMOUNT_OUT_ETH)
+    assert mockuniv2.getAmountsIn(AMOUNT_OUT_DAI, [weth, dai]) == (AMOUNT_IN_ETH * 10 , AMOUNT_OUT_DAI)
+
+    assert mockuniv2.getAmountsIn(AMOUNT_OUT_ETH, [usdt, weth]) == (AMOUNT_IN_USDT , AMOUNT_OUT_ETH)
+    assert mockuniv2.getAmountsIn(AMOUNT_OUT_USDT, [weth, usdt]) == (AMOUNT_IN_ETH * 10 , AMOUNT_OUT_USDT)

@@ -55,12 +55,13 @@ contract UBDExchange is Ownable {
     /// and  the last is the output token (UniswapV2 style)
     /// @param _inAmount amount of stable to spent
     /// @param _deadline Unix timestamp, Swap can't be executed after
-    /// @param _amountOutMin minimum amount of output tokens that must be 
+    /// @param _amountOutMin minimum amount of output tokens that 
+    /// caller want receive. 
     /// received for the transaction not to revert
     function swapExactInput(
         address _inAsset,
         uint256 _inAmount, 
-        uint256 _deadline, //TODO
+        uint256 _deadline, 
         uint256 _amountOutMin, 
         address _receiver
     ) 
