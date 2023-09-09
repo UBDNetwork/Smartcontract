@@ -17,6 +17,7 @@ contract MarketAdapterCustomMarket is IMarketAdapter, IOracleAdapter {
     string public name;
     address immutable public ROUTERV2;
     address immutable public WETH;
+    event ReceivedEther(address, uint);
 
     constructor(string memory _name, address _routerV2)
     {
@@ -27,7 +28,9 @@ contract MarketAdapterCustomMarket is IMarketAdapter, IOracleAdapter {
 
     }
 
-    receive() external payable {}
+    receive() external payable {
+        emit ReceivedEther(msg.sender, msg.value);
+    }
 
     function swapExactNativeInToERC20Out(
         uint256 amountIn,

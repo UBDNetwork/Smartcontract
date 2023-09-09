@@ -22,11 +22,15 @@ contract MarketRegistry is IMarketRegistry, Ownable{
     UBDNetwork public ubdNetwork;
     mapping(address => address) public marketAdapterForAsset;
     mapping(address => address) public oracleAdapterForAsset;
-
+    event ReceivedEther(address, uint);
 
     constructor(uint8 _minNativePercent)
     {
         MIN_NATIVE_PERCENT = _minNativePercent;
+    }
+
+    receive() external payable {
+        emit ReceivedEther(msg.sender, msg.value);
     }
 
     function swapExactInToBASEOut(
