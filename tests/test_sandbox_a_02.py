@@ -10,7 +10,7 @@ ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 def test_usdс_to_ubd(accounts, ubd, sandbox1, usdc, usdt, market_adapter):
     sandbox1.setUBDToken(ubd, {'from':accounts[0]})
     sandbox1.setBeneficiary(accounts[1], {'from':accounts[0]})
-    sandbox1.setPaymentTokenStatus(usdc.address, True, 5000, {'from': accounts[0]})
+    #sandbox1.setPaymentTokenStatus(usdc.address, True, 5000, {'from': accounts[0]})
 
     chain.sleep(sandbox1.ADD_NEW_PAYMENT_TOKEN_TIMELOCK()+10)
     
