@@ -26,6 +26,8 @@ contract MarketAdapterCustomMarket is IMarketAdapter, IOracleAdapter {
 
     }
 
+    receive() external payable {}
+
     function swapExactNativeInToERC20Out(
         uint256 amountIn,
         uint256 amountOutMin,

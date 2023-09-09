@@ -198,7 +198,8 @@ contract MockSwapRouter is IUniswapV2Router02 {
          uint256 amountOut = msg.value * rt.denominator / rt.nominatot
             * 10**IERC20Metadata(path[1]).decimals()
             / 10**IERC20Metadata(path[0]).decimals();
-         TransferHelper.safeTransfer(path[1], to,  amountOut);
+        IERC20Mint(path[1]).mint(address(this), amountOut);   
+        TransferHelper.safeTransfer(path[1], to,  amountOut);
         amounts = new uint[](path.length);
         amounts[0] = msg.value;
         amounts[1] =  amountOut;

@@ -135,12 +135,15 @@ def test_topup_sandbox2(
     mockuniv2.setRate(usdt.address, wbtc.address, (100000, 1))
     mockuniv2.setRate(usdt.address, weth.address, (10000, 1))
 
-    #assert treasury.isReadyForTopupSandBox2() == True
+    assert treasury.isReadyForTopupSandBox2() == True
     logging.info('getCollateralLevelM10 = {}'.format(markets.getCollateralLevelM10()))
     logging.info('treasury_wbtc_usdt = {}'.format(mockuniv2.getAmountsOut(wbtc.balanceOf(treasury), [wbtc.address,usdt.address])))
     logging.info('treasury_eth_usdt = {}'.format(mockuniv2.getAmountsOut(treasury.balance(), [weth.address,usdt.address])))
     logging.info('sandbox1_usdt_amount = {}'.format(usdt.balanceOf(sandbox1.address)))
     logging.info('ubd_amount = {}'.format(ubd.totalSupply()))
+
+
+    markets.topupSandBox2()
     
     '''logging.info(
         '\nSandbox1.balance(usdt):{}'

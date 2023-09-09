@@ -166,6 +166,7 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         );
 
         // Swap ERC20 Treasury assets on DAI 
+        ITreasury(ubdNetwork.treasury).approveForRedeem(mrktAdapter);
         uint256[] memory sended = new uint256[](ubdNetwork.treasuryERC20Assets.length);
         sended = ITreasury(ubdNetwork.treasury).sendForTopup(mrktAdapter);
         for (uint256 i; i < sended.length; ++ i){
