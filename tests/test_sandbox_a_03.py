@@ -37,7 +37,9 @@ def test_usdt_to_ubd(accounts, ubd, sandbox1, usdt, usdc):
 
     usdc.transfer(sandbox1.address, PAY_AMOUNT_USDC, {"from": accounts[0]})
     assert sandbox1.EXCHANGE_BASE_ASSET() == usdt.address
-    sandbox1.topupTreasuryEmergency(usdc.address)
+    with reverts('Ownable: caller is not the owner'):
+        sandbox1.topupTreasuryEmergency(usdc.address, {"from": accounts[1]})
+    sandbox1.topupTreasuryEmergency(usdc.address, {"from": accounts[0]})
 
 
     
