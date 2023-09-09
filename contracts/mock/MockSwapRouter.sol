@@ -341,6 +341,15 @@ contract MockSwapRouter is IUniswapV2Router02 {
         override
         returns (uint[] memory amounts)
     {
+        Rate memory rt = rates[path[0]][path[1]];
+        // so we need devide inAmount by rate
+        uint256 amountIn = amountOut * rt.nominatot / rt.denominator 
+            * 10**IERC20Metadata(path[0]).decimals()
+            / 10**IERC20Metadata(path[1]).decimals(); 
+        
+        amounts = new uint[](path.length);
+        amounts[0] = amountIn;
+        amounts[1] =  amountOut;
         
     }
 }

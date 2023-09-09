@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// SandBox1 
+// MarketAdapterCustomMarket for like UniSwapV2 market 
 pragma solidity 0.8.21;
 
 //import "./UBDExchange.sol";
@@ -10,7 +10,8 @@ import "../interfaces/IOracleAdapter.sol";
 import '../interfaces/IUniswapV2Router02.sol';
 
 /// @dev Adapter for MockMarket based on Uniswap2
-/// @dev must be called from ???
+/// @dev All assets should be transfered to this contract balance 
+/// @dev before call. Native asset should 
 contract MarketAdapterCustomMarket is IMarketAdapter, IOracleAdapter {
 
     string public name;
