@@ -97,13 +97,8 @@ def test_topup_sandbox2(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
         treasury, ubd, markets, wbtc, market_adapter, weth):
     
-    #assert treasury.isReadyForTopupSandBox2() == False
+    assert treasury.isReadyForTopupSandBox2() == False
     
-    
-
-    #mockuniv2.setRate(wbtc.address, usdt.address, (1, 200000000))
-    #mockuniv2.setRate(weth.address, usdt.address, (1,  2000000))
-
     for i in range(100):
         usdt.approve(sandbox1, PAY_AMOUNT, {'from':accounts[0]})
         tx = sandbox1.swapExactInput(
@@ -134,8 +129,14 @@ def test_topup_sandbox2(
     #bullrun
     mockuniv2.setRate(usdt.address, wbtc.address, (100000, 1))
     mockuniv2.setRate(usdt.address, weth.address, (10000, 1))
+    mockuniv2.setRate(dai.address, wbtc.address, (100000, 1))
+    mockuniv2.setRate(dai.address, weth.address, (10000, 1))
+    mockuniv2.setRate(weth.address, dai.address, (1, 10000))
+    mockuniv2.setRate(wbtc.address, dai.address, (1, 100000))
 
     assert treasury.isReadyForTopupSandBox2() == True
+
+    #let's go to topup sandbox2
     logging.info('getCollateralLevelM10 = {}'.format(markets.getCollateralLevelM10()))
     logging.info('treasury_wbtc_usdt = {}'.format(mockuniv2.getAmountsOut(wbtc.balanceOf(treasury), [wbtc.address,usdt.address])))
     logging.info('treasury_eth_usdt = {}'.format(mockuniv2.getAmountsOut(treasury.balance(), [weth.address,usdt.address])))
@@ -144,15 +145,40 @@ def test_topup_sandbox2(
 
 
     assert dai.balanceOf(sandbox2.address) == 0
+    before_wbtc_treasury_amount = wbtc.balanceOf(treasury.address)
+    before_eth_treasury_amount = treasury.balance()
+
     markets.topupSandBox2()
-    #treasury.approveForRedeem(markets)
-    #assert wbtc.allowance(treasury.address, markets.address) > 0
-    #
-    #treasury.approveForRedeem(markets)
-    #tx = treasury.sendForTopup(market_adapter)
-    assert dai.balanceOf(sandbox2.address) > 0
+    #tx = treasury.sendEtherForRedeem(treasury.SANDBOX2_TOPUP_PERCENT())
+
+    #1/3 of amount
+    wbtc_to_dai_amount = before_wbtc_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/100
+    eth_to_dai_amount = before_eth_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/100
+
+    logging.info('wbtc_to_dai_amount = {}'.format(wbtc_to_dai_amount))
+    logging.info('eth_to_dai_amount = {}'.format(eth_to_dai_amount))
+    logging.info('eth_balance_market = {}'.format(markets.balance()))
+
+    dai_amount_calc = wbtc_to_dai_amount*mockuniv2.rates(dai.address, wbtc.address)[0]*10**dai.decimals()/10**wbtc.decimals() + eth_to_dai_amount*mockuniv2.rates(weth.address, dai.address)[1]*10**dai.decimals()/10**weth.decimals()
+    logging.info('dai_amount_calc = {}'.format(dai_amount_calc))
+
+    logging.info(mockuniv2.getAmountsOut(eth_to_dai_amount, [weth.address,dai.address]))
+    logging.info(mockuniv2.getAmountsOut(wbtc_to_dai_amount, [wbtc.address,dai.address]))
+
+    assert dai.balanceOf(sandbox2) ==  dai_amount_calc
+    assert wbtc.balanceOf(treasury) == before_wbtc_treasury_amount - wbtc_to_dai_amount
+    assert treasury.balance() == before_eth_treasury_amount - eth_to_dai_amount
+
+    logging.info(markets.balance())
+    logging.info(wbtc.balanceOf(market_adapter))
+
+    logging.info('dai_balance_sandbox = {}'.format(dai.balanceOf(sandbox2.address)))
+
+    assert dai.balanceOf(sandbox2.address) == dai_amount_calc
     team = markets.getUBDNetworkTeamAddress()
-    assert dai.allowance(sandbox2.address, team) > 0
+    assert dai.allowance(sandbox2.address, team) == dai.balanceOf(sandbox2.address)*markets.TEAM_PERCENT()/100
+
+
     
 
 

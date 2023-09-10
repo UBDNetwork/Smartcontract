@@ -115,6 +115,8 @@ def mockuniv2(accounts, MockSwapRouter, dai, usdt, wbtc, weth, usdc):
     uni.setRate(weth.address, dai.address, (1,  1400))
     uni.setRate(dai.address, wbtc.address, (28000, 1))
     uni.setRate(dai.address, weth.address, (1400, 1))
+    uni.setRate(wbtc.address, dai.address, (1, 28000))
+    uni.setRate(weth.address, dai.address, (1, 1400))
     uni.setRate(usdc.address, usdt.address, (1, 1))
     uni.setRate(usdt.address, usdc.address, (1, 1))
    
