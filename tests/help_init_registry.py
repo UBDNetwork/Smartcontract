@@ -18,6 +18,8 @@ def init_market_registry(
     markets.setOracle(wbtc, market_adapter, {'from':accounts[0]})
     markets.setMarket(usdc, market_adapter, {'from':accounts[0]})
     markets.setOracle(usdc, market_adapter, {'from':accounts[0]})
+    markets.setMarket(dai, market_adapter, {'from':accounts[0]})
+    markets.setOracle(dai, market_adapter, {'from':accounts[0]})
     
     markets.setMarket(weth, market_adapter, {'from':accounts[0]})
     markets.setOracle(weth, market_adapter, {'from':accounts[0]})
@@ -28,6 +30,7 @@ def init_market_registry(
     markets.setSandbox2(sandbox2, {'from':accounts[0]})
     markets.setTreasury(treasury, {'from':accounts[0]})
     markets.addERC20AssetToTreasury((wbtc, 50), {'from':accounts[0]})
+    markets.setTeamAddress(accounts[8], {'from':accounts[0]})
 
 
     

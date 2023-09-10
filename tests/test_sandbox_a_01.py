@@ -143,8 +143,19 @@ def test_topup_sandbox2(
     logging.info('ubd_amount = {}'.format(ubd.totalSupply()))
 
 
+    assert dai.balanceOf(sandbox2.address) == 0
     markets.topupSandBox2()
+    #treasury.approveForRedeem(markets)
+    #assert wbtc.allowance(treasury.address, markets.address) > 0
+    #
+    #treasury.approveForRedeem(markets)
+    #tx = treasury.sendForTopup(market_adapter)
+    assert dai.balanceOf(sandbox2.address) > 0
+    team = markets.getUBDNetworkTeamAddress()
+    assert dai.allowance(sandbox2.address, team) > 0
     
+
+
     '''logging.info(
         '\nSandbox1.balance(usdt):{}'
         '\ntreasury.balance(wbtc):{}'
