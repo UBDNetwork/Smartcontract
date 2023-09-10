@@ -8,7 +8,7 @@ import '@uniswap/contracts/libraries/TransferHelper.sol';
 
 contract Treasury is MarketConnector {
 
-	uint256 constant SANDBOX2_TOPUP_PERCENT = 33;
+	uint256 public constant SANDBOX2_TOPUP_PERCENT = 33;
     uint256 constant SANDBOX2_TOPUP_MIN_AMOUNT = 1000; // Stable Coin Units (without decimals)
     uint256 constant SANDBOX1_REDEEM_PERCENT = 1;
 
@@ -45,7 +45,8 @@ contract Treasury is MarketConnector {
                 // TODO thibk about more correct approve amount
                 IERC20(_treasuryERC20Assets[i]).approve(
                     _marketAdapter, 
-                    IERC20(_treasuryERC20Assets[i]).balanceOf(address(this)) * SANDBOX1_REDEEM_PERCENT / 100 // 1 %
+                    //IERC20(_treasuryERC20Assets[i]).balanceOf(address(this)) * SANDBOX1_REDEEM_PERCENT / 100 // 1 %
+                    IERC20(_treasuryERC20Assets[i]).balanceOf(address(this)) * SANDBOX2_TOPUP_PERCENT / 100 // 33 %
                 );
             }
     }
@@ -64,10 +65,12 @@ contract Treasury is MarketConnector {
 
     function sendEtherForRedeem(uint256 _percent) external returns (uint256 amount){
         require(msg.sender == marketRegistry, 'Only for market regisrty');
+        amount = 0;
         amount = address(this).balance * _percent / 100; 
         // TODO  check gas with TransferHelper
         address payable toPayable = payable(marketRegistry);
         toPayable.transfer(amount);
+        //return amount;
     }
 
     function treasuryERC20Assets() public view returns(address[] memory assets) {
