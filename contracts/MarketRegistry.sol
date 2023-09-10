@@ -18,10 +18,17 @@ contract MarketRegistry is IMarketRegistry, Ownable{
     uint8 constant public TEAM_PERCENT = 33;
     uint8 constant public NATIVE_TOKEN_DECIMALS = 18;
     uint8 immutable public MIN_NATIVE_PERCENT;
+    uint256 constant DEFAULT_SLIPPAGE_MAX = 100000; // 10%=100000, 0.1%=1000, etc
+    uint256 public    DEFAULT_SLIPPAGE    =  10000; // 1%=10000, 0.1%=1000, etc
     address public UBD_TEAM_ADDRESS;
     UBDNetwork public ubdNetwork;
-    mapping(address => address) public marketAdapterForAsset;
-    mapping(address => address) public oracleAdapterForAsset;
+
+    // mapping(address => address) public marketAdapterForAsset;
+    // mapping(address => address) public oracleAdapterForAsset;
+    
+    // from asset() to market for this asset.
+    mapping(address => Market) public markets;
+
     event ReceivedEther(address, uint);
 
     constructor(uint8 _minNativePercent)
@@ -43,17 +50,21 @@ contract MarketRegistry is IMarketRegistry, Ownable{
 
     {
         require(msg.sender == ubdNetwork.sandbox1, 'For SandBox1 only');
-        address mrktAdapter = marketAdapterForAsset[assetIn];
-        address orclAdapter = oracleAdapterForAsset[assetIn];
         address[] memory path = new address[](2);
         path[0] = assetIn;
         path[1] = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
+        // Because this method used for swap ANY asset to Base, 
+        // lets get market fror EXCHANGE_BASE_ASSET
+        Market memory mrkt = _getMarketForAsset(path[1]); 
+        // address mrktAdapter = marketAdapterForAsset[assetIn];
+        // address orclAdapter = oracleAdapterForAsset[assetIn];
+        
 
         TransferHelper.safeTransferFrom(
-            assetIn, to, mrktAdapter, 
+            assetIn, to, mrkt.marketAdapter, 
             amountIn // 
         );
-        amountOut = IMarketAdapter(mrktAdapter).swapExactERC20InToERC20Out(
+        amountOut = IMarketAdapter(mrkt.marketAdapter).swapExactERC20InToERC20Out(
                 amountIn,
                 0, // TODO add value from oracle
                 path,
@@ -78,41 +89,24 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         // ETH ровно на 1% от общей суммы, находящейся на данный момент в Сокровищнице.
 
         require(msg.sender == ubdNetwork.sandbox1, 'For SandBox1 only');
-        // Get Treasury balance in sandbox1 base_asset
         // 1. Native asset
-        // uint256 trsrNativeBalanceInBaseAsset;
-        // uint256 trsrERC20BalanceInBaseAsset;
-        address mrktAdapter = marketAdapterForAsset[address(0)];
-        address orclAdapter = oracleAdapterForAsset[address(0)];
+        //address mrktAdapter = marketAdapterForAsset[address(0)];
+        //address orclAdapter = oracleAdapterForAsset[address(0)];
+        // Lets get market for Native chain asset (ETH in Ethereum)
+        Market memory mrkt = _getMarketForAsset(address(0)); 
         address[] memory path = new address[](2);
-        // path[1] = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
-        // path[0] = IMarketAdapter(mrktAdapter).WETH();
-        // trsrNativeBalanceInBaseAsset = IOracleAdapter(orclAdapter).getAmountOut(
-        //     ubdNetwork.treasury.balance,
-        //     path
-        // );
 
-        // 2. ERC20 Asset
-        // for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
-        //     orclAdapter = oracleAdapterForAsset[ubdNetwork.treasuryERC20Assets[i].asset];
-        //     path[0] = ubdNetwork.treasuryERC20Assets[i].asset; 
-        //     trsrERC20BalanceInBaseAsset += IOracleAdapter(orclAdapter).getAmountOut(
-        //         IERC20(ubdNetwork.treasuryERC20Assets[i].asset).balanceOf(ubdNetwork.treasury),
-        //         path
-        //     );
-        // }
-        // uint256 redeemSandbox1Amount = (trsrNativeBalanceInBaseAsset + trsrERC20BalanceInBaseAsset) / 100; //1%
-
-        // Swap treasure asssets on market for Sandbox1 redeem
-        // Swap some native asset
+        // Swap treasure Native asssets on market for Sandbox1 redeem
         path[1] = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
-        path[0] = IMarketAdapter(mrktAdapter).WETH();
+        path[0] = IMarketAdapter(mrkt.marketAdapter).WETH();
+        
         // First need withdraw ether to this contracr from treasury
         uint256 etherFromTreasuryAmount = ITreasury(ubdNetwork.treasury).sendEtherForRedeem(
             ITreasury(ubdNetwork.treasury).SANDBOX1_REDEEM_PERCENT()
         );
+        
         //TODO check with amount from just msg.value 
-        IMarketAdapter(mrktAdapter).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount} (
+        IMarketAdapter(mrkt.marketAdapter).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount} (
             etherFromTreasuryAmount, 
             0, // TODO add value from oracle
             path,
@@ -120,21 +114,17 @@ contract MarketRegistry is IMarketRegistry, Ownable{
             block.timestamp
         );
         
-        // TODO    Approve treasure assets
+        // Swap treasure erc20 assets
         //ITreasury(ubdNetwork.treasury).approveForRedeem(mrktAdapter);
         uint256[] memory sended = new uint256[](ubdNetwork.treasuryERC20Assets.length);
-        sended = ITreasury(ubdNetwork.treasury).sendForRedeem(mrktAdapter);
+        // In this case market define ONLY for first Treasure erc20 assets(in case many)
+        mrkt = _getMarketForAsset(ubdNetwork.treasuryERC20Assets[0].asset); 
+        sended = ITreasury(ubdNetwork.treasury).sendForRedeem(mrkt.marketAdapter);
 
         // Swap erc20 treasure assets on market for Sandbox1 redeem
         for (uint256 i; i < sended.length; ++ i){
-            // 2. Transfer all in assets from sandbox1 to adapter
-        // TransferHelper.safeTransferFrom(
-        //     _baseAsset, msg.sender, mrktAdapter, 
-        //     _amountIn // all base asset - to adapter
-        // );
-
             path[0] = ubdNetwork.treasuryERC20Assets[i].asset;
-            IMarketAdapter(mrktAdapter).swapExactERC20InToERC20Out(
+            IMarketAdapter(mrkt.marketAdapter).swapExactERC20InToERC20Out(
                 sended[i],
                 0, // TODO add value from oracle
                 path,
@@ -158,11 +148,12 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         uint256 totalDAITopup;
         address[] memory path = new address[](2);
         path[1] = ISandbox2(ubdNetwork.sandbox2).SANDBOX_2_BASE_ASSET();
-        address mrktAdapter = marketAdapterForAsset[path[1]];
-        address orclAdapter = oracleAdapterForAsset[path[1]];
-        path[0] = IMarketAdapter(mrktAdapter).WETH();
+        Market memory mrkt = _getMarketForAsset(path[1]); 
+        //address mrktAdapter = marketAdapterForAsset[path[1]];
+        //address orclAdapter = oracleAdapterForAsset[path[1]];
+        path[0] = IMarketAdapter(mrkt.marketAdapter).WETH();
         //TODO check with amount from just msg.value 
-        totalDAITopup = IMarketAdapter(mrktAdapter).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount} (
+        totalDAITopup = IMarketAdapter(mrkt.marketAdapter).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount} (
             etherFromTreasuryAmount, 
             0, // TODO add value from oracle
             path,
@@ -174,10 +165,10 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         //ITreasury(ubdNetwork.treasury).approveForRedeem(mrktAdapter);
         //ITreasury(ubdNetwork.treasury).approveForRedeem(address(this));
         uint256[] memory sended = new uint256[](ubdNetwork.treasuryERC20Assets.length);
-        sended = ITreasury(ubdNetwork.treasury).sendForTopup(mrktAdapter);
+        sended = ITreasury(ubdNetwork.treasury).sendForTopup(mrkt.marketAdapter);
         for (uint256 i; i < sended.length; ++ i){
             path[0] = ubdNetwork.treasuryERC20Assets[i].asset;
-            totalDAITopup += IMarketAdapter(mrktAdapter).swapExactERC20InToERC20Out(
+            totalDAITopup += IMarketAdapter(mrkt.marketAdapter).swapExactERC20InToERC20Out(
                 sended[i],
                 0, // TODO add value from oracle
                 path,
@@ -193,19 +184,19 @@ contract MarketRegistry is IMarketRegistry, Ownable{
     function swapExactBASEInToTreasuryAssets(uint256 _amountIn, address _baseAsset) external {
         // Prepare all parameters: percenet of native and erc20 assets for swap
         // Call adapter swap methods
-        // 1. First define shares of Native asset
-        address mrktAdapter = marketAdapterForAsset[address(0)];
+        // 1. First define shares of Native asset ????  TODO
+        Market memory mrkt = _getMarketForAsset(address(0)); 
         //uint256 amountInForNative = _amountIn * _getNativeTreasurePercent() / 100;
-        // 2. Transfer all in assets from sandbox1 to adapter
+        // 2. Transfer all  amount of in asset from sandbox1 to adapter
         TransferHelper.safeTransferFrom(
-            _baseAsset, msg.sender, mrktAdapter, 
+            _baseAsset, msg.sender, mrkt.marketAdapter, 
             _amountIn // all base asset - to adapter
         );
         // 3. Call Swap
         address[] memory path = new address[](2);
         path[0] = _baseAsset;
-        path[1] = IMarketAdapter(mrktAdapter).WETH(); // Native asset
-        IMarketAdapter(mrktAdapter).swapExactERC20InToNativeOut(
+        path[1] = IMarketAdapter(mrkt.marketAdapter).WETH(); // Native asset
+        IMarketAdapter(mrkt.marketAdapter).swapExactERC20InToNativeOut(
             _amountIn * _getNativeTreasurePercent() / 100,
             0, // TODO add value from oracle
             path,
@@ -216,11 +207,11 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         // 4. Call Swap for other Treasuru assets
         uint256 inSwap;
         for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
-            mrktAdapter = marketAdapterForAsset[ubdNetwork.treasuryERC20Assets[i].asset];
+            mrkt = _getMarketForAsset(ubdNetwork.treasuryERC20Assets[i].asset); 
             inSwap = _amountIn * uint256(ubdNetwork.treasuryERC20Assets[i].percent) / 100;
             path[0] = _baseAsset;
             path[1] = ubdNetwork.treasuryERC20Assets[i].asset; // TODO replace with internal var for gas safe
-            IMarketAdapter(mrktAdapter).swapExactERC20InToERC20Out(
+            IMarketAdapter(mrkt.marketAdapter).swapExactERC20InToERC20Out(
                 inSwap,
                 0, // TODO add value from oracle
                 path,
@@ -234,22 +225,30 @@ contract MarketRegistry is IMarketRegistry, Ownable{
     ///////////////////////////////////////////////////////////
     ///////    Admin Functions        /////////////////////////
     ///////////////////////////////////////////////////////////
+    function setMarketParams(address _asset, Market memory _market) external onlyOwner {
+        require(
+            _market.marketAdapter != address(0) &&
+            _market.oracleAdapter != address(0),
+            'No zero address'
+        );
+        _market.slippage = 1;
+        markets[_asset] = _market;
+    }
+
     function setMarket(address _asset, address _market) 
         external 
         onlyOwner 
     {
         require(_market != address(0), 'No zero address');
-        marketAdapterForAsset[_asset] = _market; 
-        //ubdNetwork.marketAdapter = _market;
+        markets[_asset].marketAdapter = _market; 
     }
 
     function setOracle(address _asset, address _oracle) 
         external 
         onlyOwner 
     {
-        //ubdNetwork.oracleAdapter = _oracle;
         require(_oracle != address(0), 'No zero address');
-        oracleAdapterForAsset[_asset] = _oracle;
+        markets[_asset].oracleAdapter = _oracle; 
     }
 
     function setSandbox1(address _adr) 
@@ -319,8 +318,8 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         address[] memory path
     ) public view returns (uint256 amountOut)
     {
-        address orclAdapter = oracleAdapterForAsset[path[path.length - 1]];
-        return IOracleAdapter(orclAdapter).getAmountOut(amountIn, path);
+        Market memory mrkt = _getMarketForAsset(path[path.length - 1]); 
+        return IOracleAdapter(mrkt.oracleAdapter).getAmountOut(amountIn, path);
 
     }
     // TODO check gas with replaced bdNetwork.treasuryERC20Assets[i].asset
@@ -338,7 +337,9 @@ contract MarketRegistry is IMarketRegistry, Ownable{
             sandbox1BaseAsset, s1BalanceInBaseAsset
         );
 
-        uint256 ubdTotalSupply = IERC20Metadata(ISandbox1(ubdNetwork.sandbox1).ubdTokenAddress()).totalSupply();
+        uint256 ubdTotalSupply = IERC20Metadata(
+            ISandbox1(ubdNetwork.sandbox1).ubdTokenAddress()
+        ).totalSupply();
         
         // bring supply to common decimals (18 as native chain token)
         ubdTotalSupply = _bringAmountToNativeDecimals(
@@ -382,8 +383,8 @@ contract MarketRegistry is IMarketRegistry, Ownable{
 
         
         // Calc _holder native balance
-        address mrktAdapter = marketAdapterForAsset[address(0)];
-        path[0] = IMarketAdapter(mrktAdapter).WETH();
+        Market memory mrkt = _getMarketForAsset(address(0)); 
+        path[0] = IMarketAdapter(mrkt.oracleAdapter).WETH();
         path[1] = sandbox1BaseAsset;
         
         
@@ -425,7 +426,7 @@ contract MarketRegistry is IMarketRegistry, Ownable{
             return true; 
         }
     }
-
+/////////////////////////////////////////////////////////////////////////////////////
     function _getNativeTreasurePercent() internal view returns(uint256) {
         uint8 sumPercent;
         for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
@@ -435,7 +436,11 @@ contract MarketRegistry is IMarketRegistry, Ownable{
 
     }
 
-    function _bringAmountToNativeDecimals(address _erc20, uint256 _amount) internal view returns(uint256 amount){
+    function _bringAmountToNativeDecimals(address _erc20, uint256 _amount) 
+        internal 
+        view 
+        returns(uint256 amount)
+    {
         uint8 decimals = IERC20Metadata(_erc20).decimals(); 
         if (decimals < NATIVE_TOKEN_DECIMALS) {
             amount = _amount * 10 ** (NATIVE_TOKEN_DECIMALS - decimals);
@@ -445,6 +450,13 @@ contract MarketRegistry is IMarketRegistry, Ownable{
             amount = _amount;
         }
 
+    }
+
+    function _getMarketForAsset(address _asset) internal view returns(Market memory market) {
+        market = markets[_asset];
+        if (market.slippage == 0) {
+            market.slippage == DEFAULT_SLIPPAGE;
+        }
     }
 
 }
