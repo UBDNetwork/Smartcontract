@@ -11,6 +11,7 @@ interface IMarketRegistry  {
         uint8 percent;
     }
 
+    // TODO  check GAS with another order due data packing
     struct UBDNetwork {
         address sandbox1;
         address treasury;
@@ -19,6 +20,13 @@ interface IMarketRegistry  {
         //address oracleAdapter;
         AsssetShare[] treasuryERC20Assets;
 
+    }
+
+    // TODO  check GAS with another order due data packing
+    struct Market {
+        address marketAdapter;
+        address oracleAdapter;
+        uint256 slippage;
     }
 
     function swapExactInToBASEOut(
@@ -34,7 +42,6 @@ interface IMarketRegistry  {
     function swapExactBASEInToWBTC(uint256 _amountIn) external;
     function swapExactBASEInToTreasuryAssets(uint256 _amountIn, address _baseAsset) external;
     function redeemSandbox1() external payable returns(uint256);
-    function swapTreasuryToDAI(uint256[] memory _stableAmounts) external;
 
     function getAmountOut(
         uint amountIn, 
