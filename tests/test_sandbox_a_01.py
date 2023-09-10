@@ -169,8 +169,8 @@ def test_topup_sandbox2(
     assert wbtc.balanceOf(treasury) == before_wbtc_treasury_amount - wbtc_to_dai_amount
     assert treasury.balance() == before_eth_treasury_amount - eth_to_dai_amount
 
-    logging.info(markets.balance())
-    logging.info(wbtc.balanceOf(market_adapter))
+    logging.info('market eth balance = {}'.format(markets.balance()))
+    logging.info('market_adapter wbtc balance = {}'.format(wbtc.balanceOf(market_adapter)))
 
     logging.info('dai_balance_sandbox = {}'.format(dai.balanceOf(sandbox2.address)))
 
