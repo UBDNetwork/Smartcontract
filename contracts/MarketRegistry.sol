@@ -18,8 +18,11 @@ contract MarketRegistry is IMarketRegistry, Ownable{
     uint8 constant public TEAM_PERCENT = 33;
     uint8 constant public NATIVE_TOKEN_DECIMALS = 18;
     uint8 immutable public MIN_NATIVE_PERCENT;
-    uint256 constant DEFAULT_SLIPPAGE_MAX = 100000; // 10%=100000, 0.1%=1000, etc
-    uint256 public   DEFAULT_SLIPPAGE     =  10000; // 1%=10000, 0.1%=1000, etc
+
+    // Slippage params in Base Points ( https://en.wikipedia.org/wiki/Basis_point )
+    uint256 constant DEFAULT_SLIPPAGE_MAX = 1000; // 10%=1000 bp, 0.1%=10 bp, etc
+    uint256 public   DEFAULT_SLIPPAGE     =  100; //   1%=100 bp, 0.1%=10 bp, etc
+    
     address public UBD_TEAM_ADDRESS;
     UBDNetwork public ubdNetwork;
 
@@ -53,17 +56,16 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         // Because this method used for swap ANY asset to Base, 
         // lets get market fror EXCHANGE_BASE_ASSET
         Market memory mrkt = _getMarketForAsset(path[1]); 
-        // address mrktAdapter = marketAdapterForAsset[assetIn];
-        // address orclAdapter = oracleAdapterForAsset[assetIn];
-        
 
         TransferHelper.safeTransferFrom(
             assetIn, to, mrkt.marketAdapter, 
             amountIn // 
         );
+        
+        uint256 notLessThen = _getNotLessThenEstimate(amountIn, path, mrkt.slippage);
         amountOut = IMarketAdapter(mrkt.marketAdapter).swapExactERC20InToERC20Out(
                 amountIn,
-                0, // TODO add value from oracle
+                notLessThen, // TODO add NOT_LESS value from oracle
                 path,
                 to,
                 block.timestamp
@@ -103,9 +105,10 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         );
         
         //TODO check with amount from just msg.value 
+        uint256 notLessThen = _getNotLessThenEstimate(etherFromTreasuryAmount, path, mrkt.slippage);
         IMarketAdapter(mrkt.marketAdapter).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount} (
             etherFromTreasuryAmount, 
-            0, // TODO add value from oracle
+            notLessThen, 
             path,
             ubdNetwork.sandbox1,
             block.timestamp
@@ -121,9 +124,10 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         // Swap erc20 treasure assets on market for Sandbox1 redeem
         for (uint256 i; i < sended.length; ++ i){
             path[0] = ubdNetwork.treasuryERC20Assets[i].asset;
+            notLessThen = _getNotLessThenEstimate(sended[i], path, mrkt.slippage);
             IMarketAdapter(mrkt.marketAdapter).swapExactERC20InToERC20Out(
                 sended[i],
-                0, // TODO add value from oracle
+                notLessThen, 
                 path,
                 ubdNetwork.sandbox1,
                 block.timestamp
@@ -150,9 +154,11 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         //address orclAdapter = oracleAdapterForAsset[path[1]];
         path[0] = IMarketAdapter(mrkt.marketAdapter).WETH();
         //TODO check with amount from just msg.value 
-        totalDAITopup = IMarketAdapter(mrkt.marketAdapter).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount} (
+        uint256 notLessThen = _getNotLessThenEstimate(etherFromTreasuryAmount, path, mrkt.slippage);
+        totalDAITopup = IMarketAdapter(mrkt.marketAdapter).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount} 
+        (
             etherFromTreasuryAmount, 
-            0, // TODO add value from oracle
+            notLessThen, // TODO add value from oracle
             path,
             ubdNetwork.sandbox2,
             block.timestamp
@@ -165,9 +171,10 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         sended = ITreasury(ubdNetwork.treasury).sendForTopup(mrkt.marketAdapter);
         for (uint256 i; i < sended.length; ++ i){
             path[0] = ubdNetwork.treasuryERC20Assets[i].asset;
+            notLessThen = _getNotLessThenEstimate(sended[i], path, mrkt.slippage);
             totalDAITopup += IMarketAdapter(mrkt.marketAdapter).swapExactERC20InToERC20Out(
                 sended[i],
-                0, // TODO add value from oracle
+                notLessThen, // TODO add value from oracle
                 path,
                 ubdNetwork.sandbox2,
                 block.timestamp
@@ -193,24 +200,26 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         address[] memory path = new address[](2);
         path[0] = _baseAsset;
         path[1] = IMarketAdapter(mrkt.marketAdapter).WETH(); // Native asset
+        uint256 inSwap = _amountIn * _getNativeTreasurePercent() / 100;
+        uint256 notLessThen = _getNotLessThenEstimate(inSwap, path, mrkt.slippage);
         IMarketAdapter(mrkt.marketAdapter).swapExactERC20InToNativeOut(
-            _amountIn * _getNativeTreasurePercent() / 100,
-            0, // TODO add value from oracle
+            inSwap,
+            notLessThen, 
             path,
             ubdNetwork.treasury,
             block.timestamp
         );
 
         // 4. Call Swap for other Treasuru assets
-        uint256 inSwap;
         for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
             mrkt = _getMarketForAsset(ubdNetwork.treasuryERC20Assets[i].asset); 
             inSwap = _amountIn * uint256(ubdNetwork.treasuryERC20Assets[i].percent) / 100;
             path[0] = _baseAsset;
             path[1] = ubdNetwork.treasuryERC20Assets[i].asset; // TODO replace with internal var for gas safe
+            notLessThen = _getNotLessThenEstimate(inSwap, path, mrkt.slippage);
             IMarketAdapter(mrkt.marketAdapter).swapExactERC20InToERC20Out(
                 inSwap,
-                0, // TODO add value from oracle
+                notLessThen, 
                 path,
                 ubdNetwork.treasury,
                 block.timestamp
@@ -458,6 +467,15 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         if (market.slippage == 0) {
             market.slippage == DEFAULT_SLIPPAGE;
         }
+    }
+
+    function _getNotLessThenEstimate(uint256 _amountIn, address[] memory _path, uint256 _slippagePercentPoints) 
+        internal 
+        view 
+        returns (uint256 notLessThen) 
+    {
+        notLessThen = getAmountOut(_amountIn, _path) 
+            - getAmountOut(_amountIn, _path) * _slippagePercentPoints / 10000; 
     }
 
 }
