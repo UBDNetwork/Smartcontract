@@ -19,13 +19,10 @@ contract MarketRegistry is IMarketRegistry, Ownable{
     uint8 constant public NATIVE_TOKEN_DECIMALS = 18;
     uint8 immutable public MIN_NATIVE_PERCENT;
     uint256 constant DEFAULT_SLIPPAGE_MAX = 100000; // 10%=100000, 0.1%=1000, etc
-    uint256 public    DEFAULT_SLIPPAGE    =  10000; // 1%=10000, 0.1%=1000, etc
+    uint256 public   DEFAULT_SLIPPAGE     =  10000; // 1%=10000, 0.1%=1000, etc
     address public UBD_TEAM_ADDRESS;
     UBDNetwork public ubdNetwork;
 
-    // mapping(address => address) public marketAdapterForAsset;
-    // mapping(address => address) public oracleAdapterForAsset;
-    
     // from asset() to market for this asset.
     mapping(address => Market) public markets;
 
@@ -228,10 +225,14 @@ contract MarketRegistry is IMarketRegistry, Ownable{
     function setMarketParams(address _asset, Market memory _market) external onlyOwner {
         require(
             _market.marketAdapter != address(0) &&
-            _market.oracleAdapter != address(0),
+            _market.oracleAdapter != address(0) &&
+            _market.slippage <= DEFAULT_SLIPPAGE_MAX,
             'No zero address'
         );
-        _market.slippage = 1;
+
+        if (_market.slippage == 0) {
+           _market.slippage = DEFAULT_SLIPPAGE;    
+        }
         markets[_asset] = _market;
     }
 
