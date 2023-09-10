@@ -15,7 +15,7 @@ import '@uniswap/contracts/libraries/TransferHelper.sol';
 
 contract MarketRegistry is IMarketRegistry, Ownable{
 
-    uint8 constant public TEAM_PERCENT = 3;
+    uint8 constant public TEAM_PERCENT = 33;
     uint8 constant public NATIVE_TOKEN_DECIMALS = 18;
     uint8 immutable public MIN_NATIVE_PERCENT;
     address public UBD_TEAM_ADDRESS;
@@ -170,7 +170,8 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         );
 
         // Swap ERC20 Treasury assets on DAI 
-        ITreasury(ubdNetwork.treasury).approveForRedeem(mrktAdapter);
+        //ITreasury(ubdNetwork.treasury).approveForRedeem(mrktAdapter);
+        //ITreasury(ubdNetwork.treasury).approveForRedeem(address(this));
         uint256[] memory sended = new uint256[](ubdNetwork.treasuryERC20Assets.length);
         sended = ITreasury(ubdNetwork.treasury).sendForTopup(mrktAdapter);
         for (uint256 i; i < sended.length; ++ i){
