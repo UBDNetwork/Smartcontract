@@ -70,7 +70,6 @@ contract Treasury is MarketConnector {
         // TODO  check gas with TransferHelper
         address payable toPayable = payable(marketRegistry);
         toPayable.transfer(amount);
-        //return amount;
     }
 
     function treasuryERC20Assets() public view returns(address[] memory assets) {
