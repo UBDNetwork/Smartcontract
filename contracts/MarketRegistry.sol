@@ -89,8 +89,6 @@ contract MarketRegistry is IMarketRegistry, Ownable{
 
         require(msg.sender == ubdNetwork.sandbox1, 'For SandBox1 only');
         // 1. Native asset
-        //address mrktAdapter = marketAdapterForAsset[address(0)];
-        //address orclAdapter = oracleAdapterForAsset[address(0)];
         // Lets get market for Native chain asset (ETH in Ethereum)
         Market memory mrkt = _getMarketForAsset(address(0)); 
         address[] memory path = new address[](2);
@@ -104,8 +102,10 @@ contract MarketRegistry is IMarketRegistry, Ownable{
             ITreasury(ubdNetwork.treasury).SANDBOX1_REDEEM_PERCENT()
         );
         
-        //TODO check with amount from just msg.value 
+        
         uint256 notLessThen = _getNotLessThenEstimate(etherFromTreasuryAmount, path, mrkt.slippage);
+        
+        //TODO check with amount from just msg.value 
         IMarketAdapter(mrkt.marketAdapter).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount} (
             etherFromTreasuryAmount, 
             notLessThen, 
@@ -115,7 +115,6 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         );
         
         // Swap treasure erc20 assets
-        //ITreasury(ubdNetwork.treasury).approveForRedeem(mrktAdapter);
         uint256[] memory sended = new uint256[](ubdNetwork.treasuryERC20Assets.length);
         // In this case market define ONLY for first Treasure erc20 assets(in case many)
         mrkt = _getMarketForAsset(ubdNetwork.treasuryERC20Assets[0].asset); 
@@ -138,6 +137,7 @@ contract MarketRegistry is IMarketRegistry, Ownable{
 
     // Если обеспечение UBD 3:1 и выше, то Сокровищница меняет  
     // 1/3 своих средств на DAI и переводит их в Песочницу 2.
+    // TODO think about move this call to sendbox2
     function topupSandBox2() external payable {
         require(ITreasury(ubdNetwork.treasury).isReadyForTopupSandBox2(), 'Too less for Sandbox2 TopUp');
         // Native asset
@@ -150,11 +150,10 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         address[] memory path = new address[](2);
         path[1] = ISandbox2(ubdNetwork.sandbox2).SANDBOX_2_BASE_ASSET();
         Market memory mrkt = _getMarketForAsset(path[1]); 
-        //address mrktAdapter = marketAdapterForAsset[path[1]];
-        //address orclAdapter = oracleAdapterForAsset[path[1]];
         path[0] = IMarketAdapter(mrkt.marketAdapter).WETH();
-        //TODO check with amount from just msg.value 
+        
         uint256 notLessThen = _getNotLessThenEstimate(etherFromTreasuryAmount, path, mrkt.slippage);
+        //TODO check with amount from just msg.value 
         totalDAITopup = IMarketAdapter(mrkt.marketAdapter).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount} 
         (
             etherFromTreasuryAmount, 
@@ -165,8 +164,6 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         );
 
         // Swap ERC20 Treasury assets on DAI 
-        //ITreasury(ubdNetwork.treasury).approveForRedeem(mrktAdapter);
-        //ITreasury(ubdNetwork.treasury).approveForRedeem(address(this));
         uint256[] memory sended = new uint256[](ubdNetwork.treasuryERC20Assets.length);
         sended = ITreasury(ubdNetwork.treasury).sendForTopup(mrkt.marketAdapter);
         for (uint256 i; i < sended.length; ++ i){
@@ -322,6 +319,13 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         UBD_TEAM_ADDRESS = _adr;
     }
     ///////////////////////////////////////////////////////////////
+    // TODO for  call from topupsandbox2 and redeem sandbox1
+    function _swapTreasuryAssetsFor(address _to, uint256[] memory _amounts) 
+        internal 
+        returns (uint256) 
+    {
+
+    }
 
     function getAmountOut(
         uint amountIn, 
