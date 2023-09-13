@@ -12,7 +12,8 @@ contract Sandbox2 is MarketConnector {
     address immutable public SANDBOX_2_BASE_ASSET;
 
     uint256 public lastTreasuryTopUp;
-    uint256 public MIN_TREASURY_TOPUP_AMOUNT = 100; // Stable Coin Units (without decimals)
+    //uint256 public MIN_TREASURY_TOPUP_AMOUNT = 100; // Stable Coin Units (without decimals)
+    uint256 public MIN_TREASURY_TOPUP_AMOUNT = 1000; // Stable Coin Units (without decimals)
 
     event TeamShareIncreased(uint256 Income, uint256 TeamLimit);
 

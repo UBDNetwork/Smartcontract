@@ -1,5 +1,6 @@
 import pytest
 import logging
+import math
 from brownie import Wei, reverts, chain
 from help_init_registry import init_market_registry
 LOGGER = logging.getLogger(__name__)
@@ -8,6 +9,7 @@ PAY_AMOUNT = 1005e6
 MINT_UBD_AMOUNT = 1000e18
 ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 def test_usdt_to_ubd(accounts, ubd, sandbox1, usdt):
+    logging.info('!!!!!!!!!!!!!!!!!   exchange from usdt to ubd    !!!!!!!!!!!!!!!')
     sandbox1.setUBDToken(ubd, {'from':accounts[0]})
     sandbox1.setBeneficiary(accounts[1], {'from':accounts[0]})
     
@@ -55,10 +57,10 @@ def test_usdt_to_ubd_100k_1(accounts, ubd, sandbox1, usdt):
     assert tx.return_value == MINT_UBD_AMOUNT * 100
     assert ubd.balanceOf(accounts[0]) == before_ubd_acc0 + MINT_UBD_AMOUNT * 100
 
-def test_topup_treasury2(
+def test_topup_treasury_from_sandbox1(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
         treasury, ubd, markets, wbtc, market_adapter, weth):
-    
+    logging.info('!!!!!!!!!!!!!!!!!   topup treasury from sandbox1    !!!!!!!!!!!!!!!')
     logging.info(
         '\nSandbox1.balance(usdt):{}'
         '\ntreasury.balance(wbtc):{}'
@@ -96,7 +98,7 @@ def test_topup_treasury2(
 def test_topup_sandbox2(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
         treasury, ubd, markets, wbtc, market_adapter, weth):
-    
+    logging.info('!!!!!!!!!!!!!!!!!   topup sandbox2 from treasury    !!!!!!!!!!!!!!!')
     assert treasury.isReadyForTopupSandBox2() == False
     
     for i in range(100):
@@ -184,6 +186,8 @@ def test_topup_treasury_from_sandbox2(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
         treasury, ubd, markets, wbtc, market_adapter, weth):
     
+    logging.info('!!!!!!!!!!!!!!!!!   topup treasury from sandbox2    !!!!!!!!!!!!!!!')
+
     mockuniv2.setRate(dai.address, wbtc.address, (28000, 1))
     mockuniv2.setRate(dai.address, weth.address, (1400, 1))
     mockuniv2.setRate(weth.address, dai.address, (1, 28000))
@@ -209,102 +213,47 @@ def test_topup_treasury_from_sandbox2(
     before_eth_treasury_amount = treasury.balance()
     before_dai_sandbox2_amount = dai.balanceOf(sandbox2.address)
     logging.info('dai to exchange = {}'.format(before_dai_sandbox2_amount/100))
-    sandbox2.topupTreasury()
+    assert sandbox2.lastTreasuryTopUp() == 0
+    tx = sandbox2.topupTreasury()
+    assert tx.return_value == True
+    assert sandbox2.lastTreasuryTopUp() > 0
 
     wbtc_amount_calc = before_dai_sandbox2_amount*10**wbtc.decimals()/mockuniv2.rates(dai, wbtc)[0]/10**dai.decimals()/2/100
     eth_amount_calc = before_dai_sandbox2_amount*10**weth.decimals()/mockuniv2.rates(dai, weth)[0]/10**dai.decimals()/2/100
-
-    logging.info(wbtc_amount_calc)
-    logging.info(before_dai_sandbox2_amount)
-    logging.info(mockuniv2.rates(dai, wbtc)[0])
-    logging.info(wbtc.decimals())
-    logging.info(dai.decimals())
-
 
     assert dai.balanceOf(sandbox2) == before_dai_sandbox2_amount*99/100
     assert wbtc.balanceOf(treasury) == before_wbtc_treasury_amount + wbtc_amount_calc
     assert treasury.balance() - before_eth_treasury_amount - eth_amount_calc < 100
 
+    #second time in day - revert is expected
+    with reverts('Please wait untit TREASURY_TOPUP_PERIOD'):
+        sandbox2.topupTreasury()
 
+    #security increased and became higher than 1 - topup treasury from sandbox2 is impossible
+    mockuniv2.setRate(dai.address, wbtc.address, (56000, 1))
+    mockuniv2.setRate(dai.address, weth.address, (2800, 1))
+    mockuniv2.setRate(weth.address, dai.address, (1, 56000))
+    mockuniv2.setRate(wbtc.address, dai.address, (1, 2800))
 
+    mockuniv2.setRate(usdt.address, wbtc.address, (56000, 1))
+    mockuniv2.setRate(usdt.address, weth.address, (2800, 1))
+    mockuniv2.setRate(wbtc.address, usdt.address, (1, 56000))
+    mockuniv2.setRate(weth.address, usdt.address, (1, 2800))
 
+    wbtc_treasury_amount_in_usdt = wbtc.balanceOf(treasury.address)*mockuniv2.rates(wbtc, usdt)[1]*10**usdt.decimals()/10**wbtc.decimals()
+    eth_treasury_amount_in_usdt = treasury.balance()*mockuniv2.rates(weth, usdt)[1]*10**usdt.decimals()/10**weth.decimals()
 
-    '''logging.info(
-        '\nSandbox1.balance(usdt):{}'
-        '\ntreasury.balance(wbtc):{}'
-        '\ntreasury.balance(eth):{}'.format(
-            usdt.balanceOf(sandbox1),
-            wbtc.balanceOf(treasury),
-            treasury.balance()
-    ))
-    logging.info('UBDNetwork.state:{}'.format(markets.ubdNetwork()))
-    logging.info('UBDNetwork.state:{}'.format(markets.getUBDNetworkInfo()))
-    accounts[9].transfer(mockuniv2, accounts[9].balance()-1e18)
+    security = 10*(wbtc_treasury_amount_in_usdt + eth_treasury_amount_in_usdt + usdt_sandbox1_amount)/ubd_amount_in_usdt
+    assert markets.getCollateralLevelM10() == math.trunc(security)
 
-    #sandbox has 1% of balance > 1000 usdt - can exchange usdt to ether and wbtc
-    before_usdt_sandbox = usdt.balanceOf(sandbox1.address)
-    tx = sandbox1.topupTreasury({'from':accounts[1]})
-
-    assert usdt.balanceOf(sandbox1.address) == before_usdt_sandbox - before_usdt_sandbox/100  #-1%
-
-
-    logging.info('Ether transfer:{}'.format(tx.events['ReceivedEther']))
-    [logging.info('\nfrom:{} to:{} value:{}'.format(x['from'],x['to'],x['value'])) for x in tx.events['Transfer']]
-    logging.info(
-        '\nSandbox1.balance(usdt):{}'
-        '\ntreasury.balance(wbtc):{}'
-        '\ntreasury.balance(eth):{}'.format(
-            usdt.balanceOf(sandbox1),
-            wbtc.balanceOf(treasury),
-            treasury.balance()
-    ))
-
-    #exchange 1% usdt to 50% ETH and 50% WBTC
-    assert wbtc.balanceOf(treasury) - (before_usdt_sandbox/100/2/mockuniv2.rates(usdt.address, wbtc.address)[0])*10**wbtc.decimals()/10**usdt.decimals() <=100
-    assert (before_usdt_sandbox/100/2/mockuniv2.rates(usdt.address, weth.address)[0])*10**weth.decimals()/10**usdt.decimals() - treasury.balance()  <= 3000000000000'''
-
+    before_wbtc_treasury_amount = wbtc.balanceOf(treasury.address)
+    before_eth_treasury_amount = treasury.balance()
+    before_dai_sandbox2_amount = dai.balanceOf(sandbox2.address)
     
-'''def test_ubd_to_usdt(accounts, ubd, sandbox1, usdt):
-    fee_percent = sandbox1.paymentTokens(ubd.address)[1]/sandbox1.PERCENT_DENOMINATOR()
+    tx = sandbox2.topupTreasury()
 
-    logging.info(usdt.balanceOf(sandbox1))
-    ubd.approve(sandbox1, MINT_UBD_AMOUNT, {'from':accounts[0]})
-    tx = sandbox1.swapExactInput(
-        ubd, 
-        MINT_UBD_AMOUNT,
-        0,
-        0,
-        ZERO_ADDRESS, 
-        {'from':accounts[0]}
-    )
-    logging.info('tx.return_value: {}'.format(tx.return_value))
-    usdt_balance = usdt.balanceOf(sandbox1)
-    logging.info('USDT.balanceOf(SANDBOX1): {}'.format(
-        usdt_balance
-    ))
-    assert ubd.balanceOf(accounts[0]) == 0
-    assert usdt.balanceOf(sandbox1) - (MINT_UBD_AMOUNT*fee_percent/(100+fee_percent))*10**usdt.decimals()/10**ubd.decimals() <= 1'''
-
-'''def test_usdt_to_ubd_100k(accounts, ubd, sandbox1, usdt):
-    usdt.approve(sandbox1, PAY_AMOUNT * 100, {'from':accounts[0]})
-    logging.info('Calculated UBD amount: {}'.format(
-        sandbox1.calcOutUBDForExactInBASE(PAY_AMOUNT * 100))
-    )
-    
-    
-    tx = sandbox1.swapExactInput(
-        usdt, 
-        PAY_AMOUNT * 100,
-        0,
-        0,
-        ZERO_ADDRESS, 
-        {'from':accounts[0]}
-    )
-    #logging.info('tx: {}'.format(tx.infwo()))
-    assert tx.return_value == MINT_UBD_AMOUNT * 100
-    assert ubd.balanceOf(accounts[0]) == MINT_UBD_AMOUNT * 100'''
-
-
-
-
+    assert tx.return_value == False
+    assert dai.balanceOf(sandbox2) == before_dai_sandbox2_amount
+    assert wbtc.balanceOf(treasury) == before_wbtc_treasury_amount
+    assert treasury.balance() == before_eth_treasury_amount
 
