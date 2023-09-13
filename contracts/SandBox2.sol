@@ -27,7 +27,8 @@ contract Sandbox2 is MarketConnector {
     function topupTreasury() external returns(bool) {
         if (_getCollateralSystemLevelM10() >= 5 && _getCollateralSystemLevelM10() < 10) {
             uint256 topupAmount = 
-                IERC20(SANDBOX_2_BASE_ASSET).balanceOf(address(this)) / (100 * 2);
+                //IERC20(SANDBOX_2_BASE_ASSET).balanceOf(address(this)) / (100 * 2);
+                IERC20(SANDBOX_2_BASE_ASSET).balanceOf(address(this)) / 100;
             require(
                 topupAmount 
                     >= MIN_TREASURY_TOPUP_AMOUNT * 10**IERC20Metadata(SANDBOX_2_BASE_ASSET).decimals(),// ??? 
