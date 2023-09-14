@@ -42,7 +42,14 @@ def test_usdt_to_ubd(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2,
     assert sandbox1.EXCHANGE_BASE_ASSET() == usdt.address
     with reverts('Ownable: caller is not the owner'):
         sandbox1.topupTreasuryEmergency(usdc.address, {"from": accounts[1]})
+    before_usdc_sandbox = usdc.balanceOf(sandbox1.address)
     sandbox1.topupTreasuryEmergency(usdc.address, {"from": accounts[0]})
+    logging.info(wbtc.balanceOf(treasury))
+    logging.info(before_usdc_sandbox)
+    logging.info((before_usdc_sandbox/2/mockuniv2.rates(usdc.address, wbtc.address)[0])*10**wbtc.decimals()/10**usdc.decimals())
+
+    assert wbtc.balanceOf(treasury) - (before_usdc_sandbox/2/mockuniv2.rates(usdc.address, wbtc.address)[0])*10**wbtc.decimals()/10**usdc.decimals() <=1
+    assert (before_usdc_sandbox/2/mockuniv2.rates(usdc.address, weth.address)[0])*10**weth.decimals()/10**usdc.decimals() - treasury.balance()  <= 1000000
 
 
     
