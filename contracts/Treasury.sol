@@ -9,8 +9,8 @@ import '@uniswap/contracts/libraries/TransferHelper.sol';
 contract Treasury is MarketConnector {
 
 	uint256 public constant SANDBOX2_TOPUP_PERCENT = 33;
-    uint256 constant SANDBOX2_TOPUP_MIN_AMOUNT = 1000; // Stable Coin Units (without decimals)
-    uint256 constant SANDBOX1_REDEEM_PERCENT = 1;
+    uint256 public constant SANDBOX2_TOPUP_MIN_AMOUNT = 1000; // Stable Coin Units (without decimals)
+    uint256 public constant SANDBOX1_REDEEM_PERCENT = 1;
 
     constructor(address _markets)
         MarketConnector(_markets)

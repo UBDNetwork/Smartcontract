@@ -10,7 +10,7 @@ ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt, sandbox1, ubd):
     global PAY_AMOUNT
     #prepare data
-    fee_percent = sandbox1.paymentTokens(usdt.address)[1]/exchange_single.PERCENT_DENOMINATOR()
+    fee_percent = sandbox1.paymentTokens(usdt.address)[1]/sandbox1.PERCENT_DENOMINATOR()
 
     exchange_single.setUBDToken(ubd_exch, {'from':accounts[0]})
     exchange_single.setBeneficiary(accounts[1], {'from':accounts[0]})
