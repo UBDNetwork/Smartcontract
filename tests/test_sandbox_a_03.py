@@ -14,6 +14,7 @@ def test_usdt_to_ubd(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2,
     sandbox1.setUBDToken(ubd, {'from':accounts[0]})
     sandbox1.setBeneficiary(accounts[1], {'from':accounts[0]})
     init_market_registry(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, treasury, ubd, markets, wbtc, market_adapter, weth, usdc)
+    accounts[9].transfer(mockuniv2, accounts[9].balance()-1e18)
     
     usdt.approve(sandbox1, PAY_AMOUNT_USDT, {'from':accounts[0]})
     
