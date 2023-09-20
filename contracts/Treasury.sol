@@ -51,21 +51,31 @@ contract Treasury is MarketConnector {
             }
     }
 
+    // Depricated
     function sendForRedeem(address _marketAdapter) external returns(uint256[] memory){
         require(msg.sender == marketRegistry, 'Only for market regisrty');
 
         return _sendPercentOfTreasuryTokens(_marketAdapter, SANDBOX1_REDEEM_PERCENT);
     }
 
+    // Depricated
     function sendForTopup(address _marketAdapter) external returns(uint256[] memory){
         require(msg.sender == marketRegistry, 'Only for market regisrty');
         
         return _sendPercentOfTreasuryTokens(_marketAdapter, SANDBOX2_TOPUP_PERCENT);
     }
 
+    function sendERC20ForSwap(address _marketAdapter, uint256 _percent) 
+        external 
+        returns(uint256[] memory)
+    {
+        require(msg.sender == marketRegistry, 'Only for market regisrty');
+        
+        return _sendPercentOfTreasuryTokens(_marketAdapter, _percent);
+    }
+
     function sendEtherForRedeem(uint256 _percent) external returns (uint256 amount){
         require(msg.sender == marketRegistry, 'Only for market regisrty');
-        amount = 0;
         amount = address(this).balance * _percent / 100; 
         // TODO  check gas with TransferHelper
         address payable toPayable = payable(marketRegistry);

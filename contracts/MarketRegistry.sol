@@ -15,12 +15,12 @@ import '@uniswap/contracts/libraries/TransferHelper.sol';
 
 contract MarketRegistry is IMarketRegistry, Ownable{
 
-    uint8 constant public TEAM_PERCENT = 33;
-    uint8 constant public NATIVE_TOKEN_DECIMALS = 18;
-    uint8 immutable public MIN_NATIVE_PERCENT;
+    uint8 public constant  TEAM_PERCENT = 33;
+    uint8 public constant  NATIVE_TOKEN_DECIMALS = 18;
+    uint8 public immutable  MIN_NATIVE_PERCENT;
 
     // Slippage params in Base Points ( https://en.wikipedia.org/wiki/Basis_point )
-    uint256 constant DEFAULT_SLIPPAGE_MAX = 1000; // 10%=1000 bp, 0.1%=10 bp, etc
+    uint256 public constant DEFAULT_SLIPPAGE_MAX = 1000; // 10%=1000 bp, 0.1%=10 bp, etc
     uint256 public   DEFAULT_SLIPPAGE     =  100; //   1%=100 bp, 0.1%=10 bp, etc
     
     address public UBD_TEAM_ADDRESS;
@@ -75,101 +75,160 @@ contract MarketRegistry is IMarketRegistry, Ownable{
 
     function swapExactBASEInToETH(uint256 _amountIn) external{}
     function swapExactBASEInToWBTC(uint256 _amountIn) external{}
+    
+    // DEPRICATED due swapTreasuryAssetsPercentToSandboxAsset() 
+    // function redeemSandbox1() external payable returns(uint256){
+    //     // Двумя главными условиями перехода средств из Cокровищницы в Песочницу 1,
+    //     // является: обеспеченность 1:1 и выше, а также поступление запроса на 
+    //     // вывод денег (aka пользователь возвращает UBD и хочет свои стейблы 
+    //     // или выплаты от стейкинга), а денег в Песочнице 1 не хватает, чтобы 
+    //     // покрыть сумму вывода. Только при этих двух условиях, а не какого-нибудь 
+    //     // из них, происходит анлок средств в Сокровищнице для пополнения Песочницы 1!
+    //     //В случае наступления двух данных условий, средства могут переходить 
+    //     // из Сокровищницы в Песочницу 1 на закупку cтейбла на BTC и
+    //     // ETH ровно на 1% от общей суммы, находящейся на данный момент в Сокровищнице.
 
-    function redeemSandbox1() external payable returns(uint256){
-        // Двумя главными условиями перехода средств из Cокровищницы в Песочницу 1,
-        // является: обеспеченность 1:1 и выше, а также поступление запроса на 
-        // вывод денег (aka пользователь возвращает UBD и хочет свои стейблы 
-        // или выплаты от стейкинга), а денег в Песочнице 1 не хватает, чтобы 
-        // покрыть сумму вывода. Только при этих двух условиях, а не какого-нибудь 
-        // из них, происходит анлок средств в Сокровищнице для пополнения Песочницы 1!
-        //В случае наступления двух данных условий, средства могут переходить 
-        // из Сокровищницы в Песочницу 1 на закупку cтейбла на BTC и
-        // ETH ровно на 1% от общей суммы, находящейся на данный момент в Сокровищнице.
+    //     require(msg.sender == ubdNetwork.sandbox1, 'For SandBox1 only');
+    //     // 1. Native asset
+    //     // Lets get market for Native chain asset (ETH in Ethereum)
+    //     Market memory mrkt = _getMarketForAsset(address(0)); 
+    //     address[] memory path = new address[](2);
 
-        require(msg.sender == ubdNetwork.sandbox1, 'For SandBox1 only');
-        // 1. Native asset
-        // Lets get market for Native chain asset (ETH in Ethereum)
-        Market memory mrkt = _getMarketForAsset(address(0)); 
+    //     // Swap treasure Native asssets on market for Sandbox1 redeem
+    //     path[1] = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
+    //     path[0] = IMarketAdapter(mrkt.marketAdapter).WETH();
+        
+    //     // First need withdraw ether to this contracr from treasury
+    //     uint256 etherFromTreasuryAmount = ITreasury(ubdNetwork.treasury).sendEtherForRedeem(
+    //         ITreasury(ubdNetwork.treasury).SANDBOX1_REDEEM_PERCENT()
+    //     );
+        
+        
+    //     uint256 notLessThen = _getNotLessThenEstimate(etherFromTreasuryAmount, path, mrkt.slippage);
+        
+    //     //TODO check with amount from just msg.value 
+    //     IMarketAdapter(mrkt.marketAdapter).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount} (
+    //         etherFromTreasuryAmount, 
+    //         notLessThen, 
+    //         path,
+    //         ubdNetwork.sandbox1,
+    //         block.timestamp
+    //     );
+        
+    //     // Swap treasure erc20 assets
+    //     uint256[] memory sended = new uint256[](ubdNetwork.treasuryERC20Assets.length);
+    //     // In this case market define ONLY for first Treasure erc20 assets(in case many)
+    //     mrkt = _getMarketForAsset(ubdNetwork.treasuryERC20Assets[0].asset); 
+    //     sended = ITreasury(ubdNetwork.treasury).sendForRedeem(mrkt.marketAdapter);
+
+    //     // Swap erc20 treasure assets on market for Sandbox1 redeem
+    //     for (uint256 i; i < sended.length; ++ i){
+    //         path[0] = ubdNetwork.treasuryERC20Assets[i].asset;
+    //         notLessThen = _getNotLessThenEstimate(sended[i], path, mrkt.slippage);
+    //         IMarketAdapter(mrkt.marketAdapter).swapExactERC20InToERC20Out(
+    //             sended[i],
+    //             notLessThen, 
+    //             path,
+    //             ubdNetwork.sandbox1,
+    //             block.timestamp
+    //         );
+
+    //     }
+    // }
+
+    // // Если обеспечение UBD 3:1 и выше, то Сокровищница меняет  
+    // // 1/3 своих средств на DAI и переводит их в Песочницу 2.
+    // // TODO think about move this call to sendbox2
+    // // DEPRICATED due swapTreasuryAssetsPercentToSandboxAsset() 
+    // function topupSandBox2() external payable {
+    //     require(ITreasury(ubdNetwork.treasury).isReadyForTopupSandBox2(), 'Too less for Sandbox2 TopUp');
+    //     // Native asset
+    //     // 1. Ether transfer to this contract
+    //     uint256 etherFromTreasuryAmount = ITreasury(ubdNetwork.treasury).sendEtherForRedeem(
+    //         ITreasury(ubdNetwork.treasury).SANDBOX2_TOPUP_PERCENT()
+    //     );
+        
+    //     uint256 totalDAITopup;
+    //     address[] memory path = new address[](2);
+    //     path[1] = ISandbox2(ubdNetwork.sandbox2).SANDBOX_2_BASE_ASSET();
+    //     Market memory mrkt = _getMarketForAsset(path[1]); 
+    //     path[0] = IMarketAdapter(mrkt.marketAdapter).WETH();
+        
+    //     uint256 notLessThen = _getNotLessThenEstimate(etherFromTreasuryAmount, path, mrkt.slippage);
+    //     //TODO check with amount from just msg.value 
+    //     totalDAITopup = IMarketAdapter(mrkt.marketAdapter).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount} 
+    //     (
+    //         etherFromTreasuryAmount, 
+    //         notLessThen, // TODO add value from oracle
+    //         path,
+    //         ubdNetwork.sandbox2,
+    //         block.timestamp
+    //     );
+
+    //     // Swap ERC20 Treasury assets on DAI 
+    //     uint256[] memory sended = new uint256[](ubdNetwork.treasuryERC20Assets.length);
+    //     sended = ITreasury(ubdNetwork.treasury).sendForTopup(mrkt.marketAdapter);
+    //     for (uint256 i; i < sended.length; ++ i){
+    //         path[0] = ubdNetwork.treasuryERC20Assets[i].asset;
+    //         notLessThen = _getNotLessThenEstimate(sended[i], path, mrkt.slippage);
+    //         totalDAITopup += IMarketAdapter(mrkt.marketAdapter).swapExactERC20InToERC20Out(
+    //             sended[i],
+    //             notLessThen, // TODO add value from oracle
+    //             path,
+    //             ubdNetwork.sandbox2,
+    //             block.timestamp
+    //         );
+
+    //     }
+    //     ISandbox2(ubdNetwork.sandbox2).increaseApproveForTEAM(totalDAITopup * TEAM_PERCENT / 100);
+    // }
+
+    function swapTreasuryAssetsPercentToSandboxAsset() 
+        external 
+        returns(uint256 totalStableAmount)
+    {
+        // For GAS safe
+        address sandbox1 = ubdNetwork.sandbox1;
+        address treasury = ubdNetwork.treasury;
+        address sandbox2 = ubdNetwork.sandbox2;
+        uint256 etherFromTreasuryAmount;
+        uint256 topupPercent;
         address[] memory path = new address[](2);
+        
+        // authentificate
+        require(msg.sender == sandbox1 || msg.sender == sandbox2, 'Only for SandBoxes');
+        if (msg.sender == sandbox1){
+            path[1] = ISandbox1(sandbox1).EXCHANGE_BASE_ASSET();
+            topupPercent = ITreasury(treasury).SANDBOX1_REDEEM_PERCENT();
+            
+        } else if (msg.sender == sandbox2) {
+            path[1] = ISandbox2(sandbox2).SANDBOX_2_BASE_ASSET();
+            topupPercent = ITreasury(treasury).SANDBOX2_TOPUP_PERCENT();
+            require (ITreasury(treasury).isReadyForTopupSandBox2(), "Not ready for topup Sandbox2");
+        }
 
-        // Swap treasure Native asssets on market for Sandbox1 redeem
-        path[1] = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
+        etherFromTreasuryAmount = ITreasury(treasury).sendEtherForRedeem(topupPercent);
+        Market memory mrkt = _getMarketForAsset(path[1]);
+     
+        // Swap Native Asset 
         path[0] = IMarketAdapter(mrkt.marketAdapter).WETH();
-        
-        // First need withdraw ether to this contracr from treasury
-        uint256 etherFromTreasuryAmount = ITreasury(ubdNetwork.treasury).sendEtherForRedeem(
-            ITreasury(ubdNetwork.treasury).SANDBOX1_REDEEM_PERCENT()
-        );
-        
-        
         uint256 notLessThen = _getNotLessThenEstimate(etherFromTreasuryAmount, path, mrkt.slippage);
-        
         //TODO check with amount from just msg.value 
-        IMarketAdapter(mrkt.marketAdapter).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount} (
+        totalStableAmount =  IMarketAdapter(mrkt.marketAdapter).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount} (
             etherFromTreasuryAmount, 
             notLessThen, 
             path,
-            ubdNetwork.sandbox1,
-            block.timestamp
-        );
-        
-        // Swap treasure erc20 assets
-        uint256[] memory sended = new uint256[](ubdNetwork.treasuryERC20Assets.length);
-        // In this case market define ONLY for first Treasure erc20 assets(in case many)
-        mrkt = _getMarketForAsset(ubdNetwork.treasuryERC20Assets[0].asset); 
-        sended = ITreasury(ubdNetwork.treasury).sendForRedeem(mrkt.marketAdapter);
-
-        // Swap erc20 treasure assets on market for Sandbox1 redeem
-        for (uint256 i; i < sended.length; ++ i){
-            path[0] = ubdNetwork.treasuryERC20Assets[i].asset;
-            notLessThen = _getNotLessThenEstimate(sended[i], path, mrkt.slippage);
-            IMarketAdapter(mrkt.marketAdapter).swapExactERC20InToERC20Out(
-                sended[i],
-                notLessThen, 
-                path,
-                ubdNetwork.sandbox1,
-                block.timestamp
-            );
-
-        }
-    }
-
-    // Если обеспечение UBD 3:1 и выше, то Сокровищница меняет  
-    // 1/3 своих средств на DAI и переводит их в Песочницу 2.
-    // TODO think about move this call to sendbox2
-    function topupSandBox2() external payable {
-        require(ITreasury(ubdNetwork.treasury).isReadyForTopupSandBox2(), 'Too less for Sandbox2 TopUp');
-        // Native asset
-        // 1. Ether transfer to this contract
-        uint256 etherFromTreasuryAmount = ITreasury(ubdNetwork.treasury).sendEtherForRedeem(
-            ITreasury(ubdNetwork.treasury).SANDBOX2_TOPUP_PERCENT()
-        );
-        
-        uint256 totalDAITopup;
-        address[] memory path = new address[](2);
-        path[1] = ISandbox2(ubdNetwork.sandbox2).SANDBOX_2_BASE_ASSET();
-        Market memory mrkt = _getMarketForAsset(path[1]); 
-        path[0] = IMarketAdapter(mrkt.marketAdapter).WETH();
-        
-        uint256 notLessThen = _getNotLessThenEstimate(etherFromTreasuryAmount, path, mrkt.slippage);
-        //TODO check with amount from just msg.value 
-        totalDAITopup = IMarketAdapter(mrkt.marketAdapter).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount} 
-        (
-            etherFromTreasuryAmount, 
-            notLessThen, // TODO add value from oracle
-            path,
-            ubdNetwork.sandbox2,
+            msg.sender,
             block.timestamp
         );
 
-        // Swap ERC20 Treasury assets on DAI 
+        // Swap ERC20 Treasure assets
         uint256[] memory sended = new uint256[](ubdNetwork.treasuryERC20Assets.length);
-        sended = ITreasury(ubdNetwork.treasury).sendForTopup(mrkt.marketAdapter);
+        sended = ITreasury(ubdNetwork.treasury).sendERC20ForSwap(mrkt.marketAdapter, topupPercent);
         for (uint256 i; i < sended.length; ++ i){
             path[0] = ubdNetwork.treasuryERC20Assets[i].asset;
             notLessThen = _getNotLessThenEstimate(sended[i], path, mrkt.slippage);
-            totalDAITopup += IMarketAdapter(mrkt.marketAdapter).swapExactERC20InToERC20Out(
+            totalStableAmount += IMarketAdapter(mrkt.marketAdapter).swapExactERC20InToERC20Out(
                 sended[i],
                 notLessThen, // TODO add value from oracle
                 path,
@@ -178,7 +237,6 @@ contract MarketRegistry is IMarketRegistry, Ownable{
             );
 
         }
-        ISandbox2(ubdNetwork.sandbox2).increaseApproveForTEAM(totalDAITopup * TEAM_PERCENT / 100);
     }
 
 

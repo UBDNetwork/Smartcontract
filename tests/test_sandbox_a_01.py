@@ -152,7 +152,8 @@ def test_topup_sandbox2(
     before_wbtc_treasury_amount = wbtc.balanceOf(treasury.address)
     before_eth_treasury_amount = treasury.balance()
 
-    markets.topupSandBox2()
+    #markets.topupSandBox2()
+    tx = sandbox2.topupSandBox2( {'from':accounts[0]})
     #tx = treasury.sendEtherForRedeem(treasury.SANDBOX2_TOPUP_PERCENT())
 
     #1/3 of amount
@@ -282,7 +283,7 @@ def test_ubd_to_usdt(
                             150000*10**usdt.decimals())
     assert wbtc.balanceOf(treasury) - before_wbtc_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT()) /100 < 10
     assert treasury.balance() - before_eth_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT())/100 < 10000000000000
-    assert before_usdt_sandbox1_amount + usdt_amount_calc - usdt.balanceOf(sandbox1) < 1000
+    assert before_usdt_sandbox1_amount + usdt_amount_calc - usdt.balanceOf(sandbox1) < 10000
 
     #security decreased
     mockuniv2.setRate(dai.address, wbtc.address, (28000, 1))

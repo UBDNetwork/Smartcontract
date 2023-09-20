@@ -7,9 +7,10 @@ import "../interfaces/IERC20Burn.sol";
 
 contract Sandbox2 is MarketConnector {
 
-    uint256 constant public TREASURY_TOPUP_PERIOD = 1 days;
-    uint256 constant public TREASURY_TOPUP_PERCENT = 10000; // 1% - 10000, 13% - 130000, etc 
-    address immutable public SANDBOX_2_BASE_ASSET;
+    uint256 public constant  TREASURY_TOPUP_PERIOD = 1 days;
+    uint256 public constant TREASURY_TOPUP_PERCENT = 10000; // 1% - 10000, 13% - 130000, etc 
+    uint8 public constant  TEAM_PERCENT = 33;
+    address public immutable SANDBOX_2_BASE_ASSET;
 
     uint256 public lastTreasuryTopUp;
     //uint256 public MIN_TREASURY_TOPUP_AMOUNT = 100; // Stable Coin Units (without decimals)
@@ -28,29 +29,42 @@ contract Sandbox2 is MarketConnector {
     function topupTreasury() external returns(bool) {
         if (_getCollateralSystemLevelM10() >= 5 && _getCollateralSystemLevelM10() < 10) {
             uint256 topupAmount = 
-                //IERC20(SANDBOX_2_BASE_ASSET).balanceOf(address(this)) / (100 * 2);
-                IERC20(SANDBOX_2_BASE_ASSET).balanceOf(address(this)) / 100;
+                IERC20(SANDBOX_2_BASE_ASSET).balanceOf(address(this)) * TREASURY_TOPUP_PERCENT / 1000000;
             require(
                 topupAmount 
-                    >= MIN_TREASURY_TOPUP_AMOUNT * 10**IERC20Metadata(SANDBOX_2_BASE_ASSET).decimals(),// ??? 
+                    >= MIN_TREASURY_TOPUP_AMOUNT 
+                       * 10**IERC20Metadata(SANDBOX_2_BASE_ASSET).decimals(),
                 'Too small topup amount'
             );
             require(
                 lastTreasuryTopUp + TREASURY_TOPUP_PERIOD < block.timestamp, 
                 'Please wait untit TREASURY_TOPUP_PERIOD'
             );
+
             lastTreasuryTopUp = block.timestamp;
             IERC20(SANDBOX_2_BASE_ASSET).approve(marketRegistry, topupAmount);
-            IMarketRegistry(marketRegistry).swapExactBASEInToTreasuryAssets(topupAmount, SANDBOX_2_BASE_ASSET);
+            IMarketRegistry(marketRegistry).swapExactBASEInToTreasuryAssets(
+                topupAmount, 
+                SANDBOX_2_BASE_ASSET
+            );
+            emit TreasuryTopup(SANDBOX_2_BASE_ASSET, topupAmount);
             return true;
         } else {
             return false;
         }
     }
 
+    function topupSandBox2() external returns (bool){
+        uint256  topupAmount;
+        topupAmount = IMarketRegistry(marketRegistry).swapTreasuryAssetsPercentToSandboxAsset();
+        emit Sandbox2Topup(SANDBOX_2_BASE_ASSET, topupAmount);
+        _increaseApproveForTEAM(topupAmount * TEAM_PERCENT / 100);
+
+    }
+
     /// Approve 30% from DAI in to Team wallet
-    function increaseApproveForTEAM(uint256 _incAmount) external {
-        require(msg.sender == marketRegistry, 'Only for market registry contract');
+    function _increaseApproveForTEAM(uint256 _incAmount) internal {
+        //require(msg.sender == marketRegistry, 'Only for market registry contract');
         address team = IMarketRegistry(marketRegistry).getUBDNetworkTeamAddress();
         uint256 newApprove = IERC20(SANDBOX_2_BASE_ASSET).allowance(address(this),team) + _incAmount;
         IERC20(SANDBOX_2_BASE_ASSET).approve(team, newApprove);

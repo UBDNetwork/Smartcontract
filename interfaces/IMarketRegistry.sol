@@ -41,7 +41,10 @@ interface IMarketRegistry  {
     function swapExactBASEInToETH(uint256 _amountIn) external;
     function swapExactBASEInToWBTC(uint256 _amountIn) external;
     function swapExactBASEInToTreasuryAssets(uint256 _amountIn, address _baseAsset) external;
-    function redeemSandbox1() external payable returns(uint256);
+    //function redeemSandbox1() external payable returns(uint256);
+    function swapTreasuryAssetsPercentToSandboxAsset() 
+        external 
+        returns(uint256 totalStableAmount);
 
     function getAmountOut(
         uint amountIn, 

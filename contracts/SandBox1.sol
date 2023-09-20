@@ -9,8 +9,8 @@ import "./MarketConnector.sol";
 
 contract SandBox1 is UBDExchange, MarketConnector {
 
-    uint256 constant public TREASURY_TOPUP_PERIOD = 1 days;
-    uint256 constant public TREASURY_TOPUP_PERCENT = 10000; // 1% - 10000, 13% - 130000, etc 
+    uint256 public constant TREASURY_TOPUP_PERIOD = 1 days;
+    uint256 public constant TREASURY_TOPUP_PERCENT = 10000; // 1% - 10000, 13% - 130000, etc 
 
     uint256 public lastTreasuryTopUp;
     uint256 public MIN_TREASURY_TOPUP_AMOUNT = 1000; // Stable Coin Units (without decimals)
@@ -68,7 +68,7 @@ contract SandBox1 is UBDExchange, MarketConnector {
             topupAmount 
                 >= MIN_TREASURY_TOPUP_AMOUNT * 10**IERC20Metadata(EXCHANGE_BASE_ASSET).decimals(), 
             'Too small topup amount'
-        ); //TODO CHECK this
+        ); 
         require(
             lastTreasuryTopUp + TREASURY_TOPUP_PERIOD < block.timestamp, 
             'Please wait untit TREASURY_TOPUP_PERIOD'
@@ -76,6 +76,7 @@ contract SandBox1 is UBDExchange, MarketConnector {
         lastTreasuryTopUp = block.timestamp;
         IERC20(EXCHANGE_BASE_ASSET).approve(marketRegistry, topupAmount);
         IMarketRegistry(marketRegistry).swapExactBASEInToTreasuryAssets(topupAmount, EXCHANGE_BASE_ASSET);
+        emit TreasuryTopup(EXCHANGE_BASE_ASSET, topupAmount);
     }
 
     function topupTreasuryEmergency(address _token) external onlyOwner {
@@ -83,6 +84,8 @@ contract SandBox1 is UBDExchange, MarketConnector {
         uint256 topupAmount = IERC20(_token).balanceOf(address(this));
         IERC20(_token).approve(marketRegistry, topupAmount);
         IMarketRegistry(marketRegistry).swapExactBASEInToTreasuryAssets(topupAmount, _token);
+        emit TreasuryTopup(_token, topupAmount);
+
     }
 
 
@@ -103,7 +106,8 @@ contract SandBox1 is UBDExchange, MarketConnector {
     
     function _redeemSandbox1() internal returns(uint256 newBASEBalance) {
         if (_getCollateralSystemLevelM10() >= 10) {
-            IMarketRegistry(marketRegistry).redeemSandbox1();
+            //IMarketRegistry(marketRegistry).redeemSandbox1();
+            IMarketRegistry(marketRegistry).swapTreasuryAssetsPercentToSandboxAsset(); 
         }
         newBASEBalance = IERC20(EXCHANGE_BASE_ASSET).balanceOf(address(this));
     }

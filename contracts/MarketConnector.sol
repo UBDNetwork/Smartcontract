@@ -13,6 +13,9 @@ contract MarketConnector {
 
     }
 
+    event TreasuryTopup(address Asset, uint256 TopupAmount);
+    event Sandbox2Topup(address Asset, uint256 TopupAmount);
+
     function _getCollateralSystemLevelM10() internal view returns(uint256) {
         return  IMarketRegistry(marketRegistry).getCollateralLevelM10();
     }
