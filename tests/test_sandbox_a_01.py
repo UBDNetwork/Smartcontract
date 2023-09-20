@@ -275,15 +275,27 @@ def test_ubd_to_usdt(
     before_usdt_sandbox1_amount = usdt.balanceOf(sandbox1)
     wbtc_to_swap = before_wbtc_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/100
     eth_to_swap = before_eth_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/100
+    #logging.info(eth_to_swap)
     usdt_amount_calc = wbtc_to_swap*mockuniv2.rates(wbtc.address, usdt.address)[1]*10**usdt.decimals()/10**wbtc.decimals() + eth_to_swap*mockuniv2.rates(weth.address, usdt.address)[1]*10**usdt.decimals()/10**weth.decimals()
+
+    #logging.info('before_wbtc_treasury_amount = {}'.format(before_wbtc_treasury_amount))
+    #logging.info('before_eth_treasury_amount = {}'.format(before_eth_treasury_amount))
+
+    #logging.info('before_usdt_sandbox1_amount = {}'.format(before_usdt_sandbox1_amount))
+    #logging.info('usdt_amount_calc = {}'.format(usdt_amount_calc))
     #only redeem Sandbox1 - without swap
-    sandbox1.swapExactInput(ubd.address, 
+    tx = sandbox1.swapExactInput(ubd.address, 
                             150000*10**ubd.decimals(),
                             0,
                             150000*10**usdt.decimals())
+    #logging.info(tx.return_value)
+    #logging.info(usdt.balanceOf(sandbox1))
+    #logging.info(wbtc.balanceOf(treasury.address))
+    #logging.info(treasury.balance())
+
     assert wbtc.balanceOf(treasury) - before_wbtc_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT()) /100 < 10
     assert treasury.balance() - before_eth_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT())/100 < 10000000000000
-    assert before_usdt_sandbox1_amount + usdt_amount_calc - usdt.balanceOf(sandbox1) < 10000
+    assert before_usdt_sandbox1_amount + usdt_amount_calc - usdt.balanceOf(sandbox1) < 1000
 
     #security decreased
     mockuniv2.setRate(dai.address, wbtc.address, (28000, 1))
