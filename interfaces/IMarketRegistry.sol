@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
-//import "./IERC20Mint.sol";
 
 
 interface IMarketRegistry  {
@@ -11,7 +10,6 @@ interface IMarketRegistry  {
         uint8 percent;
     }
 
-    // TODO  check GAS with another order due data packing
     struct UBDNetwork {
         address sandbox1;
         address treasury;
@@ -20,7 +18,6 @@ interface IMarketRegistry  {
 
     }
 
-    // TODO  check GAS with another order due data packing
     struct Market {
         address marketAdapter;
         address oracleAdapter;
