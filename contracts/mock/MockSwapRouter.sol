@@ -16,6 +16,8 @@ contract MockSwapRouter is IUniswapV2Router02 {
     address public immutable override factory;
     address public immutable override WETH;
 
+    uint256 public slippagePercent;
+
     /// @dev Mapping from addres1 from address2 to rate
     /// @dev rate is price of address2 asset expressed in address1 asset units
     /// @dev Example WBTC/USDT pair: address1 - usdt, address2 - wbtc, rate (28_000, 1)
@@ -37,6 +39,10 @@ contract MockSwapRouter is IUniswapV2Router02 {
 
     function setRate(address asset1, address asset2, Rate memory _rate) external {
         rates[asset1][asset2] = _rate;
+    }
+
+    function setSlippgae(uint _percent) external {
+        slippagePercent = _percent;
     }
 
     // **** ADD LIQUIDITY ****
@@ -168,6 +174,9 @@ contract MockSwapRouter is IUniswapV2Router02 {
         uint256 amountOut = amountIn * rt.denominator / rt.nominatot
             * 10**IERC20Metadata(path[1]).decimals()
             / 10**IERC20Metadata(path[0]).decimals(); 
+        if (slippagePercent > 0) {
+            amountOut = amountOut - amountOut * slippagePercent / 100;
+        }
         IERC20Mint(path[1]).mint(address(this), amountOut);    
         TransferHelper.safeTransfer(path[1], to, amountOut);
         amounts = new uint[](path.length);
@@ -198,6 +207,9 @@ contract MockSwapRouter is IUniswapV2Router02 {
          uint256 amountOut = msg.value * rt.denominator / rt.nominatot
             * 10**IERC20Metadata(path[1]).decimals()
             / 10**IERC20Metadata(path[0]).decimals();
+        if (slippagePercent > 0) {
+            amountOut = amountOut - amountOut * slippagePercent / 100;
+        }    
         IERC20Mint(path[1]).mint(address(this), amountOut);   
         TransferHelper.safeTransfer(path[1], to,  amountOut);
         amounts = new uint[](path.length);
@@ -226,7 +238,10 @@ contract MockSwapRouter is IUniswapV2Router02 {
         TransferHelper.safeTransferFrom(path[0], msg.sender, address(this), amountIn);
         uint256 amountOut = amountIn * rt.denominator / rt.nominatot
             * 10**IERC20Metadata(path[1]).decimals()
-            / 10**IERC20Metadata(path[0]).decimals();  
+            / 10**IERC20Metadata(path[0]).decimals(); 
+        if (slippagePercent > 0) {
+            amountOut = amountOut - amountOut * slippagePercent / 100;
+        } 
         address payable toPayable = payable(to);
         toPayable.transfer(amountOut);
         amounts = new uint[](path.length);
