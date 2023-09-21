@@ -12,17 +12,53 @@ contract Treasury is MarketConnector {
     uint256 public constant SANDBOX2_TOPUP_MIN_AMOUNT = 1000; // Stable Coin Units (without decimals)
     uint256 public constant SANDBOX1_REDEEM_PERCENT = 1;
 
+    
+    modifier onlyMarketRegistry()
+    {
+        require(msg.sender == marketRegistry, 'Only for SandBoxes');
+        _;
+    }
+
+    event ReceivedEther(address, uint);
+    
     constructor(address _markets)
         MarketConnector(_markets)
     {
         require(_markets != address(0), 'No zero markets');
     }
-    event ReceivedEther(address, uint);
-    
+
     receive() external payable {
         emit ReceivedEther(msg.sender, msg.value);
     }
     
+
+    function sendERC20ForSwap(address _marketAdapter, uint256 _percent) 
+        external
+        onlyMarketRegistry 
+        returns(uint256[] memory)
+    {
+        
+        return _sendPercentOfTreasuryTokens(_marketAdapter, _percent);
+    }
+
+    function sendEtherForRedeem(uint256 _percent) 
+        external 
+        onlyMarketRegistry 
+        returns (uint256 amount)
+    {
+        amount = address(this).balance * _percent / 100; 
+        TransferHelper.safeTransferETH(marketRegistry, amount);
+    }
+
+   
+    function getBalanceInStableUnits(address _holder, address[] memory _assets) 
+        external 
+        view 
+        returns(uint256)
+    {
+        return _getBalanceInStableUnits(_holder, _assets);
+    }
+
     function isReadyForTopupSandBox2() public view returns(bool) {
         if (_getCollateralSystemLevelM10() >= 30) {
             uint256 sandbox2TopupAmount = _getBalanceInStableUnits(
@@ -33,53 +69,6 @@ contract Treasury is MarketConnector {
                 return true;    
             }
         }
-    }
-
-    /// Approve 1 percent
-    function approveForRedeem(address _marketAdapter) external {
-        require(msg.sender == marketRegistry, 'Only for market regisrty');
-        uint256 treasuryERC20AssetsCount = treasuryERC20Assets().length;
-        address[] memory _treasuryERC20Assets = new address[](treasuryERC20AssetsCount);
-        _treasuryERC20Assets = treasuryERC20Assets();
-        for (uint8 i = 0; i < _treasuryERC20Assets.length; ++ i){
-                // TODO thibk about more correct approve amount
-                IERC20(_treasuryERC20Assets[i]).approve(
-                    _marketAdapter, 
-                    //IERC20(_treasuryERC20Assets[i]).balanceOf(address(this)) * SANDBOX1_REDEEM_PERCENT / 100 // 1 %
-                    IERC20(_treasuryERC20Assets[i]).balanceOf(address(this)) * SANDBOX2_TOPUP_PERCENT / 100 // 33 %
-                );
-            }
-    }
-
-    // Depricated
-    function sendForRedeem(address _marketAdapter) external returns(uint256[] memory){
-        require(msg.sender == marketRegistry, 'Only for market regisrty');
-
-        return _sendPercentOfTreasuryTokens(_marketAdapter, SANDBOX1_REDEEM_PERCENT);
-    }
-
-    // Depricated
-    function sendForTopup(address _marketAdapter) external returns(uint256[] memory){
-        require(msg.sender == marketRegistry, 'Only for market regisrty');
-        
-        return _sendPercentOfTreasuryTokens(_marketAdapter, SANDBOX2_TOPUP_PERCENT);
-    }
-
-    function sendERC20ForSwap(address _marketAdapter, uint256 _percent) 
-        external 
-        returns(uint256[] memory)
-    {
-        require(msg.sender == marketRegistry, 'Only for market regisrty');
-        
-        return _sendPercentOfTreasuryTokens(_marketAdapter, _percent);
-    }
-
-    function sendEtherForRedeem(uint256 _percent) external returns (uint256 amount){
-        require(msg.sender == marketRegistry, 'Only for market regisrty');
-        amount = address(this).balance * _percent / 100; 
-        // TODO  check gas with TransferHelper
-        address payable toPayable = payable(marketRegistry);
-        toPayable.transfer(amount);
     }
 
     function treasuryERC20Assets() public view returns(address[] memory assets) {

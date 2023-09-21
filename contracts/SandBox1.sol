@@ -4,7 +4,6 @@ pragma solidity 0.8.21;
 
 import "./UBDExchange.sol";
 import "./MarketConnector.sol";
-//import "../interfaces/IMarketRegistry.sol";
 
 
 contract SandBox1 is UBDExchange, MarketConnector {
@@ -106,8 +105,8 @@ contract SandBox1 is UBDExchange, MarketConnector {
     
     function _redeemSandbox1() internal returns(uint256 newBASEBalance) {
         if (_getCollateralSystemLevelM10() >= 10) {
-            //IMarketRegistry(marketRegistry).redeemSandbox1();
-            IMarketRegistry(marketRegistry).swapTreasuryAssetsPercentToSandboxAsset(); 
+            uint256 redeemAmount = IMarketRegistry(marketRegistry).swapTreasuryAssetsPercentToSandboxAsset(); 
+            emit Sandbox1Redeem(EXCHANGE_BASE_ASSET,redeemAmount);
         }
         newBASEBalance = IERC20(EXCHANGE_BASE_ASSET).balanceOf(address(this));
     }

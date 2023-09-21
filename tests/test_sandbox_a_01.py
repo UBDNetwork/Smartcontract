@@ -181,7 +181,7 @@ def test_topup_sandbox2(
 
     assert dai.balanceOf(sandbox2.address) == dai_amount_calc
     team = markets.getUBDNetworkTeamAddress()
-    assert dai.allowance(sandbox2.address, team) == dai.balanceOf(sandbox2.address)*markets.TEAM_PERCENT()/100
+    assert dai.allowance(sandbox2.address, team) == dai.balanceOf(sandbox2.address)*sandbox2.TEAM_PERCENT()/100
 
 def test_topup_treasury_from_sandbox2(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 

@@ -127,6 +127,10 @@ contract UBDExchange is Ownable {
         } 
     }
 
+    /// @notice Mint UBD for staking reward
+    /// @notice Available only for trusted addresses
+    /// @param _for address reward minting for
+    /// @param _amount reward amount
     function mintReward(address _for, uint256 _amount) external {
         require(isStakingContract[msg.sender], 'Only for staking reward');
         ubdToken.mint(_for, _amount); 
