@@ -14,6 +14,7 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt, sandbox1, ubd):
 
     exchange_single.setUBDToken(ubd_exch, {'from':accounts[0]})
     exchange_single.setBeneficiary(accounts[1], {'from':accounts[0]})
+    chain.sleep(10)
 
     usdt.transfer(accounts[2], PAY_AMOUNT, {'from':accounts[0]})
     usdt.approve(sandbox1.address, PAY_AMOUNT, {'from':accounts[2]})
@@ -56,6 +57,7 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt, sandbox1, ubd):
     ubd.approve(sandbox1.address, PAY_AMOUNT, {'from':accounts[2]})
     usdt_out_amount = round(PAY_AMOUNT*100/(100+fee_percent))*10**usdt.decimals()/10**ubd_exch.decimals()
 
+    chain.sleep(10)
     tx = sandbox1.swapExactInput(
         ubd, 
         PAY_AMOUNT,

@@ -18,6 +18,7 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt):
         exchange_single.paymentTokens(usdt), chain.time() 
     ))
     
+    chain.sleep(10)
     tx = exchange_single.swapExactInput(
         usdt, 
         PAY_AMOUNT,
@@ -55,6 +56,7 @@ def test_ubd_to_usdt(accounts, ubd_exch, exchange_single, usdt):
     ))
 
     ubd_exch.approve(exchange_single, MINT_UBD_AMOUNT, {'from':accounts[0]})
+    chain.sleep(10)
     tx = exchange_single.swapExactInput(
         ubd_exch, 
         MINT_UBD_AMOUNT,

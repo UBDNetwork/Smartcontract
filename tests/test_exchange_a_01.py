@@ -23,6 +23,7 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt, dai):
     
 
     #receiver<>msg.sender
+    chain.sleep(10)
     tx = exchange_single.swapExactInput(
         usdt, 
         PAY_AMOUNT,
@@ -66,6 +67,7 @@ def test_ubd_to_usdt(accounts, ubd_exch, exchange_single, usdt):
     before_total_supply = ubd_exch.totalSupply()
     
     #receiver<>msg.sender
+    chain.sleep(10)
     tx = exchange_single.swapExactInput(
         ubd_exch, 
         PAY_AMOUNT,

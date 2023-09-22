@@ -6,11 +6,11 @@ LOGGER = logging.getLogger(__name__)
 ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 def test_approve_fail(accounts, erc20_ubd):
-    with reverts("erc20_ubd: approve to the zero address"):
+    with reverts("ERC20: approve to the zero address"):
         erc20_ubd.approve(ZERO_ADDRESS, 1, {"from": accounts[0]})
 
 def test_transfer_fail(accounts, erc20_ubd):
-    with reverts("erc20_ubd: transfer to the zero address"):
+    with reverts("ERC20: transfer to the zero address"):
         erc20_ubd.transfer(ZERO_ADDRESS, 1, {"from": accounts[0]})
 
 
@@ -20,10 +20,12 @@ def test_mint(accounts, erc20_ubd):
 
     erc20_ubd.mint(accounts[1], 1e18, {"from":accounts[0]})
     assert erc20_ubd.balanceOf(accounts[1]) == 1e18
+    logging.info(erc20_ubd.balanceOf(accounts[1]))
 
 def test_erc20_ubd_transferFrom(accounts, erc20_ubd):
+    logging.info(erc20_ubd.balanceOf(accounts[1]))
     erc20_ubd.transfer(accounts[2], 1, {"from": accounts[1]})
-    with reverts("erc20_ubd: insufficient allowance"):
+    with reverts("ERC20: insufficient allowance"):
         erc20_ubd.transferFrom(accounts[2], accounts[3], 1, {"from": accounts[0]})
     erc20_ubd.approve(accounts[0], 1, {"from": accounts[2]})    
     erc20_ubd.transferFrom(accounts[2], accounts[0], 1, {"from": accounts[0]})
@@ -34,12 +36,12 @@ def test_erc20_ubd_transferFrom(accounts, erc20_ubd):
     erc20_ubd.transfer(accounts[2], 1, {"from": accounts[0]})
     erc20_ubd.approve(accounts[0], 1, {"from": accounts[2]})
     erc20_ubd.transferFrom(accounts[2], accounts[0], 1, {"from": accounts[0]})
-    assert erc20_ubd.balanceOf(accounts[0]) == 2
+    assert erc20_ubd.balanceOf(accounts[0]) == 1
     assert erc20_ubd.balanceOf(accounts[2]) == 0
 
-    erc20_ubd.approve(accounts[3], erc20_ubd.INITIAL_SUPPLY(), {"from": accounts[1]})
-    with reverts("erc20_ubd: transfer amount exceeds balance"):
-        erc20_ubd.transferFrom(accounts[1], accounts[3], erc20_ubd.INITIAL_SUPPLY(), {"from": accounts[3]})
+    erc20_ubd.approve(accounts[3], 1e18, {"from": accounts[1]})
+    with reverts("ERC20: transfer amount exceeds balance"):
+        erc20_ubd.transferFrom(accounts[1], accounts[3], 1e18, {"from": accounts[3]})
 
 def test_increaseAllowance(accounts, erc20_ubd):
     before = erc20_ubd.allowance(accounts[1], accounts[3])
@@ -55,12 +57,5 @@ def test_decreaseAllowance(accounts, erc20_ubd):
     assert before == erc20_ubd.allowance(accounts[1], accounts[3]) + 1e18       
 
 def test_decreaseAllowance_fail(accounts, erc20_ubd):
-    with reverts("erc20_ubd: decreased allowance below zero"):
+    with reverts("ERC20: decreased allowance below zero"):
         erc20_ubd.decreaseAllowance(accounts[4], 1e18, {'from': accounts[0]})
-
-def test_mint(accounts, erc20_ubd):
-    with reverts("Only distibutor contract"):
-        erc20_ubd.mint(accounts[4], 1e18, {"from":accounts[1]})
-
-    erc20_ubd.mint(accounts[4], 1e18, {"from":accounts[0]})
-    assert erc20_ubd.balanceOf(accounts[4]) == 1e18

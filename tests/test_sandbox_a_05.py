@@ -52,7 +52,7 @@ def test_topup_treasury_from_sandbox1(
     logging.info('UBDNetwork.state:{}'.format(markets.ubdNetwork()))
     init_market_registry(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, treasury, ubd, markets, wbtc, market_adapter, weth, usdc)
     logging.info('UBDNetwork.state:{}'.format(markets.getUBDNetworkInfo()))
-    accounts[9].transfer(mockuniv2, accounts[9].balance()-1e18)
+    accounts[5].transfer(mockuniv2, accounts[5].balance()-1e18)
     logging.info(
         '\nSandbox1.balance(usdt):{}'
         '\ntreasury.balance(wbtc):{}'
@@ -63,7 +63,6 @@ def test_topup_treasury_from_sandbox1(
     ))
     logging.info('UBDNetwork.state:{}'.format(markets.ubdNetwork()))
     logging.info('UBDNetwork.state:{}'.format(markets.getUBDNetworkInfo()))
-    accounts[9].transfer(mockuniv2, accounts[9].balance()-1e18)
 
     #sandbox has 1% of balance > 1000 usdt - can exchange usdt to ether and wbtc
     before_usdt_sandbox = usdt.balanceOf(sandbox1.address)

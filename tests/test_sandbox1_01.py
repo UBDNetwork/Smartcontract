@@ -10,6 +10,7 @@ ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 def test_usdt_to_ubd(accounts, ubd, sandbox1, usdt):
     sandbox1.setUBDToken(ubd, {'from':accounts[0]})
     sandbox1.setBeneficiary(accounts[2], {'from':accounts[0]})
+    chain.sleep(10)
     
     usdt.approve(sandbox1, PAY_AMOUNT, {'from':accounts[0]})
     logging.info('Calculated UBD amount: {}'.format(
@@ -58,6 +59,7 @@ def test_ubd_to_usdt(accounts, ubd, sandbox1, usdt):
     ))
 
     ubd.approve(sandbox1, MINT_UBD_AMOUNT, {'from':accounts[0]})
+    chain.sleep(10)
     tx = sandbox1.swapExactInput(
         ubd, 
         MINT_UBD_AMOUNT,
@@ -112,7 +114,7 @@ def test_topup_treasury(
     )
 
     logging.info('UBDNetwork.state:{}'.format(markets.getUBDNetworkInfo()))
-    accounts[9].transfer(mockuniv2, accounts[9].balance()-1e18)
+    accounts[7].transfer(mockuniv2, accounts[7].balance()-1e18)
 
     tx = sandbox1.topupTreasury({'from':accounts[1]})
     logging.info('Ether transfer:{}'.format(tx.events['ReceivedEther']))
