@@ -85,8 +85,8 @@ def sandbox1(accounts, SandBox1, usdt, markets):
     yield snb1
 
 @pytest.fixture(scope="module")
-def sandbox2(accounts, Sandbox2, markets, dai):
-    snb2 = accounts[0].deploy(Sandbox2, markets.address, dai.address)
+def sandbox2(accounts, SandBox2, markets, dai):
+    snb2 = accounts[0].deploy(SandBox2, markets.address, dai.address)
     yield snb2
 
 @pytest.fixture(scope="module")

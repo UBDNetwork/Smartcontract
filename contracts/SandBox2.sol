@@ -5,7 +5,7 @@ pragma solidity 0.8.21;
 import "./MarketConnector.sol";
 import "../interfaces/IERC20Burn.sol";
 
-contract Sandbox2 is MarketConnector {
+contract SandBox2 is MarketConnector {
 
     uint256 public constant TREASURY_TOPUP_PERIOD = 1 days;
     uint256 public constant TREASURY_TOPUP_PERCENT = 10000; // 1% - 10000, 13% - 130000, etc 

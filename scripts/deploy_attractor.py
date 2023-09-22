@@ -24,32 +24,39 @@ ETH_ERC20_TOKENS = [
 
 
 SEPOLIA_ERC20_TOKENS = [
-    '0xE3cfED0fbCDB7AaE09816718f0f52F10140Fc61F',
-    '0xBF8528699868B1a5279084C92B1d31D9C0160504',
-    '0xE52E3383740e713631864Af328717966F5Fa4e22',
-    '0xa2535BFbe7c0b0EB7B494D70cf7f47e037e19b02',
-    '0x947b627800c349854ea3665cc7C3A139662D3e49'
+    '0xE3cfED0fbCDB7AaE09816718f0f52F10140Fc61F', # USDT
+    '0xBF8528699868B1a5279084C92B1d31D9C0160504', # USDC
+    '0xE52E3383740e713631864Af328717966F5Fa4e22', # DAI
+    '0xa2535BFbe7c0b0EB7B494D70cf7f47e037e19b02', # WBTC
+    '0x947b627800c349854ea3665cc7C3A139662D3e49'  # WETH
 ]
 
 CHAIN = {   
     0:{'explorer_base':'io', 'premint_address': accounts[0], 'timelock': 700},
     1:{
         'explorer_base':'etherscan.io', 
-        'enabled_erc20': ETH_PAYMENT_TOKENS, 
+        'enabled_erc20': ETH_ERC20_TOKENS, 
         'premint_address': '0xE206f8AC6067d8253C57D86ac96A789Cd90ed4D4',
-        'timelock': 0
+        'timelock': 0,
+        'market_adapter': '',
+        'team_address': accounts[0],
+        'wbtc_address': ''
     },
     5:{
         'explorer_base':'goerli.etherscan.io', 
-        'enabled_erc20': GOERLI_PAYMENT_TOKENS,
         'premint_address': accounts[0],
         'timelock': 700
     },
     56:{'explorer_base':'bscscan.com', },
 
-    1115511:{
+    11155111:{
         'explorer_base':'sepolia.etherscan.io', 
-        'enabled_erc20': SEPOLIA_ERC20_TOKENS
+        'enabled_erc20': SEPOLIA_ERC20_TOKENS,
+        'market_adapter': '0x8aC7c971D0DA91034c75bA261ca67FF6c506F2fA',
+        'team_address': accounts[0],
+        'wbtc_address': '0xa2535BFbe7c0b0EB7B494D70cf7f47e037e19b02',
+        'usdt_address': '0xE3cfED0fbCDB7AaE09816718f0f52F10140Fc61F',
+        'dai_address': '0xE52E3383740e713631864Af328717966F5Fa4e22',
     },
     
 
@@ -57,42 +64,67 @@ CHAIN = {
     'explorer_base':'io',
     'premint_address': accounts[0], 
     'enabled_erc20':SEPOLIA_ERC20_TOKENS, 
-    'timelock': 0
+    'timelock': 0,
+    'market_adapter': '',
+    'team_address': accounts[0],
+    'wbtc_address': '0xa2535BFbe7c0b0EB7B494D70cf7f47e037e19b02',
+    'usdt_address': '0xE3cfED0fbCDB7AaE09816718f0f52F10140Fc61F',
+    'dai_address': '0xE52E3383740e713631864Af328717966F5Fa4e22',
 })
 print(CHAIN)
 zero_address = '0x0000000000000000000000000000000000000000'
 
 def main():
     markets = MarketRegistry.deploy(40, tx_params)
-    sandbox1 = SandBox1.deploy(markets.address, usdt.address)
-    sandbox1 = SandBox2.deploy(markets.address, dai.address)
-    treasury = Treasury.deploy(markets.address)
-    ubd = UBDToken.deploy(sandbox1.address)
+    sandbox1 = SandBox1.deploy(markets.address, CHAIN['usdt_address'], tx_params)
+    sandbox2 = SandBox2.deploy(markets.address, CHAIN['dai_address'], tx_params)
+    treasury = Treasury.deploy(markets.address, tx_params)
+    ubd = UBDToken.deploy(sandbox1.address, tx_params)
 
 
     # Print addresses for quick access from console
     print("----------Deployment artifacts-------------------")
-    print("locker = UBDNLockerDistributor.at('{}')".format(locker.address))
-    print("erc20 = UBDNToken.at('{}')".format(erc20.address))
+    print("markets = MarketRegistry.at('{}')".format(markets.address))
+    print("sandbox1 = SandBox1.at('{}')".format(sandbox1.address))
+    print("sandbox2 = SandBox2.at('{}')".format(sandbox2.address))
+    print("treasury = Treasury.at('{}')".format(treasury.address))
+    print("ubd = UBDToken.at('{}')".format(ubd.address))
+    print("\n")
+    print('https://{}/address/{}#code'.format(CHAIN['explorer_base'], markets.address))
+    print('https://{}/address/{}#code'.format(CHAIN['explorer_base'], sandbox1.address))
+    print('https://{}/address/{}#code'.format(CHAIN['explorer_base'], sandbox2.address))
+    print('https://{}/address/{}#code'.format(CHAIN['explorer_base'], treasury.address))
+    print('https://{}/address/{}#code'.format(CHAIN['explorer_base'], ubd.address))
+
+    if  web3.eth.chainId in [1,11155111]:
+        MarketRegistry.publish_source(markets);
+        SandBox1.publish_source(sandbox1);
+        SandBox2.publish_source(sandbox2);
+        Treasury.publish_source(treasury);
+        UBDToken.publish_source(ubd);
     
-    print('https://{}/address/{}#code'.format(CHAIN['explorer_base'],locker.address))
-    print('https://{}/address/{}#code'.format(CHAIN['explorer_base'],erc20.address))
 
-    if  web3.eth.chainId in [1,4, 5,56, 137, 43114,1313161555,1313161554]:
-        UBDNLockerDistributor.publish_source(locker);
-        UBDNToken.publish_source(erc20);
+
     
-    locker.setDistributionToken(erc20,tx_params)
-    for t in CHAIN['enabled_erc20']:
-       locker.setPaymentTokenStatus(t, True, tx_params)
+    # Init
+    markets.setSandbox1(sandbox1, tx_params)
+    markets.setSandbox2(sandbox2, tx_params)
+    markets.setTreasury(treasury, tx_params)    
+    markets.setTeamAddress(CHAIN['team_address'], tx_params)
+    sandbox1.setBeneficiary(CHAIN['team_address'], tx_params)
+    markets.addERC20AssetToTreasury((CHAIN['wbtc_address'], 50), tx_params)
+    sandbox1.setUBDToken(ubd, tx_params)
 
+    if len(CHAIN['market_adapter']) > 0 :
+        market_adapter = MarketAdapterCustomMarket.at(CHAIN['market_adapter'])
+        
+    ####   Ganach   Testnet CASE  only
+    else:
+        mockuniv2 = MockSwapRouter.deploy(accounts[2], accounts[2], tx_params)
+        market_adapter = MarketAdapterCustomMarket.deploy('Mock UniSwapV2 adapter', mockuniv2, tx_params)
 
-
-
-### Encoding in python
-#from eth_abi import encode_single
-#from eth_account.messages import encode_defunct
-#encoded_msg = encode_single('(string)',('ETH/USDT',))
-#pair_hash = Web3.solidityKeccak(['bytes32'],[encoded])
+    markets.setMarketParams(ZERO_ADDRESS, (market_adapter, market_adapter, 0), tx_params)
+    for a in CHAIN['enabled_erc20']:
+        markets.setMarketParams(a, (market_adapter, market_adapter, 0), tx_params)
 
 
