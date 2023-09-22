@@ -60,9 +60,7 @@ contract Treasury is MarketConnector {
 
     function isReadyForTopupSandBox2() public view returns(bool) {
         if (_getCollateralSystemLevelM10() >= 30) {
-            uint256 sandbox2TopupAmount = _getBalanceInStableUnits(
-                address(this),  treasuryERC20Assets()
-            ) * SANDBOX2_TOPUP_PERCENT / 100;
+            return true;
         }
     }
 
