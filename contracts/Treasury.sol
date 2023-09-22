@@ -63,7 +63,6 @@ contract Treasury is MarketConnector {
             uint256 sandbox2TopupAmount = _getBalanceInStableUnits(
                 address(this),  treasuryERC20Assets()
             ) * SANDBOX2_TOPUP_PERCENT / 100;
-            
         }
     }
 
