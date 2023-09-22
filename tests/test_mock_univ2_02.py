@@ -53,7 +53,7 @@ def test_mock_univ2_swapExactTokensForTokens_back(accounts, mockuniv2, dai, usdt
 def test_mock_univ2_swapExactTokensForETH(accounts, mockuniv2, dai, usdt, wbtc, weth, ubd):
     
     usdt.approve(mockuniv2, AMOUNT_IN_USDT, {'from':accounts[0]})
-    accounts[9].transfer(mockuniv2, accounts[9].balance()-1e18)
+    accounts[4].transfer(mockuniv2, accounts[4].balance()-1e18)
     
     acc0_usdt_before = usdt.balanceOf(accounts[0])
     acc1_eth_befroe = accounts[1].balance()
@@ -73,7 +73,7 @@ def test_mock_univ2_swapExactTokensForETH(accounts, mockuniv2, dai, usdt, wbtc, 
 def test_mock_univ2_swapExactTokensForETH_2(accounts, mockuniv2, dai, usdt, wbtc, weth, ubd):
     
     dai.approve(mockuniv2, AMOUNT_IN_DAI, {'from':accounts[0]})
-    accounts[9].transfer(mockuniv2, accounts[9].balance()-1e18)
+    #accounts[9].transfer(mockuniv2, accounts[9].balance()-1e18)
     
     acc0_dai_before = dai.balanceOf(accounts[0])
     acc1_eth_befroe = accounts[1].balance()
@@ -93,7 +93,7 @@ def test_mock_univ2_swapExactTokensForETH_2(accounts, mockuniv2, dai, usdt, wbtc
 
 def test_mock_univ2_swapExactETHForTokens(accounts, mockuniv2, dai, usdt, wbtc, weth, ubd):
     dai.transfer(mockuniv2, AMOUNT_IN_ETH / 1800e18)
-    accounts[9].transfer(mockuniv2, accounts[9].balance()-1e18)
+    #accounts[9].transfer(mockuniv2, accounts[9].balance()-1e18)
     acc1_dai_before = dai.balanceOf(accounts[1])
     acc0_eth_befroe = accounts[0].balance()
 
