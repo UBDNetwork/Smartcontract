@@ -4,9 +4,10 @@ pragma solidity 0.8.21;
 
 import "./UBDExchange.sol";
 import "./MarketConnector.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 
-contract SandBox1 is UBDExchange, MarketConnector {
+contract SandBox1 is UBDExchange, MarketConnector, ReentrancyGuard {
 
     uint256 public constant TREASURY_TOPUP_PERIOD = 1 days;
     uint256 public constant TREASURY_TOPUP_PERCENT = 10000; // 1% - 10000, 13% - 130000, etc 
@@ -28,6 +29,7 @@ contract SandBox1 is UBDExchange, MarketConnector {
         uint256 _amountOutMin
     ) 
         public
+        nonReentrant
         returns (uint256 outAmount)
     {
         
