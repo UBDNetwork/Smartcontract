@@ -1,4 +1,6 @@
-## UBD Network Token & Sale
+## UBD Network 
+
+[Attractor subsystem][./attractor.md]
 
 
 ### Tests
