@@ -9,7 +9,6 @@ import '@uniswap/contracts/libraries/TransferHelper.sol';
 contract Treasury is MarketConnector {
 
 	uint256 public constant SANDBOX2_TOPUP_PERCENT = 33;
-    uint256 public constant SANDBOX2_TOPUP_MIN_AMOUNT = 1000; // Stable Coin Units (without decimals)
     uint256 public constant SANDBOX1_REDEEM_PERCENT = 1;
 
     
@@ -65,9 +64,6 @@ contract Treasury is MarketConnector {
                 address(this),  treasuryERC20Assets()
             ) * SANDBOX2_TOPUP_PERCENT / 100;
             
-            if (sandbox2TopupAmount >= SANDBOX2_TOPUP_MIN_AMOUNT) {
-                return true;    
-            }
         }
     }
 
