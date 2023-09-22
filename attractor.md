@@ -7,10 +7,10 @@ Attractor is a system of smart contracts that provides project users with the pu
 - **Treasury** - BTC/ETH 50%/50% is stored; Collateral is the amount of funds in the Sandbox1 plus the amount of funds in the Treasury, divided by the number of currently existing UBDs (UBD totalSypply).
 - **Sandbox 2** - reserve for stabilizing supply in DAI. At the moment when UBD collateral is 3:1 or higher, then the Treasury exchanges 1/3 of its funds for DAI and transfers them to Sandbox2.  As soon as the collateral level approaches 0.5:1, Sandbox2 does the same as Sandbox 1: it replenishes the Treasury by 1% once a day through the purchase of WBTC and ETH. Sandbox2 turns off and stops replenishing the Treasury when the supply level reaches 1:1. Thus, Sandbox2 operates at a supply level of 0.5 to 1.
 - **UBDToken** - United Blockchain Dollar (UBD) Stable Coin.
-- **MarketRegistry** - encapsulate all assets managment logic and work with AMM(DEXes).
+- **MarketRegistry** - encapsulate all assets managment logic and work with AMM(DEXes).  
 [Full Class Diagramm](./CLASSDIAGRAM.md)
 
-## Deployments Insfo
+## Deployments Info
 
 ### 2023-09-21 Attractor Contracts Set in Sepolia
 [MarketRegistry](
