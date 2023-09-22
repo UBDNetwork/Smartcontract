@@ -1,6 +1,6 @@
 ## UBD Network 
 
-[Attractor subsystem][./attractor.md]
+[Attractor subsystem](./attractor.md])
 
 
 ### Tests
