@@ -58,6 +58,11 @@ def wbtc(accounts, MockToken):
     erc = accounts[0].deploy(MockToken, 'Wrapped BTC Token', 'WBTC', 8)
     yield erc
 
+@pytest.fixture(scope="module")
+def wbnb(accounts, MockToken):
+    erc = accounts[0].deploy(MockToken, 'Wrapped BNB Token', 'WBNB', 18)
+    yield erc
+
 
 @pytest.fixture(scope="module")
 def weth(accounts, MockToken):
@@ -102,7 +107,7 @@ def ubd(accounts, UBDToken, sandbox1):
 
 ##############################################################
 @pytest.fixture(scope="module")
-def mockuniv2(accounts, MockSwapRouter, dai, usdt, wbtc, weth, usdc):
+def mockuniv2(accounts, MockSwapRouter, dai, usdt, wbtc, weth, usdc, wbnb):
     uni = accounts[0].deploy(MockSwapRouter, weth, weth)
     #accounts[9].transfer(uni.address, accounts[9].balance()-1e18)
     #uni.setRate(weth.address, usdt.address, (1800, 1))
@@ -123,6 +128,9 @@ def mockuniv2(accounts, MockSwapRouter, dai, usdt, wbtc, weth, usdc):
     uni.setRate(weth.address, usdc.address, (1,  1400))
     uni.setRate(usdc.address, wbtc.address, (28000, 1))
     uni.setRate(usdc.address, weth.address, (1400, 1))
+
+    uni.setRate(usdt.address, wbnb.address, (200, 1))
+    uni.setRate(wbnb.address, usdt.address, (1, 200))
 
    
     # uni.setRate(weth.address, usdt.address, (1800, 1))
