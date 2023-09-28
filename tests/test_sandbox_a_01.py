@@ -191,8 +191,8 @@ def test_topup_treasury_from_sandbox2(
 
     mockuniv2.setRate(dai.address, wbtc.address, (28000, 1))
     mockuniv2.setRate(dai.address, weth.address, (1400, 1))
-    mockuniv2.setRate(weth.address, dai.address, (1, 28000))
-    mockuniv2.setRate(wbtc.address, dai.address, (1, 1400))
+    mockuniv2.setRate(weth.address, dai.address, (1, 1400))
+    mockuniv2.setRate(wbtc.address, dai.address, (1, 28000))
 
     mockuniv2.setRate(usdt.address, wbtc.address, (28000, 1))
     mockuniv2.setRate(usdt.address, weth.address, (1400, 1))
@@ -237,8 +237,8 @@ def test_topup_treasury_from_sandbox2(
     #security increased and became higher than 1 - topup treasury from sandbox2 is impossible
     mockuniv2.setRate(dai.address, wbtc.address, (56000, 1))
     mockuniv2.setRate(dai.address, weth.address, (2800, 1))
-    mockuniv2.setRate(weth.address, dai.address, (1, 56000))
-    mockuniv2.setRate(wbtc.address, dai.address, (1, 2800))
+    mockuniv2.setRate(weth.address, dai.address, (1, 2800))
+    mockuniv2.setRate(wbtc.address, dai.address, (1, 56000))
 
     mockuniv2.setRate(usdt.address, wbtc.address, (56000, 1))
     mockuniv2.setRate(usdt.address, weth.address, (2800, 1))
@@ -300,8 +300,8 @@ def test_ubd_to_usdt(
     #security decreased
     mockuniv2.setRate(dai.address, wbtc.address, (28000, 1))
     mockuniv2.setRate(dai.address, weth.address, (1400, 1))
-    mockuniv2.setRate(weth.address, dai.address, (1, 28000))
-    mockuniv2.setRate(wbtc.address, dai.address, (1, 1400))
+    mockuniv2.setRate(weth.address, dai.address, (1, 1400))
+    mockuniv2.setRate(wbtc.address, dai.address, (1, 28000))
 
     mockuniv2.setRate(usdt.address, wbtc.address, (28000, 1))
     mockuniv2.setRate(usdt.address, weth.address, (1400, 1))
@@ -317,8 +317,8 @@ def test_ubd_to_usdt(
     #security increased
     mockuniv2.setRate(dai.address, wbtc.address, (56000, 1))
     mockuniv2.setRate(dai.address, weth.address, (2800, 1))
-    mockuniv2.setRate(weth.address, dai.address, (1, 56000))
-    mockuniv2.setRate(wbtc.address, dai.address, (1, 2800))
+    mockuniv2.setRate(weth.address, dai.address, (1, 2800))
+    mockuniv2.setRate(wbtc.address, dai.address, (1, 56000))
 
     mockuniv2.setRate(usdt.address, wbtc.address, (56000, 1))
     mockuniv2.setRate(usdt.address, weth.address, (2800, 1))
