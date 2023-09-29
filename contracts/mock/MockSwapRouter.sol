@@ -177,6 +177,10 @@ contract MockSwapRouter is IUniswapV2Router02 {
         if (slippagePercent > 0) {
             amountOut = amountOut - amountOut * slippagePercent / 100;
         }
+        require(
+            amountOut >= amountOutMin, 
+            'UniSwapV2: Excuse me, slippage. Try again with other settings'
+        ); 
         IERC20Mint(path[1]).mint(address(this), amountOut);    
         TransferHelper.safeTransfer(path[1], to, amountOut);
         amounts = new uint[](path.length);
@@ -209,7 +213,11 @@ contract MockSwapRouter is IUniswapV2Router02 {
             / 10**IERC20Metadata(path[0]).decimals();
         if (slippagePercent > 0) {
             amountOut = amountOut - amountOut * slippagePercent / 100;
-        }    
+        }
+        require(
+            amountOut >= amountOutMin, 
+            'UniSwapV2: Excuse me, slippage. Try again with other settings'
+        );     
         IERC20Mint(path[1]).mint(address(this), amountOut);   
         TransferHelper.safeTransfer(path[1], to,  amountOut);
         amounts = new uint[](path.length);
@@ -241,7 +249,11 @@ contract MockSwapRouter is IUniswapV2Router02 {
             / 10**IERC20Metadata(path[0]).decimals(); 
         if (slippagePercent > 0) {
             amountOut = amountOut - amountOut * slippagePercent / 100;
-        } 
+        }
+        require(
+            amountOut >= amountOutMin, 
+            'UniSwapV2: Excuse me, slippage. Try again with other settings'
+        ); 
         address payable toPayable = payable(to);
         toPayable.transfer(amountOut);
         amounts = new uint[](path.length);
