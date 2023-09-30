@@ -209,8 +209,8 @@ def test_topup_treasury_from_sandbox2(
     mockuniv2.setRate(dai.address, wbtc.address, (28000, 1))
     mockuniv2.setRate(dai.address, weth.address, (1400, 1))
     mockuniv2.setRate(dai.address, wbnb.address, (200, 1))
-    mockuniv2.setRate(weth.address, dai.address, (1, 28000))
-    mockuniv2.setRate(wbtc.address, dai.address, (1, 1400))
+    mockuniv2.setRate(wbtc.address, dai.address, (1, 28000))
+    mockuniv2.setRate(weth.address, dai.address, (1, 1400))
     mockuniv2.setRate(wbnb.address, dai.address, (1, 200))
     
 
@@ -242,6 +242,8 @@ def test_topup_treasury_from_sandbox2(
     # add call constant with percent!!!!
     logging.info('dai to exchange = {}'.format(before_dai_sandbox2_amount/100))
     assert sandbox2.lastTreasuryTopUp() == 0
+    logging.info(markets.treasuryERC20Assets())
+    logging.info(markets.ubdNetwork())
     tx = sandbox2.topupTreasury()
     assert tx.return_value == True
     assert sandbox2.lastTreasuryTopUp() > 0

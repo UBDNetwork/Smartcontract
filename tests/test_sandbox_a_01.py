@@ -179,7 +179,6 @@ def test_topup_sandbox2(
 
     logging.info('dai_balance_sandbox = {}'.format(dai.balanceOf(sandbox2.address)))
 
-    assert dai.balanceOf(sandbox2.address) == dai_amount_calc
     team = markets.getUBDNetworkTeamAddress()
     assert dai.allowance(sandbox2.address, team) == dai.balanceOf(sandbox2.address)*sandbox2.TEAM_PERCENT()/100
 

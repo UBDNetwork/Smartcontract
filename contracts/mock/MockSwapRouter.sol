@@ -180,7 +180,7 @@ contract MockSwapRouter is IUniswapV2Router02 {
         require(
             amountOut >= amountOutMin, 
             'UniSwapV2: Excuse me, slippage. Try again with other settings'
-        ); 
+        );
         IERC20Mint(path[1]).mint(address(this), amountOut);    
         TransferHelper.safeTransfer(path[1], to, amountOut);
         amounts = new uint[](path.length);
