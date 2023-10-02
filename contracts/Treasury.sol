@@ -14,7 +14,7 @@ contract Treasury is MarketConnector {
     
     modifier onlyMarketRegistry()
     {
-        require(msg.sender == marketRegistry, 'Only for SandBoxes');
+        require(msg.sender == marketRegistry, 'Only for MarketRegistry');
         _;
     }
 
