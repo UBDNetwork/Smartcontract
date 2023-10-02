@@ -198,6 +198,7 @@ def test_topup_sandbox2(
     logging.info('dai_balance_sandbox2 = {}'.format(dai.balanceOf(sandbox2.address)))
 
     team = markets.getUBDNetworkTeamAddress()
+    assert team == accounts[8]
     assert dai.allowance(sandbox2.address, team) == dai.balanceOf(sandbox2.address)*sandbox2.TEAM_PERCENT()/100
 
 def test_topup_treasury_from_sandbox2(
@@ -425,6 +426,21 @@ def test_ubd_to_usdt(
     #logging.info(wbnb.balanceOf(treasury.address))
     #logging.info(treasury.balance())
     #logging.info(usdt.balanceOf(accounts[0]))
+
+def test_check_other_functions(
+        accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
+        treasury, ubd, markets, wbtc, market_adapter, weth, wbnb):
+    amount_from_contract = treasury.getBalanceInStableUnits(treasury, [wbtc, wbnb])
+    eth_calc = treasury.balance() * mockuniv2.rates(weth, usdt)[1] /10**markets.NATIVE_TOKEN_DECIMALS()
+    wbtc_calc = wbtc.balanceOf(treasury) * mockuniv2.rates(wbtc, usdt)[1] / 10**wbtc.decimals()
+    wbnb_calc = wbnb.balanceOf(treasury) * mockuniv2.rates(wbnb, usdt)[1] / 10**wbnb.decimals()
+
+    calc_amount = eth_calc + wbtc_calc + wbnb_calc
+
+    assert amount_from_contract == calc_amount
+    assert markets.getAmountOut(treasury.balance(), [weth, usdt]) == eth_calc*10**usdt.decimals()
+    assert markets.getAmountOut(wbtc.balanceOf(treasury), [wbtc, usdt]) == round(wbtc_calc*10**usdt.decimals())
+    assert markets.getAmountOut(wbnb.balanceOf(treasury), [wbnb, usdt]) == wbnb_calc*10**usdt.decimals()
 
 
 

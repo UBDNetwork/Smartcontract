@@ -259,3 +259,39 @@ def test_redeem_for_sandbox1(
     assert before_eth_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT())/100 - treasury.balance()  < 1000
     assert before_usdt_sandbox1_amount + usdt_amount_calc - usdt.balanceOf(sandbox1) < 10
     assert wbtc.balanceOf(treasury) == before_wbtc_treasury_amount
+
+def test_other_funscion(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
+        treasury, ubd, markets, wbtc, market_adapter, weth, wbnb):
+    with reverts("Only for MarketRegistry"):
+        treasury.sendERC20ForSwap(wbnb,1)
+    with reverts("Only for MarketRegistry"):
+        treasury.sendEtherForRedeem(1)
+
+    with reverts("Only for SandBoxes"):
+        markets.swapExactInToBASEOut(1,1,wbtc, accounts[0],chain.time(), {"from": accounts[0]})
+
+    with reverts("Only for SandBoxes"):
+        markets.swapTreasuryAssetsPercentToSandboxAsset({"from": accounts[0]})
+
+    with reverts("Only for SandBoxes"):
+        markets.swapExactBASEInToTreasuryAssets(1, wbtc, {"from":accounts[0]})
+
+    with reverts("Ownable: caller is not the owner"):
+        markets.setSandbox1(sandbox1, {'from':accounts[1]})
+
+    with reverts("Ownable: caller is not the owner"):
+        markets.setSandbox2(sandbox2, {'from':accounts[1]})
+
+    with reverts("Ownable: caller is not the owner"):
+        markets.setTreasury(treasury, {'from':accounts[1]})
+
+    with reverts("Ownable: caller is not the owner"):
+        markets.setTeamAddress(accounts[8], {'from':accounts[1]})
+
+    assert markets.isInitialized() == True
+
+    assert markets.getUBDNetworkInfo()[0] == sandbox1
+    assert markets.getUBDNetworkInfo()[1] == treasury
+    assert markets.getUBDNetworkInfo()[2] == sandbox2
+    assert markets.getUBDNetworkInfo()[3][0][0] == wbnb
+    assert markets.getUBDNetworkInfo()[3][0][1] == 50
