@@ -215,7 +215,7 @@ def test_topup_treasury_from_sandbox2(
         treasury, ubd, markets, wbtc, market_adapter, weth):
     
     logging.info('!!!!!!!!!!!!!!!!!   topup treasury from sandbox2    !!!!!!!!!!!!!!!')
-    #desrease balance of sandbox1
+    #desrease MinTopUp of sandbox1
     with reverts('Ownable: caller is not the owner'):
         sandbox1.setMinTopUp(990, {"from": accounts[1]})
     sandbox1.setMinTopUp(990, {"from": accounts[0]})
