@@ -69,6 +69,10 @@ def test_topup_treasury_from_sandbox1(
     before_usdt_sandbox = usdt.balanceOf(sandbox1.address)
     tx = sandbox1.topupTreasury({'from':accounts[1]})
 
+    logging.info(tx.events['ReceivedEther'])
+    assert tx.events['ReceivedEther'][0][''] == treasury.balance()
+
+
 
     assert usdt.balanceOf(sandbox1.address) == before_usdt_sandbox - before_usdt_sandbox/100  #-1%
 

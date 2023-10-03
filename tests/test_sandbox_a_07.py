@@ -80,6 +80,9 @@ def test_topup_treasury_from_sandbox1(
 
     assert usdt.balanceOf(sandbox1.address) == before_usdt_sandbox - before_usdt_sandbox/100  #-1%
 
+    assert tx.events['TreasuryTopup'][0]['Asset'] == usdt.address
+    assert tx.events['TreasuryTopup'][0]['TopupAmount'] == before_usdt_sandbox/100
+
 
     logging.info('Ether transfer:{}'.format(tx.events['ReceivedEther']))
     [logging.info('\nfrom:{} to:{} value:{}'.format(x['from'],x['to'],x['value'])) for x in tx.events['Transfer']]
@@ -156,6 +159,11 @@ def test_topup_sandbox2(
     assert wbtc.balanceOf(treasury) == before_wbtc_treasury_amount - wbtc_to_dai_amount
     assert treasury.balance() == before_eth_treasury_amount - eth_to_dai_amount
 
+    assert tx.events['TeamShareIncreased']['Income'] - dai.balanceOf(sandbox2)*sandbox2.TEAM_PERCENT()/100 <= 1e6
+    assert tx.events['TeamShareIncreased']['TeamLimit'] - dai.balanceOf(sandbox2)*sandbox2.TEAM_PERCENT()/100 <= 1e6
+    assert tx.events['Sandbox2Topup']['Asset'] == dai.address
+    assert tx.events['Sandbox2Topup']['TopupAmount'] == dai.balanceOf(sandbox2)
+
     logging.info('market eth balance = {}'.format(markets.balance()))
     logging.info('market_adapter wbtc balance = {}'.format(wbtc.balanceOf(market_adapter)))
     logging.info('dai_balance_sandbox = {}'.format(dai.balanceOf(sandbox2.address)))
@@ -200,6 +208,9 @@ def test_topup_sandbox2(
     assert dai_amount_calc - dai.balanceOf(sandbox2) < 1e15  #mathematical error of Solidity and python 
     assert wbtc.balanceOf(treasury) == before_wbtc_treasury_amount - wbtc_to_dai_amount
     assert treasury.balance() == before_eth_treasury_amount - eth_to_dai_amount
+
+    assert tx.events['TeamShareIncreased']['Income'] - (dai.balanceOf(sandbox2) - before_dai_sandbox2)*sandbox2.TEAM_PERCENT()/100 <= 1e6
+    assert tx.events['TeamShareIncreased']['TeamLimit'] == dai.allowance(sandbox2.address, team)
 
     logging.info('market eth balance = {}'.format(markets.balance()))
     logging.info('market_adapter wbtc balance = {}'.format(wbtc.balanceOf(market_adapter)))
@@ -309,6 +320,9 @@ def test_redeem_for_sandbox1(
                                 100000*10**ubd.decimals(),
                                 0,
                                 100000*10**usdt.decimals())
+
+    assert tx.events['Sandbox1Redeem']['Asset'] == usdt.address
+    assert tx.events['Sandbox1Redeem']['TopupAmount'] ==  usdt.balanceOf(sandbox1) - before_usdt_sandbox1_amount
 
     assert wbtc.balanceOf(treasury) - before_wbtc_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT()) /100 < 10
     assert before_eth_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT())/100 - treasury.balance()  < 1000
