@@ -4,7 +4,9 @@ import json
 if  web3.eth.chain_id in [4, 5, 97, 11155111]:
     # Testnets
     #private_key='???'
-    accounts.load('ttwo');
+    #accounts.load('ttwo');
+    accounts.load('secret2');
+
 elif web3.eth.chain_id in [1,56,137]:
     accounts.load('ubd_deployer')
     
@@ -31,6 +33,14 @@ SEPOLIA_ERC20_TOKENS = [
     '0x947b627800c349854ea3665cc7C3A139662D3e49'  # WETH
 ]
 
+GOERLI_ERC20_TOKENS = [
+    '0x168fF7e2F39b8048E32F52Ada62E41d61Fceda58', # USDT
+    '0x59A40FAeb4D727279Ef6d72F52B3d4995f0DBf87', # USDC
+    '0x50BddB7911CE4248822a60968A32CDF1D683e7AD', # DAI
+    '0x2c10745ABA5FFe97bEEA7288b755342381D56980', # WBTC
+    '0xFD5D5176c1E63aD1d10441Dc278F92a02F5e153b'  # WETH
+]
+
 CHAIN = {   
     0:{'explorer_base':'io', 'premint_address': accounts[0], 'timelock': 700},
     1:{
@@ -44,8 +54,12 @@ CHAIN = {
     },
     5:{
         'explorer_base':'goerli.etherscan.io', 
-        'premint_address': accounts[0],
-        'timelock': 700
+        'enabled_erc20': GOERLI_ERC20_TOKENS,
+        'market_adapter': '0xA8e732513A32eE299B87Da7Ef602cDA39cd7514f',
+        'team_address': accounts[0],
+        'wbtc_address': '0x2c10745ABA5FFe97bEEA7288b755342381D56980',
+        'usdt_address': '0x168fF7e2F39b8048E32F52Ada62E41d61Fceda58',
+        'dai_address': '0x50BddB7911CE4248822a60968A32CDF1D683e7AD',
     },
     56:{'explorer_base':'bscscan.com', },
 
@@ -63,9 +77,9 @@ CHAIN = {
 }.get(web3.eth.chainId, {
     'explorer_base':'io',
     'premint_address': accounts[0], 
-    'enabled_erc20':SEPOLIA_ERC20_TOKENS, 
+    'enabled_erc20': GOERLI_ERC20_TOKENS, 
     'timelock': 0,
-    'market_adapter': '',
+    'market_adapter': '0xA8e732513A32eE299B87Da7Ef602cDA39cd7514f', #goerli market_adapter
     'team_address': accounts[0],
     'wbtc_address': '0xa2535BFbe7c0b0EB7B494D70cf7f47e037e19b02',
     'usdt_address': '0xE3cfED0fbCDB7AaE09816718f0f52F10140Fc61F',
@@ -96,7 +110,7 @@ def main():
     print('https://{}/address/{}#code'.format(CHAIN['explorer_base'], treasury.address))
     print('https://{}/address/{}#code'.format(CHAIN['explorer_base'], ubd.address))
 
-    if  web3.eth.chainId in [1,11155111]:
+    if  web3.eth.chainId in [1,11155111,5]:
         MarketRegistry.publish_source(markets);
         SandBox1.publish_source(sandbox1);
         SandBox2.publish_source(sandbox2);

@@ -68,6 +68,7 @@ def wbnb(accounts, MockToken):
 def weth(accounts, MockToken):
     erc = accounts[0].deploy(MockToken, 'Wrapped ETHER', 'WETH', 18)
     yield erc
+
 #------------------------------
 @pytest.fixture(scope="module")
 def exchange_single(accounts, UBDExchange, usdt):
@@ -145,3 +146,8 @@ def market_adapter(accounts, MarketAdapterCustomMarket, mockuniv2):
 #MarketAdapterCustomMarket
 #28_000_000 00000000
 #1000 000000
+
+@pytest.fixture(scope="module")
+def hackERC20(accounts, HackERC20, market_adapter, sandbox1):
+    erc = accounts[0].deploy(HackERC20, 'Hack ERC20', 'Hack', market_adapter, sandbox1)
+    yield erc
