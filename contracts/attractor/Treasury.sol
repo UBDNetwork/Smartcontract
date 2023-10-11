@@ -3,7 +3,7 @@
 pragma solidity 0.8.21;
 
 import "./MarketConnector.sol";
-import "../interfaces/IERC20Burn.sol";
+import "../../interfaces/IERC20Burn.sol";
 import '@uniswap/contracts/libraries/TransferHelper.sol';
 
 contract Treasury is MarketConnector {

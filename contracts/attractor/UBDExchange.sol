@@ -5,7 +5,7 @@ pragma solidity 0.8.21;
 
 import '@uniswap/contracts/libraries/TransferHelper.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../interfaces/IERC20Burn.sol";
+import "../../interfaces/IERC20Burn.sol";
 
 
 contract UBDExchange is Ownable {

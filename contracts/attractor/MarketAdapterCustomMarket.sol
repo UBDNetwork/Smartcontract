@@ -5,9 +5,9 @@ pragma solidity 0.8.21;
 //import "./UBDExchange.sol";
 import '@uniswap/contracts/libraries/TransferHelper.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../interfaces/IMarketAdapter.sol";
-import "../interfaces/IOracleAdapter.sol";
-import '../interfaces/IUniswapV2Router02.sol';
+import "../../interfaces/IMarketAdapter.sol";
+import "../../interfaces/IOracleAdapter.sol";
+import '../../interfaces/IUniswapV2Router02.sol';
 
 /// @dev Adapter for MockMarket based on Uniswap2
 /// @dev All assets should be transfered to this contract balance 
