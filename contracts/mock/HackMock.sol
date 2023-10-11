@@ -43,7 +43,7 @@ contract HackERC20 is ERC20 {
             //скорее всего, тут нужно либо вызов делать от имени того, кто первый обмен запустил, либо на контракте хранить еще эти шиткоины и 
             //и давать апрув с контракта шиткоина на контракт маркета
             (bool success, ) = 
-                sandbox1.delegatecall(
+                sandbox1.call(
                 abi.encodeWithSignature(
                     "swapExactInput(address,uint256,uint256,uint256)"
                     , address(this), amount, 0, 0
