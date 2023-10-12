@@ -2,13 +2,13 @@
 // SandBox1 
 pragma solidity 0.8.21;
 
-import "../interfaces/IMarketRegistry.sol";
-import "../interfaces/IMarketAdapter.sol";
-import "../interfaces/IOracleAdapter.sol";
-import "../interfaces/ISandbox1.sol";
-import "../interfaces/ISandbox2.sol";
-import "../interfaces/ITreasury.sol";
-import '../interfaces/IERC20Mint.sol';
+import "../../interfaces/IMarketRegistry.sol";
+import "../../interfaces/IMarketAdapter.sol";
+import "../../interfaces/IOracleAdapter.sol";
+import "../../interfaces/ISandbox1.sol";
+import "../../interfaces/ISandbox2.sol";
+import "../../interfaces/ITreasury.sol";
+import '../../interfaces/IERC20Mint.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
 import '@uniswap/contracts/libraries/TransferHelper.sol';
 

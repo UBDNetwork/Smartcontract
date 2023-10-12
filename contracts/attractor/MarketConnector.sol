@@ -2,7 +2,7 @@
 // MarketConnector 
 pragma solidity 0.8.21;
 
-import "../interfaces/IMarketRegistry.sol";
+import "../../interfaces/IMarketRegistry.sol";
 
 abstract contract MarketConnector {
 
