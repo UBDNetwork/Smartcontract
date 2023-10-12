@@ -34,7 +34,7 @@ def test_topup_treasury1(
     logging.info('UBDNetwork.state:{}'.format(markets.ubdNetwork()))
     init_market_registry(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, treasury, ubd, markets, wbtc, market_adapter, weth, usdc)
     logging.info('UBDNetwork.state:{}'.format(markets.getUBDNetworkInfo()))
-    accounts[8].transfer(mockuniv2, accounts[8].balance()-1e18)
+    accounts[8].transfer(mockuniv2, 40e18)
 
     #sandbox has 1% of balance <1000 usdt - can't exchange usdt to ether and wbtc
     with reverts("Too small topup amount"):
@@ -114,7 +114,6 @@ def test_topup_sandbox2(
         chain.sleep(sandbox1.TREASURY_TOPUP_PERIOD()+1)
         sandbox1.topupTreasury()
 
-    #try to topup Treasury second time in day - expect revert 
     usdt.approve(sandbox1, PAY_AMOUNT, {'from':accounts[0]})
     tx = sandbox1.swapExactInput(
         usdt, 

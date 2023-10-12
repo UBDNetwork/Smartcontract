@@ -40,7 +40,7 @@ def test_topup_treasury1(
     markets.setMarketParams(wbnb, (market_adapter, market_adapter, 0), {'from':accounts[0]})
     markets.addERC20AssetToTreasury((wbnb, 10), {'from':accounts[0]})
     logging.info('UBDNetwork.state:{}'.format(markets.getUBDNetworkInfo()))
-    accounts[3].transfer(mockuniv2, accounts[3].balance()-1e18)
+    accounts[3].transfer(mockuniv2, 40e18)
 
     #sandbox has 1% of balance <1000 usdt - can't exchange usdt to ether and wbtc
     with reverts("Too small topup amount"):

@@ -114,7 +114,7 @@ def test_topup_treasury(
     )
 
     logging.info('UBDNetwork.state:{}'.format(markets.getUBDNetworkInfo()))
-    accounts[7].transfer(mockuniv2, accounts[7].balance()-1e18)
+    accounts[7].transfer(mockuniv2, 40e18)
 
     tx = sandbox1.topupTreasury({'from':accounts[1]})
     logging.info('Ether transfer:{}'.format(tx.events['ReceivedEther']))
