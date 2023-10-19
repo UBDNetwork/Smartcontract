@@ -205,21 +205,21 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         markets[_asset] = _market;
     }
 
-    function setMarket(address _asset, address _market) 
-        external 
-        onlyOwner 
-    {
-        require(_market != address(0), 'No zero address');
-        markets[_asset].marketAdapter = _market; 
-    }
+    // function setMarket(address _asset, address _market) 
+    //     external 
+    //     onlyOwner 
+    // {
+    //     require(_market != address(0), 'No zero address');
+    //     markets[_asset].marketAdapter = _market; 
+    // }
 
-    function setOracle(address _asset, address _oracle) 
-        external 
-        onlyOwner 
-    {
-        require(_oracle != address(0), 'No zero address');
-        markets[_asset].oracleAdapter = _oracle; 
-    }
+    // function setOracle(address _asset, address _oracle) 
+    //     external 
+    //     onlyOwner 
+    // {
+    //     require(_oracle != address(0), 'No zero address');
+    //     markets[_asset].oracleAdapter = _oracle; 
+    // }
 
     function setSandbox1(address _adr) 
         external 
