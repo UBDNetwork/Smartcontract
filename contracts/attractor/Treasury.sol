@@ -68,7 +68,10 @@ contract Treasury is MarketConnector {
          return IMarketRegistry(marketRegistry).treasuryERC20Assets();
     }
 
-    function _sendPercentOfTreasuryTokens(address _to, uint256 _percent) internal returns(uint256[] memory){
+    function _sendPercentOfTreasuryTokens(address _to, uint256 _percent) 
+        internal 
+        returns(uint256[] memory)
+    {
         uint256 treasuryERC20AssetsCount = treasuryERC20Assets().length;
         address[] memory _treasuryERC20Assets = new address[](treasuryERC20AssetsCount);
         uint256[] memory _treasuryERC20sended = new uint256[](treasuryERC20AssetsCount);
