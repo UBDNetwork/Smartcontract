@@ -80,7 +80,7 @@ contract SandBox1 is UBDExchange, MarketConnector, ReentrancyGuard {
         emit TreasuryTopup(EXCHANGE_BASE_ASSET, topupAmount);
     }
 
-    function topupTreasuryEmergency(address _token) external onlyOwner {
+    function topupTreasuryEmergency(address _token) external {
         require(_token != EXCHANGE_BASE_ASSET && _token != address(ubdToken), 'Only for other assets');
         uint256 topupAmount = IERC20(_token).balanceOf(address(this));
         IERC20(_token).approve(marketRegistry, topupAmount);
