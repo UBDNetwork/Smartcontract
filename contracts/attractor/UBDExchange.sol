@@ -209,6 +209,9 @@ contract UBDExchange is Ownable {
         FEE_BENEFICIARY = _addr;
     }
 
+    function setStakingContract(address _contract, bool _isEnabled) external onlyOwner {
+        isStakingContract[_contract] = _isEnabled;
+    }
 
     ///////////////////////////////////////////////////////////
 

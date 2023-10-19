@@ -155,3 +155,10 @@ def test_topupTreasuryEmergency(accounts, sandbox1, markets, ubd, usdt, usdc, da
     [logging.info('\nfrom:{} to:{} value:{}'.format(x['from'],x['to'],x['value'])) for x in tx.events['Transfer']]
     assert wbtc.balanceOf(treasury) > treasury_wbtc_before
     assert treasury.balance() > treasury_eth_befroe
+
+def test_mintReward(accounts, sandbox1, ubd):
+    with reverts('Only for staking reward'):
+        sandbox1.mintReward(accounts[0], 1, {'from': accounts[7]})
+    sandbox1.setStakingContract(accounts[7], True, {'from': accounts[0]})
+    sandbox1.mintReward(accounts[7], 1, {'from': accounts[7]})
+    assert ubd.balanceOf(accounts[7]) == 1
