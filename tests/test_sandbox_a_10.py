@@ -8,7 +8,10 @@ LOGGER = logging.getLogger(__name__)
 PAY_AMOUNT = 1005e6
 MINT_UBD_AMOUNT = 1000e18
 ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
-def test_hackECR20_reentrancy(accounts, ubd, sandbox1, usdt, hackERC20, markets, market_adapter, mockuniv2, sandbox2, wbtc, weth, usdc, dai, treasury):
+def test_hackECR20_reentrancy(
+    accounts, ubd, sandbox1, usdt, hackERC20, markets, 
+    market_adapter, mockuniv2, sandbox2, wbtc, weth, usdc, dai, treasury
+):
     logging.info('!!!!!!!!!!!!!!!!!   REENTRANCY attack    !!!!!!!!!!!!!!!')
     sandbox1.setUBDToken(ubd, {'from':accounts[0]})
     sandbox1.setBeneficiary(accounts[1], {'from':accounts[0]})
