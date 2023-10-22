@@ -255,13 +255,16 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
             sumPercent += ubdNetwork.treasuryERC20Assets[i].percent;
         }
-        require(sumPercent + MIN_NATIVE_PERCENT < 100, 'Sum percent to much');
+        require(sumPercent + MIN_NATIVE_PERCENT <= 100, 'Sum percent to much');
     }
 
     function removeERC20AssetFromTreasury(address _erc20) 
         external 
         onlyOwner 
     {
+        // TODO Check that fact deleting asset share must be zero before array pop
+        // For that case need first change asset's share to zero. Then make rebalancing.
+        // And then delete from array
         uint256 assetsCount = ubdNetwork.treasuryERC20Assets.length;
         for (uint256 i; i < assetsCount; ++ i){
             if (ubdNetwork.treasuryERC20Assets[i].asset == _erc20){
