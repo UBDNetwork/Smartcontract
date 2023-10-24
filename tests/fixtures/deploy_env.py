@@ -82,7 +82,12 @@ def ubd_exch(accounts, UBDToken, exchange_single):
 
 @pytest.fixture(scope="module")
 def markets(accounts, MarketRegistry):
-    m = accounts[0].deploy(MarketRegistry, 1)
+    m = accounts[0].deploy(MarketRegistry, 1, 0)
+    yield m
+
+@pytest.fixture(scope="module")
+def markets_timelocked(accounts, MarketRegistry):
+    m = accounts[0].deploy(MarketRegistry, 1, 3600)
     yield m
 
 @pytest.fixture(scope="module")

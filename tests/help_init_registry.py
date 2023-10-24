@@ -40,6 +40,7 @@ def init_market_registry(
     markets.setSandbox2(sandbox2, {'from':accounts[0]})
     markets.setTreasury(treasury, {'from':accounts[0]})
     markets.addERC20AssetToTreasury((wbtc, 50), {'from':accounts[0]})
+    #markets.addERC20AssetToTreasury((wbtc, 50), {'from':accounts[0]})
     markets.setTeamAddress(accounts[8], {'from':accounts[0]})
 
 

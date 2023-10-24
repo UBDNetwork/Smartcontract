@@ -17,6 +17,7 @@ contract MarketRegistry is IMarketRegistry, Ownable{
 
     uint8 public constant   NATIVE_TOKEN_DECIMALS = 18;
     uint8 public immutable  MIN_NATIVE_PERCENT;
+    uint256 public immutable TIME_LOCK_DELAY;
 
     // Slippage params in Base Points ( https://en.wikipedia.org/wiki/Basis_point )
     uint256 public constant DEFAULT_SLIPPAGE_MAX = 1000; // 10%=1000 bp, 0.1%=10 bp, etc
@@ -27,8 +28,11 @@ contract MarketRegistry is IMarketRegistry, Ownable{
 
     // from asset() to market for this asset.
     mapping(address => Market) public markets;
+    mapping(bytes32 => uint256) public changePendings;
 
     event ReceivedEther(address, uint);
+    event TreasuryChangeScheduled(bytes32 indexed ParamsHash, uint256 ScheduledAt);
+    event TreasuryChanged(bytes32 indexed ParamsHash, uint256 FactdAt);
 
     modifier onlySandboxes()
     {
@@ -39,9 +43,34 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         );
         _;
     }
-    constructor(uint8 _minNativePercent)
+
+    modifier afterTimeLock(bytes32 newParamsHash)
+    {
+        if (TIME_LOCK_DELAY != 0) {
+            if (changePendings[newParamsHash] == 0) {
+                // New change pending
+                changePendings[newParamsHash] = block.timestamp + TIME_LOCK_DELAY;
+                emit TreasuryChangeScheduled(newParamsHash, block.timestamp + TIME_LOCK_DELAY);
+        
+            } else if (changePendings[newParamsHash] <= block.timestamp ) {
+                // Operation ready
+                changePendings[newParamsHash] = 0;
+                emit TreasuryChanged(newParamsHash, block.timestamp);
+                _;
+
+            } else {
+                revert('Still pending');
+            }
+
+        } else {
+            _;
+        }
+    }
+
+    constructor(uint8 _minNativePercent, uint256 _timeLockDelay)
     {
         MIN_NATIVE_PERCENT = _minNativePercent;
+        TIME_LOCK_DELAY = _timeLockDelay;
     }
 
     receive() external payable {
@@ -243,7 +272,8 @@ contract MarketRegistry is IMarketRegistry, Ownable{
 
     function addERC20AssetToTreasury(AsssetShare memory _assetShare) 
         external 
-        onlyOwner 
+        onlyOwner
+        afterTimeLock(keccak256(abi.encode(_assetShare.asset, _assetShare.percent))) 
     {
         for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
             require(ubdNetwork.treasuryERC20Assets[i].asset != _assetShare.asset, 'Asset already exist');

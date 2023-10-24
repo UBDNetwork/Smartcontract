@@ -114,6 +114,7 @@ def test_topup_treasury(
     )
 
     logging.info('UBDNetwork.state:{}'.format(markets.getUBDNetworkInfo()))
+    logging.info('Treasury assets:{}'.format(markets.treasuryERC20Assets()))
     accounts[7].transfer(mockuniv2, 40e18)
 
     tx = sandbox1.topupTreasury({'from':accounts[1]})
@@ -162,3 +163,14 @@ def test_mintReward(accounts, sandbox1, ubd):
     sandbox1.setStakingContract(accounts[7], True, {'from': accounts[0]})
     sandbox1.mintReward(accounts[7], 1, {'from': accounts[7]})
     assert ubd.balanceOf(accounts[7]) == 1
+
+def test_timelock(accounts, markets_timelocked, wbtc):
+    tx1 = markets_timelocked.addERC20AssetToTreasury((wbtc, 50), {'from':accounts[0]})
+    assert len(markets_timelocked.treasuryERC20Assets()) == 0
+    assert len(tx1.events['TreasuryChangeScheduled']) == 1
+    with reverts('Still pending'):
+        tx2 = markets_timelocked.addERC20AssetToTreasury((wbtc, 50), {'from':accounts[0]})
+    chain.sleep(markets_timelocked.TIME_LOCK_DELAY())
+    tx3 = markets_timelocked.addERC20AssetToTreasury((wbtc, 50), {'from':accounts[0]})
+    assert len(markets_timelocked.treasuryERC20Assets()) == 1
+    assert len(tx3.events['TreasuryChanged']) == 1
