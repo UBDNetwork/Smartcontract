@@ -285,7 +285,27 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
             sumPercent += ubdNetwork.treasuryERC20Assets[i].percent;
         }
-        require(sumPercent + MIN_NATIVE_PERCENT <= 100, 'Sum percent to much');
+        require(sumPercent + MIN_NATIVE_PERCENT <= 100, 'Percent sum too much');
+        // TODO make rebalancing
+    }
+
+    function editAssetShares(uint8[] calldata _percentShares)
+        external
+        onlyOwner
+    {
+        uint256 erc20AssetsCount = ubdNetwork.treasuryERC20Assets.length;
+        require(_percentShares.length == erc20AssetsCount, 'Arrays len mismatch');
+        uint8 sumPercent;
+        for (uint256 i; i < _percentShares.length; ++ i){
+            sumPercent += _percentShares[i];
+        }
+        require(sumPercent + MIN_NATIVE_PERCENT <= 100, 'Percent sum to much');
+
+        for (uint256 i; i < erc20AssetsCount; ++ i){
+            ubdNetwork.treasuryERC20Assets[i].percent = _percentShares[i];
+        }
+        // TODO make rebalancing
+
     }
 
     function removeERC20AssetFromTreasury(address _erc20) 
@@ -392,9 +412,9 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         uint256 tBalanceNative = _holder.balance;
         originalBalance = getAmountOut(tBalanceNative, path);
         tBalanceNative = _bringAmountToNativeDecimals(
-                sandbox1BaseAsset,
-                originalBalance
-            );
+            sandbox1BaseAsset,
+            originalBalance
+        );
         // Sum and devide for get balance in Stable coin units
         stableUnitsNoDecimal = (erc20BalanceCommonDecimals + tBalanceNative) / 10 ** NATIVE_TOKEN_DECIMALS;
     }
@@ -406,7 +426,70 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         }
         
     }
-    
+
+    // 1% = 100 bp
+    function getActualAssetsSharesM100() public  view returns(ActualShares[] memory sharesM100, uint256 r) {
+        // Gas Save local vars
+        address treasury = ubdNetwork.treasury;
+        uint256 treasuryBalanceWithNativeDecimals = getBalanceInStableUnits(
+            ubdNetwork.treasury, 
+            treasuryERC20Assets()
+        ) * 10 ** NATIVE_TOKEN_DECIMALS;
+        address sandbox1BaseAsset = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
+        address[] memory path = new address[](2);
+        path[1] = sandbox1BaseAsset;
+        sharesM100 = new ActualShares[](ubdNetwork.treasuryERC20Assets.length + 1);
+        uint256 assetBalance;
+        uint256 assetBalanceInBaseAsset;
+        uint256 assetBalanceInBaseAssetNativeDecimals;
+        uint256 diff;
+        Market memory mrkt = _getMarketForAsset(address(0)); 
+        for (uint256 i; i < sharesM100.length; ++ i) {
+            if (i != sharesM100.length - 1) {
+                // ERC20 assets
+                path[0] = ubdNetwork.treasuryERC20Assets[i].asset;
+                
+                sharesM100[i].asset = path[0];
+                // balance in asset
+                assetBalance = IERC20(path[0]).balanceOf(treasury);
+                // balance in BASE asset
+                assetBalanceInBaseAsset = getAmountOut(
+                    assetBalance, 
+                    path
+                );
+                // balance in BASE asset but with Native Decimals
+                assetBalanceInBaseAssetNativeDecimals = _bringAmountToNativeDecimals(path[1], assetBalanceInBaseAsset);
+                sharesM100[i].actualPercentPoint  = assetBalanceInBaseAssetNativeDecimals * 10000 / treasuryBalanceWithNativeDecimals;
+                if (sharesM100[i].actualPercentPoint > uint256(ubdNetwork.treasuryERC20Assets[i].percent) * 100) {
+                    diff = uint256(ubdNetwork.treasuryERC20Assets[i].percent) * 100 * 100 / sharesM100[i].actualPercentPoint;
+                    // have exceeds,  lets calc
+                    sharesM100[i].excessAmount = assetBalance * diff / 10000;
+                }
+            } else {
+                //Native asset
+                path[0] = IMarketAdapter(mrkt.oracleAdapter).WETH();
+                assetBalance = treasury.balance;
+                // because it native we dont need call _bringAmountToNativeDecimals
+                assetBalanceInBaseAsset = getAmountOut(
+                    assetBalance, 
+                    path
+                );
+                assetBalanceInBaseAssetNativeDecimals = _bringAmountToNativeDecimals(sandbox1BaseAsset, assetBalanceInBaseAsset);
+                //debug
+                r = assetBalanceInBaseAssetNativeDecimals;
+                sharesM100[i].actualPercentPoint  = assetBalanceInBaseAssetNativeDecimals * 10000 / treasuryBalanceWithNativeDecimals;
+                if (sharesM100[i].actualPercentPoint > _getNativeTreasurePercent() * 100) {
+                    diff = _getNativeTreasurePercent() * 100 * 100 / sharesM100[i].actualPercentPoint;
+                    // have exceeds,  lets calc
+                    sharesM100[i].excessAmount = assetBalance * diff / 10000;
+                }
+
+            }
+            
+        }
+        
+    }
+
     function getUBDNetworkTeamAddress() external view returns(address) {
         return UBD_TEAM_ADDRESS;
     }
@@ -425,6 +508,19 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         }
     }
 /////////////////////////////////////////////////////////////////////////////////////
+    // Rebalancing. При изменении доли активов в Сокровищнице, система должна продать 
+    // излишки каждого актива(если таковые есть) в Песочницу 1, за Базовый актив песочницы 1 (base_sandbox1_asset).
+    function _rebalance() internal {
+        uint256 treasuryBalanceNoDecimals = getBalanceInStableUnits(
+            ubdNetwork.treasury, 
+            treasuryERC20Assets()
+        );
+        for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
+            // Check real asset share in the Treasury
+        }
+
+    }
+
     function _getNativeTreasurePercent() internal view returns(uint256) {
         uint8 sumPercent;
         for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){

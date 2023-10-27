@@ -24,6 +24,12 @@ interface IMarketRegistry  {
         uint256 slippage;
     }
 
+    struct ActualShares{
+        address asset;
+        uint256 actualPercentPoint;
+        uint256 excessAmount;
+    } 
+    
     function swapExactInToBASEOut(
         uint256 amountIn,
         uint256 amountOutMin,
