@@ -435,14 +435,13 @@ contract MarketRegistry is IMarketRegistry, Ownable{
             ubdNetwork.treasury, 
             treasuryERC20Assets()
         ) * 10 ** NATIVE_TOKEN_DECIMALS;
-        address sandbox1BaseAsset = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
+        //debug
+        r = treasuryBalanceWithNativeDecimals;
+
         address[] memory path = new address[](2);
-        path[1] = sandbox1BaseAsset;
+        path[1] = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
         sharesM100 = new ActualShares[](ubdNetwork.treasuryERC20Assets.length + 1);
         uint256 assetBalance;
-        uint256 assetBalanceInBaseAsset;
-        uint256 assetBalanceInBaseAssetNativeDecimals;
-        uint256 diff;
         Market memory mrkt = _getMarketForAsset(address(0)); 
         for (uint256 i; i < sharesM100.length; ++ i) {
             if (i != sharesM100.length - 1) {
@@ -452,49 +451,57 @@ contract MarketRegistry is IMarketRegistry, Ownable{
                 sharesM100[i].asset = path[0];
                 // balance in asset
                 assetBalance = IERC20(path[0]).balanceOf(treasury);
-                // balance in BASE asset
-                assetBalanceInBaseAsset = getAmountOut(
-                    assetBalance, 
-                    path
+                
+                (sharesM100[i].actualPercentPoint, sharesM100[i].excessAmount) = calcAssetShareAndExcess(
+                    assetBalance,
+                    path,
+                    uint256(ubdNetwork.treasuryERC20Assets[i].percent),
+                    treasuryBalanceWithNativeDecimals
                 );
-                // balance in BASE asset but with Native Decimals
-                assetBalanceInBaseAssetNativeDecimals = _bringAmountToNativeDecimals(path[1], assetBalanceInBaseAsset);
-                sharesM100[i].actualPercentPoint  = assetBalanceInBaseAssetNativeDecimals * 10000 / treasuryBalanceWithNativeDecimals;
-                if (sharesM100[i].actualPercentPoint > uint256(ubdNetwork.treasuryERC20Assets[i].percent) * 100) {
-                    diff = uint256(ubdNetwork.treasuryERC20Assets[i].percent) * 100 * 100 / sharesM100[i].actualPercentPoint;
-                    // have exceeds,  lets calc
-                    sharesM100[i].excessAmount = assetBalance * diff / 10000;
-                }
             } else {
                 //Native asset
                 path[0] = IMarketAdapter(mrkt.oracleAdapter).WETH();
                 assetBalance = treasury.balance;
-                // because it native we dont need call _bringAmountToNativeDecimals
-                assetBalanceInBaseAsset = getAmountOut(
-                    assetBalance, 
-                    path
-                );
-                assetBalanceInBaseAssetNativeDecimals = _bringAmountToNativeDecimals(sandbox1BaseAsset, assetBalanceInBaseAsset);
-                //debug
-                r = assetBalanceInBaseAssetNativeDecimals;
-                sharesM100[i].actualPercentPoint  = assetBalanceInBaseAssetNativeDecimals * 10000 / treasuryBalanceWithNativeDecimals;
-                if (sharesM100[i].actualPercentPoint > _getNativeTreasurePercent() * 100) {
-                    diff = _getNativeTreasurePercent() * 100 * 100 / sharesM100[i].actualPercentPoint;
-                    // have exceeds,  lets calc
-                    sharesM100[i].excessAmount = assetBalance * diff / 10000;
-                }
 
+                (sharesM100[i].actualPercentPoint, sharesM100[i].excessAmount) = calcAssetShareAndExcess(
+                    assetBalance,
+                    path,
+                    _getNativeTreasurePercent(),
+                    treasuryBalanceWithNativeDecimals
+                );
             }
             
         }
-        
     }
 
+    
     function getUBDNetworkTeamAddress() external view returns(address) {
         return UBD_TEAM_ADDRESS;
     }
     function getUBDNetworkInfo() external view returns(UBDNetwork memory) {
         return ubdNetwork;
+    }
+
+    function calcAssetShareAndExcess(
+        uint256 _actualBalance, 
+        address[] memory _path,
+        uint256 _nominalShare,
+        uint256 _treasuryBalanceWithNativeDecimals
+    ) public view returns (uint256 share, uint256 exceed) {
+        uint256 assetBalanceInBaseAsset = getAmountOut(
+            _actualBalance, 
+            _path
+        );
+        // balance in BASE asset but with Native Decimals
+        uint256 assetBalanceInBaseAssetNativeDecimals = _bringAmountToNativeDecimals(_path[1], assetBalanceInBaseAsset);
+        share  = assetBalanceInBaseAssetNativeDecimals * 10000 / _treasuryBalanceWithNativeDecimals;
+        uint256 diff;
+        if (share > _nominalShare * 100) {
+            diff = 10000 - _nominalShare * 100 * 100 / share;
+            // have exceeds,  lets calc
+            exceed = _actualBalance * diff / 10000;
+        }
+
     }
     
     function isInitialized() public view returns(bool){

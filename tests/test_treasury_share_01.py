@@ -96,4 +96,11 @@ def test_topup_treasury(
     t = markets.getActualAssetsSharesM100()
     logging.info('Plus Ether Actual shares: {}'.format(t))
     
-   
+    logging.info(
+        '\nSandbox1.balance(usdt):{}'
+        '\ntreasury.balance(wbtc):{}'
+        '\ntreasury.balance(eth):{}'.format(
+            usdt.balanceOf(sandbox1),
+            wbtc.balanceOf(treasury),
+            treasury.balance()
+    ))
