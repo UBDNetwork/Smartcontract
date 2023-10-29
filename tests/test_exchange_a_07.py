@@ -57,6 +57,20 @@ def test_usdt_to_ubd(accounts, ubd_exch, exchange_single, usdt, dai):
 
     assert UBD_AMOUNT - inAmount_ubd < 10**13
 
+def test_usdt_to_ubd(accounts, ubd_exch, exchange_single):
+    
+    exchange_single.setUBDToken(ubd_exch, {'from':accounts[0]})
+
+    with reverts("Ownable: caller is not the owner"):
+        exchange_single.setStakingContract(accounts[1], True, {"from": accounts[1]})
+    exchange_single.setStakingContract(accounts[1], True, {"from": accounts[0]})
+
+    with reverts("Only for staking reward"):
+        exchange_single.mintReward(accounts[0], 1, {"from": accounts[0]})
+
+    exchange_single.mintReward(accounts[2], 1, {"from": accounts[1]})
+    assert ubd_exch.balanceOf(accounts[2]) == 1
+
 
 
 
