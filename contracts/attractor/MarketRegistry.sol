@@ -334,6 +334,11 @@ contract MarketRegistry is IMarketRegistry, Ownable{
     {
         UBD_TEAM_ADDRESS = _adr;
     }
+
+    function rebalance() external payable onlyOwner {
+        _rebalance();    
+    }
+    
     ///////////////////////////////////////////////////////////////
     
 
@@ -377,7 +382,7 @@ contract MarketRegistry is IMarketRegistry, Ownable{
     }
 
     // 
-    function getBalanceInStableUnits(address _holder, address[] memory _assets) 
+    function getBalanceInStable18(address _holder, address[] memory _assets) 
         public 
         view 
         returns(uint256 stableUnitsNoDecimal)
@@ -416,7 +421,17 @@ contract MarketRegistry is IMarketRegistry, Ownable{
             originalBalance
         );
         // Sum and devide for get balance in Stable coin units
-        stableUnitsNoDecimal = (erc20BalanceCommonDecimals + tBalanceNative) / 10 ** NATIVE_TOKEN_DECIMALS;
+        stableUnitsNoDecimal = (erc20BalanceCommonDecimals + tBalanceNative);
+    }
+    
+    
+
+    function getBalanceInStableUnits(address _holder, address[] memory _assets) 
+        public 
+        view 
+        returns(uint256 stableUnitsNoDecimal)
+    {
+         stableUnitsNoDecimal = getBalanceInStable18(_holder, _assets)/ 10 ** NATIVE_TOKEN_DECIMALS;
     }
     
     function treasuryERC20Assets() public view returns(address[] memory assets) {
@@ -431,10 +446,10 @@ contract MarketRegistry is IMarketRegistry, Ownable{
     function getActualAssetsSharesM100() public  view returns(ActualShares[] memory sharesM100, uint256 r) {
         // Gas Save local vars
         address treasury = ubdNetwork.treasury;
-        uint256 treasuryBalanceWithNativeDecimals = getBalanceInStableUnits(
+        uint256 treasuryBalanceWithNativeDecimals = getBalanceInStable18(
             ubdNetwork.treasury, 
             treasuryERC20Assets()
-        ) * 10 ** NATIVE_TOKEN_DECIMALS;
+        );
         //debug
         r = treasuryBalanceWithNativeDecimals;
 
@@ -518,12 +533,53 @@ contract MarketRegistry is IMarketRegistry, Ownable{
     // Rebalancing. При изменении доли активов в Сокровищнице, система должна продать 
     // излишки каждого актива(если таковые есть) в Песочницу 1, за Базовый актив песочницы 1 (base_sandbox1_asset).
     function _rebalance() internal {
-        uint256 treasuryBalanceNoDecimals = getBalanceInStableUnits(
-            ubdNetwork.treasury, 
-            treasuryERC20Assets()
+        address treasury = ubdNetwork.treasury;
+        ActualShares[] memory actshrs = new ActualShares[](
+            ubdNetwork.treasuryERC20Assets.length + 1
         );
-        for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
-            // Check real asset share in the Treasury
+        (actshrs, ) = getActualAssetsSharesM100();
+        
+        uint256 notLessThen;
+
+        address[] memory path = new address[](2);
+        path[1] = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
+        for (uint256 i; i < actshrs.length; ++ i){
+            if (actshrs[i].asset != address(0) && actshrs[i].excessAmount > 0){
+                // Sell ERC20
+                path[0] = actshrs[i].asset;
+                Market memory mrkt = _getMarketForAsset(path[0]); 
+                // Transfer erc20 asset to MarketAdapter for Swap
+                TransferHelper.safeTransfer(
+                    actshrs[i].asset, mrkt.marketAdapter, 
+                    actshrs[i].excessAmount  
+                );                
+               
+                notLessThen = _getNotLessThenEstimate(actshrs[i].excessAmount, path, mrkt.slippage);
+                IMarketAdapter(mrkt.marketAdapter).swapExactERC20InToERC20Out(
+                    actshrs[i].excessAmount,
+                    notLessThen, 
+                    path,
+                    ubdNetwork.sandbox1,
+                    block.timestamp
+                );
+            } else {
+                // Sel Native
+                Market memory mrkt = _getMarketForAsset(path[0]); 
+                path[0] = IMarketAdapter(mrkt.marketAdapter).WETH();
+                notLessThen = _getNotLessThenEstimate(actshrs[i].excessAmount, path, mrkt.slippage);
+                // First need send ether from Treasury to this contract
+                uint256 etherPercent = actshrs[i].excessAmount * 100 / treasury.balance;
+                uint256 etherFromTreasuryAmount = ITreasury(treasury).sendEtherForRedeem(etherPercent);
+                IMarketAdapter(
+                    mrkt.marketAdapter
+                ).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount}(
+                    etherFromTreasuryAmount, 
+                    notLessThen, 
+                    path,
+                    ubdNetwork.sandbox1,
+                    block.timestamp
+                );
+            }
         }
 
     }
