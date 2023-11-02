@@ -28,6 +28,8 @@ def init_market_registry(
     # markets.setOracle(ZERO_ADDRESS, market_adapter, {'from':accounts[0]})
 
 ### New style market info set ##
+    with reverts("No zero address"):
+        markets.setMarketParams(usdt, (market_adapter, market_adapter, markets.DEFAULT_SLIPPAGE_MAX()+1), {'from':accounts[0]})
     markets.setMarketParams(usdt, (market_adapter, market_adapter, 0), {'from':accounts[0]})
     markets.setMarketParams(usdc, (market_adapter, market_adapter, 0), {'from':accounts[0]})
     markets.setMarketParams(wbtc, (market_adapter, market_adapter, 0), {'from':accounts[0]})
