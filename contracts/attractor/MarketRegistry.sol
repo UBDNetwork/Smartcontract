@@ -21,7 +21,7 @@ contract MarketRegistry is IMarketRegistry, Ownable{
 
     // Slippage params in Base Points ( https://en.wikipedia.org/wiki/Basis_point )
     uint256 public constant DEFAULT_SLIPPAGE_MAX = 1000; // 10%=1000 bp, 0.1%=10 bp, etc
-    uint256 public   DEFAULT_SLIPPAGE     =  100; //   1%=100 bp, 0.1%=10 bp, etc
+    uint256 public   DEFAULT_SLIPPAGE; //     =  100; //   1%=100 bp, 0.1%=10 bp, etc
     
     address public UBD_TEAM_ADDRESS;
     UBDNetwork public ubdNetwork;
@@ -508,16 +508,32 @@ contract MarketRegistry is IMarketRegistry, Ownable{
             _path
         );
         // balance in BASE asset but with Native Decimals
-        uint256 assetBalanceInBaseAssetNativeDecimals = _bringAmountToNativeDecimals(_path[1], assetBalanceInBaseAsset);
-        share  = assetBalanceInBaseAssetNativeDecimals * 10000 / _treasuryBalanceWithNativeDecimals;
-        uint256 diff;
-        if (share > _nominalShare * 100) {
-            diff = 10000 - _nominalShare * 100 * 100 / share;
-            //diff = share - _nominalShare * 100;
-            // have exceeds,  lets calc
-            exceed = _actualBalance * diff / 10000;
-        }
+        uint256 factAssetBalanceInBaseAssetNativeDecimals = _bringAmountToNativeDecimals(_path[1], assetBalanceInBaseAsset);
+        uint256 nominalAssetBalanceInBaseAssetNativeDecimals = _treasuryBalanceWithNativeDecimals * _nominalShare / 100; 
+        share  = factAssetBalanceInBaseAssetNativeDecimals * 10000 / _treasuryBalanceWithNativeDecimals;
+        uint256 diffInStableNativeDecimals;
+        uint256 diffPercent;
+        address a0 = _path[0];
 
+        if (nominalAssetBalanceInBaseAssetNativeDecimals < factAssetBalanceInBaseAssetNativeDecimals) {
+            //diffInStableNativeDecimals = 
+            diffInStableNativeDecimals =
+                factAssetBalanceInBaseAssetNativeDecimals - nominalAssetBalanceInBaseAssetNativeDecimals;
+            _path[0] = _path[1];
+            _path[1] = a0;
+            exceed = getAmountOut(
+                diffInStableNativeDecimals / 10**18 * 10 ** IERC20Metadata(_path[0]).decimals(), 
+                _path
+            );  
+            //diffPercent = diffInStableNativeDecimals * 10000 / factAssetBalanceInBaseAssetNativeDecimals; 
+            //exceed = _actualBalance * diffPercent / 10000;   
+        }
+        // if (share > _nominalShare * 100) {
+        //     //diffPercent = _nominalShare * 100 * 10000 / share;
+        //     //diff = share - _nominalShare * 100;
+        //     // have exceeds,  lets calc
+        //     exceed = _actualBalance * share / 10000;
+        // }
     }
     
     function isInitialized() public view returns(bool){
@@ -549,12 +565,12 @@ contract MarketRegistry is IMarketRegistry, Ownable{
                 // Sell ERC20
                 path[0] = actshrs[i].asset;
                 Market memory mrkt = _getMarketForAsset(path[0]); 
-                // Transfer erc20 asset to MarketAdapter for Swap
-                TransferHelper.safeTransfer(
-                    actshrs[i].asset, mrkt.marketAdapter, 
-                    actshrs[i].excessAmount  
-                );                
-               
+                // Transfer erc20 asset to MarketAdapter for Swap from Treasury
+                ITreasury(ubdNetwork.treasury).sendOneERC20ForSwap(
+                    mrkt.marketAdapter, 
+                    actshrs[i].asset, 
+                    actshrs[i].excessAmount
+                );
                 notLessThen = _getNotLessThenEstimate(actshrs[i].excessAmount, path, mrkt.slippage);
                 IMarketAdapter(mrkt.marketAdapter).swapExactERC20InToERC20Out(
                     actshrs[i].excessAmount,
@@ -563,7 +579,7 @@ contract MarketRegistry is IMarketRegistry, Ownable{
                     ubdNetwork.sandbox1,
                     block.timestamp
                 );
-            } else {
+            } else if (actshrs[i].asset == address(0) && actshrs[i].excessAmount > 0) {
                 // Sel Native
                 Market memory mrkt = _getMarketForAsset(path[0]); 
                 path[0] = IMarketAdapter(mrkt.marketAdapter).WETH();
@@ -571,6 +587,7 @@ contract MarketRegistry is IMarketRegistry, Ownable{
                 // First need send ether from Treasury to this contract
                 uint256 etherPercent = actshrs[i].excessAmount * 100 / treasury.balance;
                 uint256 etherFromTreasuryAmount = ITreasury(treasury).sendEtherForRedeem(etherPercent);
+                notLessThen = _getNotLessThenEstimate(etherFromTreasuryAmount, path, mrkt.slippage);
                 IMarketAdapter(
                     mrkt.marketAdapter
                 ).swapExactNativeInToERC20Out{value: etherFromTreasuryAmount}(
@@ -622,8 +639,8 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         view 
         returns (uint256 notLessThen) 
     {
-        notLessThen = getAmountOut(_amountIn, _path) 
-            - getAmountOut(_amountIn, _path) * _slippagePercentPoints / 10000; 
-    }
-
+        uint256 out = getAmountOut(_amountIn, _path); 
+        notLessThen = out - out * _slippagePercentPoints / 10000;  
+        //notLessThen = out;
+    }  
 }

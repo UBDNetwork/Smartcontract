@@ -31,6 +31,14 @@ contract Treasury is MarketConnector {
     }
     
 
+    function sendOneERC20ForSwap(address _marketAdapter, address _erc20, uint256 _amount) 
+        external
+        onlyMarketRegistry 
+    {
+        
+        TransferHelper.safeTransfer(_erc20, _marketAdapter, _amount);
+    }
+
     function sendERC20ForSwap(address _marketAdapter, uint256 _percent) 
         external
         onlyMarketRegistry 

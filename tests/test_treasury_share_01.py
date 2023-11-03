@@ -65,7 +65,7 @@ def test_topup_treasury(
         '\ntreasury.balance(wbtc):{}'
         '\ntreasury.balance(eth):{}'.format(
             usdt.balanceOf(sandbox1),
-            wbtc.balanceOf(treasury),
+            wbtc.balanceOf(treasury) / 1e8,
             Wei(treasury.balance()).to('ether')
     ))
     logging.info('UBDNetwork.state:{}'.format(markets.ubdNetwork()))
@@ -87,7 +87,7 @@ def test_topup_treasury(
         '\ntreasury.balance(eth):{} ({})'
         '\ngetBalanceInStableUnits: {}'.format(
             usdt.balanceOf(sandbox1),
-            wbtc.balanceOf(treasury), markets.getAmountOut(wbtc.balanceOf(treasury), [wbtc, usdt]),
+            wbtc.balanceOf(treasury) / 1e8, markets.getAmountOut(wbtc.balanceOf(treasury), [wbtc, usdt]),
             Wei(treasury.balance()).to('ether'), markets.getAmountOut(treasury.balance(), [weth, usdt]),
             Wei(markets.getBalanceInStable18(treasury, [wbtc, weth])).to('ether')
     ))
@@ -104,21 +104,39 @@ def test_topup_treasury(
         '\ntreasury.balance(eth):{} ({})'
         '\ngetBalanceInStableUnits: {}'.format(
             usdt.balanceOf(sandbox1),
-            wbtc.balanceOf(treasury), markets.getAmountOut(wbtc.balanceOf(treasury), [wbtc, usdt]),
+            wbtc.balanceOf(treasury) / 1e8, markets.getAmountOut(wbtc.balanceOf(treasury), [wbtc, usdt]),
             Wei(treasury.balance()).to('ether'), markets.getAmountOut(treasury.balance(), [weth, usdt]),
             Wei(markets.getBalanceInStable18(treasury, [wbtc, weth])).to('ether')
     ))
+
     tx = markets.rebalance({'from':accounts[0]})
     t = markets.getActualAssetsSharesM100()
-    logging.info('After rebalancing Actual shares: {}'.format(t))
     logging.info(
-        '\n rebalancing...'
+        '\n rebalancing 1...'
         '\nSandbox1.balance(usdt):{}'
         '\ntreasury.balance(wbtc):{} ({})'
         '\ntreasury.balance(eth):{} ({})'
         '\ngetBalanceInStableUnits: {}'.format(
             usdt.balanceOf(sandbox1),
-            wbtc.balanceOf(treasury), markets.getAmountOut(wbtc.balanceOf(treasury), [wbtc, usdt]),
+            wbtc.balanceOf(treasury) / 1e8, markets.getAmountOut(wbtc.balanceOf(treasury), [wbtc, usdt]),
             Wei(treasury.balance()).to('ether'), markets.getAmountOut(treasury.balance(), [weth, usdt]),
             Wei(markets.getBalanceInStable18(treasury, [wbtc, weth])).to('ether')
     ))
+    logging.info('After rebalancing 1 Actual shares: {}'.format(t))
+
+    tx = markets.rebalance({'from':accounts[0]})
+    t = markets.getActualAssetsSharesM100()
+    
+    logging.info(
+        '\n rebalancing 2...'
+        '\nSandbox1.balance(usdt):{}'
+        '\ntreasury.balance(wbtc):{} ({})'
+        '\ntreasury.balance(eth):{} ({})'
+        '\ngetBalanceInStableUnits: {}'.format(
+            usdt.balanceOf(sandbox1),
+            wbtc.balanceOf(treasury) / 1e8, markets.getAmountOut(wbtc.balanceOf(treasury), [wbtc, usdt]),
+            Wei(treasury.balance()).to('ether'), markets.getAmountOut(treasury.balance(), [weth, usdt]),
+            Wei(markets.getBalanceInStable18(treasury, [wbtc, weth])).to('ether')
+    ))
+    logging.info('After rebalancing 2 Actual shares: {}'.format(t))
+    wwww
