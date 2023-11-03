@@ -513,6 +513,7 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         uint256 diff;
         if (share > _nominalShare * 100) {
             diff = 10000 - _nominalShare * 100 * 100 / share;
+            //diff = share - _nominalShare * 100;
             // have exceeds,  lets calc
             exceed = _actualBalance * diff / 10000;
         }
