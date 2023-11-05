@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
-//import "./IERC20Mint.sol";
-
 
 interface IOracleAdapter  {
 
@@ -17,5 +15,4 @@ interface IOracleAdapter  {
         view
         returns (uint256 amountIn);
 
-    //function WETH() external view returns(address);
 }

@@ -10,25 +10,24 @@ import "../../interfaces/ISandbox2.sol";
 import "../../interfaces/ITreasury.sol";
 import '../../interfaces/IERC20Mint.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
-import '@uniswap/contracts/libraries/TransferHelper.sol';
+import "@uniswap/contracts/libraries/TransferHelper.sol";
+import "./TimeLock.sol";
 
 
-contract MarketRegistry is IMarketRegistry, Ownable{
+contract MarketRegistry is IMarketRegistry, Ownable, TimeLock{
 
     uint8 public constant   NATIVE_TOKEN_DECIMALS = 18;
     uint8 public immutable  MIN_NATIVE_PERCENT;
-    uint256 public immutable TIME_LOCK_DELAY;
 
     // Slippage params in Base Points ( https://en.wikipedia.org/wiki/Basis_point )
     uint256 public constant DEFAULT_SLIPPAGE_MAX = 1000; // 10%=1000 bp, 0.1%=10 bp, etc
-    uint256 public   DEFAULT_SLIPPAGE; //     =  100; //   1%=100 bp, 0.1%=10 bp, etc
+    uint256 public   DEFAULT_SLIPPAGE =  100; //   1%=100 bp, 0.1%=10 bp, etc
     
     address public UBD_TEAM_ADDRESS;
     UBDNetwork public ubdNetwork;
 
     // from asset() to market for this asset.
     mapping(address => Market) public markets;
-    mapping(bytes32 => uint256) public changePendings;
 
     event ReceivedEther(address, uint);
     event TreasuryChangeScheduled(bytes32 indexed ParamsHash, uint256 ScheduledAt);
@@ -44,33 +43,11 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         _;
     }
 
-    modifier afterTimeLock(bytes32 newParamsHash)
-    {
-        if (TIME_LOCK_DELAY != 0) {
-            if (changePendings[newParamsHash] == 0) {
-                // New change pending
-                changePendings[newParamsHash] = block.timestamp + TIME_LOCK_DELAY;
-                emit TreasuryChangeScheduled(newParamsHash, block.timestamp + TIME_LOCK_DELAY);
-        
-            } else if (changePendings[newParamsHash] <= block.timestamp ) {
-                // Operation ready
-                changePendings[newParamsHash] = 0;
-                emit TreasuryChanged(newParamsHash, block.timestamp);
-                _;
-
-            } else {
-                revert('Still pending');
-            }
-
-        } else {
-            _;
-        }
-    }
 
     constructor(uint8 _minNativePercent, uint256 _timeLockDelay)
+    TimeLock(_timeLockDelay)
     {
         MIN_NATIVE_PERCENT = _minNativePercent;
-        TIME_LOCK_DELAY = _timeLockDelay;
     }
 
     receive() external payable {
@@ -234,22 +211,6 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         markets[_asset] = _market;
     }
 
-    // function setMarket(address _asset, address _market) 
-    //     external 
-    //     onlyOwner 
-    // {
-    //     require(_market != address(0), 'No zero address');
-    //     markets[_asset].marketAdapter = _market; 
-    // }
-
-    // function setOracle(address _asset, address _oracle) 
-    //     external 
-    //     onlyOwner 
-    // {
-    //     require(_oracle != address(0), 'No zero address');
-    //     markets[_asset].oracleAdapter = _oracle; 
-    // }
-
     function setSandbox1(address _adr) 
         external 
         onlyOwner 
@@ -286,7 +247,7 @@ contract MarketRegistry is IMarketRegistry, Ownable{
             sumPercent += ubdNetwork.treasuryERC20Assets[i].percent;
         }
         require(sumPercent + MIN_NATIVE_PERCENT <= 100, 'Percent sum too much');
-        _rebalance()
+        _rebalance();
     }
 
     function editAssetShares(uint8[] calldata _percentShares)
@@ -312,7 +273,11 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         external 
         onlyOwner 
     {
-        require(ERC20().balanceOf(ubdNetwork.treasury) == 0, 'Cant remove asset with non zero balance');
+        require(
+            IERC20(_erc20).balanceOf(ubdNetwork.treasury) == 0, 
+            'Cant remove asset with non zero balance'
+        );
+
         uint256 assetsCount = ubdNetwork.treasuryERC20Assets.length;
         for (uint256 i; i < assetsCount; ++ i){
             if (ubdNetwork.treasuryERC20Assets[i].asset == _erc20){
@@ -378,7 +343,6 @@ contract MarketRegistry is IMarketRegistry, Ownable{
 
     }
 
-    // 
     function getBalanceInStable18(address _holder, address[] memory _assets) 
         public 
         view 
@@ -464,24 +428,26 @@ contract MarketRegistry is IMarketRegistry, Ownable{
                 sharesM100[i].asset = path[0];
                 // balance in asset
                 assetBalance = IERC20(path[0]).balanceOf(treasury);
-                
-                (sharesM100[i].actualPercentPoint, sharesM100[i].excessAmount) = calcAssetShareAndExcess(
-                    assetBalance,
-                    path,
-                    uint256(ubdNetwork.treasuryERC20Assets[i].percent),
-                    treasuryBalanceWithNativeDecimals
-                );
+                if (assetBalance > 0) {
+                    (sharesM100[i].actualPercentPoint, sharesM100[i].excessAmount) = calcAssetShareAndExcess(
+                        assetBalance,
+                        path,
+                        uint256(ubdNetwork.treasuryERC20Assets[i].percent),
+                        treasuryBalanceWithNativeDecimals
+                    );
+                }
             } else {
                 //Native asset
                 path[0] = IMarketAdapter(mrkt.oracleAdapter).WETH();
                 assetBalance = treasury.balance;
-
-                (sharesM100[i].actualPercentPoint, sharesM100[i].excessAmount) = calcAssetShareAndExcess(
-                    assetBalance,
-                    path,
-                    _getNativeTreasurePercent(),
-                    treasuryBalanceWithNativeDecimals
-                );
+                if (assetBalance > 0) {
+                    (sharesM100[i].actualPercentPoint, sharesM100[i].excessAmount) = calcAssetShareAndExcess(
+                        assetBalance,
+                        path,
+                        _getNativeTreasurePercent(),
+                        treasuryBalanceWithNativeDecimals
+                    );
+                }
             }
             
         }

@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: MIT
 
-//   UBDN  ERC20 Locker
-
 
 pragma solidity 0.8.21;
 
