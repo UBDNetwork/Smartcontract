@@ -164,13 +164,18 @@ def test_mintReward(accounts, sandbox1, ubd):
     sandbox1.mintReward(accounts[7], 1, {'from': accounts[7]})
     assert ubd.balanceOf(accounts[7]) == 1
 
-def test_timelock(accounts, markets_timelocked, wbtc):
-    tx1 = markets_timelocked.addERC20AssetToTreasury((wbtc, 50), {'from':accounts[0]})
+def test_timelock(accounts, markets_timelocked, wbtc,
+    mockuniv2, dai, usdt, sandbox1, sandbox2, treasury_t, ubd,  market_adapter, weth, usdc):
+    init_market_registry(
+        accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, treasury_t, 
+        ubd, markets_timelocked, wbtc, market_adapter, weth, usdc
+    )
+    tx1 = markets_timelocked.addERC20AssetToTreasury((wbtc, 70), {'from':accounts[0]})
     assert len(markets_timelocked.treasuryERC20Assets()) == 0
-    assert len(tx1.events['TreasuryChangeScheduled']) == 1
+    assert len(tx1.events['ChangeScheduled']) == 1
     with reverts('Still pending'):
-        tx2 = markets_timelocked.addERC20AssetToTreasury((wbtc, 50), {'from':accounts[0]})
+        tx2 = markets_timelocked.addERC20AssetToTreasury((wbtc, 70), {'from':accounts[0]})
     chain.sleep(markets_timelocked.TIME_LOCK_DELAY())
-    tx3 = markets_timelocked.addERC20AssetToTreasury((wbtc, 50), {'from':accounts[0]})
+    tx3 = markets_timelocked.addERC20AssetToTreasury((wbtc, 70), {'from':accounts[0]})
     assert len(markets_timelocked.treasuryERC20Assets()) == 1
-    assert len(tx3.events['TreasuryChanged']) == 1
+    assert len(tx3.events['Changed']) == 1

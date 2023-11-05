@@ -106,6 +106,11 @@ def treasury(accounts, Treasury, markets):
     yield tr
 
 @pytest.fixture(scope="module")
+def treasury_t(accounts, Treasury, markets_timelocked):
+    tr = accounts[0].deploy(Treasury,  markets_timelocked.address)
+    yield tr
+
+@pytest.fixture(scope="module")
 def ubd(accounts, UBDToken, sandbox1):
     erc = accounts[0].deploy(UBDToken, sandbox1)
     #sandbox1.setUBDToken(erc.address, {'from':accounts[0]})
