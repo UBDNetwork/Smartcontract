@@ -286,7 +286,7 @@ contract MarketRegistry is IMarketRegistry, Ownable{
             sumPercent += ubdNetwork.treasuryERC20Assets[i].percent;
         }
         require(sumPercent + MIN_NATIVE_PERCENT <= 100, 'Percent sum too much');
-        // TODO make rebalancing
+        _rebalance()
     }
 
     function editAssetShares(uint8[] calldata _percentShares)
@@ -304,7 +304,7 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         for (uint256 i; i < erc20AssetsCount; ++ i){
             ubdNetwork.treasuryERC20Assets[i].percent = _percentShares[i];
         }
-        // TODO make rebalancing
+        _rebalance();
 
     }
 
@@ -312,9 +312,7 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         external 
         onlyOwner 
     {
-        // TODO Check that fact deleting asset share must be zero before array pop
-        // For that case need first change asset's share to zero. Then make rebalancing.
-        // And then delete from array
+        require(ERC20().balanceOf(ubdNetwork.treasury) == 0, 'Cant remove asset with non zero balance');
         uint256 assetsCount = ubdNetwork.treasuryERC20Assets.length;
         for (uint256 i; i < assetsCount; ++ i){
             if (ubdNetwork.treasuryERC20Assets[i].asset == _erc20){
@@ -323,7 +321,6 @@ contract MarketRegistry is IMarketRegistry, Ownable{
                     ubdNetwork.treasuryERC20Assets[i] = ubdNetwork.treasuryERC20Assets[assetsCount-1];
                 }
                 ubdNetwork.treasuryERC20Assets.pop();
-
             } 
         }
     }
@@ -446,6 +443,7 @@ contract MarketRegistry is IMarketRegistry, Ownable{
     function getActualAssetsSharesM100() public  view returns(ActualShares[] memory sharesM100, uint256 r) {
         // Gas Save local vars
         address treasury = ubdNetwork.treasury;
+        address baseAsset = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
         uint256 treasuryBalanceWithNativeDecimals = getBalanceInStable18(
             ubdNetwork.treasury, 
             treasuryERC20Assets()
@@ -454,11 +452,11 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         r = treasuryBalanceWithNativeDecimals;
 
         address[] memory path = new address[](2);
-        path[1] = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
         sharesM100 = new ActualShares[](ubdNetwork.treasuryERC20Assets.length + 1);
         uint256 assetBalance;
         Market memory mrkt = _getMarketForAsset(address(0)); 
         for (uint256 i; i < sharesM100.length; ++ i) {
+            path[1] = baseAsset;
             if (i != sharesM100.length - 1) {
                 // ERC20 assets
                 path[0] = ubdNetwork.treasuryERC20Assets[i].asset;
@@ -512,11 +510,9 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         uint256 nominalAssetBalanceInBaseAssetNativeDecimals = _treasuryBalanceWithNativeDecimals * _nominalShare / 100; 
         share  = factAssetBalanceInBaseAssetNativeDecimals * 10000 / _treasuryBalanceWithNativeDecimals;
         uint256 diffInStableNativeDecimals;
-        uint256 diffPercent;
         address a0 = _path[0];
 
         if (nominalAssetBalanceInBaseAssetNativeDecimals < factAssetBalanceInBaseAssetNativeDecimals) {
-            //diffInStableNativeDecimals = 
             diffInStableNativeDecimals =
                 factAssetBalanceInBaseAssetNativeDecimals - nominalAssetBalanceInBaseAssetNativeDecimals;
             _path[0] = _path[1];
@@ -525,15 +521,7 @@ contract MarketRegistry is IMarketRegistry, Ownable{
                 diffInStableNativeDecimals / 10**18 * 10 ** IERC20Metadata(_path[0]).decimals(), 
                 _path
             );  
-            //diffPercent = diffInStableNativeDecimals * 10000 / factAssetBalanceInBaseAssetNativeDecimals; 
-            //exceed = _actualBalance * diffPercent / 10000;   
         }
-        // if (share > _nominalShare * 100) {
-        //     //diffPercent = _nominalShare * 100 * 10000 / share;
-        //     //diff = share - _nominalShare * 100;
-        //     // have exceeds,  lets calc
-        //     exceed = _actualBalance * share / 10000;
-        // }
     }
     
     function isInitialized() public view returns(bool){
@@ -547,8 +535,6 @@ contract MarketRegistry is IMarketRegistry, Ownable{
         }
     }
 /////////////////////////////////////////////////////////////////////////////////////
-    // Rebalancing. При изменении доли активов в Сокровищнице, система должна продать 
-    // излишки каждого актива(если таковые есть) в Песочницу 1, за Базовый актив песочницы 1 (base_sandbox1_asset).
     function _rebalance() internal {
         address treasury = ubdNetwork.treasury;
         ActualShares[] memory actshrs = new ActualShares[](
@@ -641,6 +627,5 @@ contract MarketRegistry is IMarketRegistry, Ownable{
     {
         uint256 out = getAmountOut(_amountIn, _path); 
         notLessThen = out - out * _slippagePercentPoints / 10000;  
-        //notLessThen = out;
     }  
 }
