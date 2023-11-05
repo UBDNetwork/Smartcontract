@@ -4,8 +4,6 @@ pragma solidity 0.8.21;
 //import "./IERC20Mint.sol";
 
 interface ITreasury  {
-    function approveForRedeem(address _marketAdapter) external returns (bool);
-    function sendForRedeem(address _marketAdapter) external returns(uint256[] memory);
     function sendERC20ForSwap(address _marketAdapter, uint256 _percent) 
         external 
         returns(uint256[] memory);
