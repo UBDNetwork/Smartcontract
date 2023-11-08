@@ -260,7 +260,7 @@ contract MarketRegistry is IMarketRegistry, Ownable, TimeLock{
         for (uint256 i; i < _percentShares.length; ++ i){
             sumPercent += _percentShares[i];
         }
-        require(sumPercent + MIN_NATIVE_PERCENT <= 100, 'Percent sum to much');
+        require(sumPercent + MIN_NATIVE_PERCENT <= 100, 'Percent sum too much');
 
         for (uint256 i; i < erc20AssetsCount; ++ i){
             ubdNetwork.treasuryERC20Assets[i].percent = _percentShares[i];
