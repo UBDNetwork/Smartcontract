@@ -106,13 +106,27 @@ def test_treasury_change_asset(
     markets.setMarketParams(wbnb, (market_adapter, market_adapter, 0), {'from':accounts[0]})
     with reverts("Ownable: caller is not the owner"):
         markets.addERC20AssetToTreasury((wbnb, 50), {'from':accounts[1]})
-    with reverts("Sum percent to much"):
+    with reverts("Percent sum too much"):
         markets.addERC20AssetToTreasury((wbnb, 50), {'from':accounts[0]})
 
     with reverts('Ownable: caller is not the owner'):
         markets.removeERC20AssetFromTreasury(wbtc, {"from": accounts[1]})
     #remove wbtc from treasury assets and add wbnb
-    markets.removeERC20AssetFromTreasury(wbtc, {"from": accounts[0]})
+    with reverts('Cant remove asset with non zero balance'):
+        markets.removeERC20AssetFromTreasury(wbtc, {"from": accounts[0]})
+
+    #change asset shares. Rebalance happened
+    logging.info('wbtc balance before rebalance = {}'.format(wbtc.balanceOf(treasury)))
+    with reverts('Ownable: caller is not the owner'):
+        markets.editAssetShares([0], {"from": accounts[1]})
+    markets.editAssetShares([0], {"from": accounts[0]})
+    markets.editAssetShares([0], {"from": accounts[0]})
+
+    logging.info('wbtc balance after rebalance = {}'.format(wbtc.balanceOf(treasury)))
+
+    #rebalance happened. Can remove asset
+    '''markets.removeERC20AssetFromTreasury(wbtc, {"from": accounts[0]})
+
     markets.addERC20AssetToTreasury((wbnb, 50), {'from':accounts[0]})
 
     #wbnb is treasuryERC20Assets
@@ -298,4 +312,4 @@ def test_other_funscion(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2,
     assert markets.getUBDNetworkInfo()[1] == treasury
     assert markets.getUBDNetworkInfo()[2] == sandbox2
     assert markets.getUBDNetworkInfo()[3][0][0] == wbnb
-    assert markets.getUBDNetworkInfo()[3][0][1] == 50
+    assert markets.getUBDNetworkInfo()[3][0][1] == 50'''

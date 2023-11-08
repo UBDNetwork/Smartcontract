@@ -170,6 +170,11 @@ def test_timelock(accounts, markets_timelocked, wbtc,
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, treasury_t, 
         ubd, markets_timelocked, wbtc, market_adapter, weth, usdc
     )
+
+    tx1 = markets_timelocked.addERC20AssetToTreasury((wbtc, 200), {'from':accounts[0]})
+    chain.sleep(markets_timelocked.TIME_LOCK_DELAY())
+    with reverts('Percent sum too much'):
+        tx1 = markets_timelocked.addERC20AssetToTreasury((wbtc, 200), {'from':accounts[0]})
     tx1 = markets_timelocked.addERC20AssetToTreasury((wbtc, 70), {'from':accounts[0]})
     assert len(markets_timelocked.treasuryERC20Assets()) == 0
     assert len(tx1.events['ChangeScheduled']) == 1
