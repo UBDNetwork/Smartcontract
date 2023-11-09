@@ -120,12 +120,14 @@ def test_treasury_change_asset(
     with reverts('Ownable: caller is not the owner'):
         markets.editAssetShares([0], {"from": accounts[1]})
     markets.editAssetShares([0], {"from": accounts[0]})
+    logging.info('wbtc balance after rebalance = {}'.format(wbtc.balanceOf(treasury)))
     markets.editAssetShares([0], {"from": accounts[0]})
 
     logging.info('wbtc balance after rebalance = {}'.format(wbtc.balanceOf(treasury)))
 
     #rebalance happened. Can remove asset
-    '''markets.removeERC20AssetFromTreasury(wbtc, {"from": accounts[0]})
+    markets.removeERC20AssetFromTreasury(wbtc, {"from": accounts[0]})
+    
 
     markets.addERC20AssetToTreasury((wbnb, 50), {'from':accounts[0]})
 
@@ -134,7 +136,7 @@ def test_treasury_change_asset(
     assert len(markets.treasuryERC20Assets()) == 1
     
     logging.info('getCollateralLevelM10 after delete wbtc from assets= {}'.format(markets.getCollateralLevelM10()))
-
+    '''
     sandbox1.setMinTopUp(990, {"from": accounts[0]})
     #check - after topup treasury wbtc balance will not be changed but wbnb balance will be changed
 

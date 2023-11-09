@@ -294,6 +294,7 @@ contract MarketRegistry is IMarketRegistry, Ownable, TimeLock{
         external 
         onlyOwner 
     {
+        require(_adr != address(0), 'Cant be zero address');
         UBD_TEAM_ADDRESS = _adr;
     }
 
@@ -475,16 +476,22 @@ contract MarketRegistry is IMarketRegistry, Ownable, TimeLock{
         uint256 factAssetBalanceInBaseAssetNativeDecimals = _bringAmountToNativeDecimals(_path[1], assetBalanceInBaseAsset);
         uint256 nominalAssetBalanceInBaseAssetNativeDecimals = _treasuryBalanceWithNativeDecimals * _nominalShare / 100; 
         share  = factAssetBalanceInBaseAssetNativeDecimals * 10000 / _treasuryBalanceWithNativeDecimals;
+        
+        // Case when owner want to remove asset and  set it share=0 before 
+        if (_nominalShare == 0) {
+            exceed = _actualBalance;
+            return (share, exceed);
+        }
+
         uint256 diffInStableNativeDecimals;
         address a0 = _path[0];
-
         if (nominalAssetBalanceInBaseAssetNativeDecimals < factAssetBalanceInBaseAssetNativeDecimals) {
             diffInStableNativeDecimals =
                 factAssetBalanceInBaseAssetNativeDecimals - nominalAssetBalanceInBaseAssetNativeDecimals;
             _path[0] = _path[1];
             _path[1] = a0;
             exceed = getAmountOut(
-                diffInStableNativeDecimals / 10**18 * 10 ** IERC20Metadata(_path[0]).decimals(), 
+                diffInStableNativeDecimals  * 10 ** IERC20Metadata(_path[0]).decimals() / 10**18, 
                 _path
             );  
         }
