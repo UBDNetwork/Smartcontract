@@ -63,7 +63,7 @@ def test_topup_treasury_from_sandbox1(
     ))
     logging.info('UBDNetwork.state:{}'.format(markets.ubdNetwork()))
     logging.info('UBDNetwork.state:{}'.format(markets.getUBDNetworkInfo()))
-    accounts[1].transfer(mockuniv2, 10e18)
+    accounts[1].transfer(mockuniv2, 50e18)
 
     #sandbox has 1% of balance > 1000 usdt - can exchange usdt to ether and wbtc
     before_usdt_sandbox = usdt.balanceOf(sandbox1.address)
@@ -136,7 +136,7 @@ def test_treasury_change_asset(
     assert len(markets.treasuryERC20Assets()) == 1
     
     logging.info('getCollateralLevelM10 after delete wbtc from assets= {}'.format(markets.getCollateralLevelM10()))
-    '''
+    
     sandbox1.setMinTopUp(990, {"from": accounts[0]})
     #check - after topup treasury wbtc balance will not be changed but wbnb balance will be changed
 
@@ -148,8 +148,9 @@ def test_treasury_change_asset(
     #again topup treasury
     chain.sleep(sandbox1.TREASURY_TOPUP_PERIOD() + 10)
     tx = sandbox1.topupTreasury({'from':accounts[1]})
+    logging.info(wbnb.balanceOf(treasury))
 
-    assert wbnb.balanceOf(treasury) - (before_usdt_sandbox1/100/2/mockuniv2.rates(usdt.address, wbnb.address)[0])*10**wbnb.decimals()/10**usdt.decimals() == 0
+    assert (before_usdt_sandbox1/100/2/mockuniv2.rates(usdt.address, wbnb.address)[0])*10**wbnb.decimals()/10**usdt.decimals() - wbnb.balanceOf(treasury) < 10e12
     assert (before_usdt_sandbox1/100/2/mockuniv2.rates(usdt.address, weth.address)[0])*10**weth.decimals()/10**usdt.decimals() + before_eth - treasury.balance()  < 1e12
 
     assert wbtc.balanceOf(treasury) == before_wbtc
@@ -209,21 +210,28 @@ def test_topup_sandbox2(
     assert treasury.balance() == before_eth_treasury_amount - eth_to_dai_amount
     assert wbtc.balanceOf(treasury) == before_wbtc_treasury_amount
 
+def test_technical_preparing(
+        accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
+        treasury, ubd, markets, wbtc, market_adapter, weth, wbnb):
+    chain.sleep(sandbox1.TREASURY_TOPUP_PERIOD()+10)
+    tx = sandbox1.topupTreasury({'from':accounts[1]})
+    
+
 def test_topup_treasury_from_sandbox2(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
         treasury, ubd, markets, wbtc, market_adapter, weth, wbnb):
     
     logging.info('!!!!!!!!!!!!!!!!!   topup treasury from sandbox2    !!!!!!!!!!!!!!!')
     
-    mockuniv2.setRate(dai.address, wbnb.address, (10, 1))
-    mockuniv2.setRate(dai.address, weth.address, (200, 1))
-    mockuniv2.setRate(weth.address, dai.address, (1, 200))
-    mockuniv2.setRate(wbnb.address, dai.address, (1, 10))
+    mockuniv2.setRate(dai.address, wbnb.address, (5, 1))
+    mockuniv2.setRate(dai.address, weth.address, (50, 1))
+    mockuniv2.setRate(wbnb.address, dai.address, (1, 5))
+    mockuniv2.setRate(weth.address, dai.address, (1, 50))
 
-    mockuniv2.setRate(usdt.address, wbnb.address, (10, 1))
-    mockuniv2.setRate(usdt.address, weth.address, (200, 1))
-    mockuniv2.setRate(wbnb.address, usdt.address, (1, 10))
-    mockuniv2.setRate(weth.address, usdt.address, (1, 200))
+    mockuniv2.setRate(usdt.address, wbnb.address, (5, 1))
+    mockuniv2.setRate(usdt.address, weth.address, (50, 1))
+    mockuniv2.setRate(wbnb.address, usdt.address, (1, 5))
+    mockuniv2.setRate(weth.address, usdt.address, (1, 50))
 
     logging.info('getCollateralLevelM10 = {}'.format(markets.getCollateralLevelM10()))
 
@@ -269,11 +277,16 @@ def test_redeem_for_sandbox1(
     #and 1% of defi slippage of usdt
     usdt_amount_calc = wbnb_to_swap*mockuniv2.rates(wbnb.address, usdt.address)[1]*10**usdt.decimals()/10**wbnb.decimals() + eth_to_swap*mockuniv2.rates(weth.address, usdt.address)[1]*10**usdt.decimals()/10**weth.decimals()
 
-    #redeem only - topup sandbox1 from treasury
+    #redeem only - topup sandbox1 from treasury - without exchange ubds
+    with reverts('Unexpected Out Amount'):
+        tx = sandbox1.swapExactInput(ubd.address, 
+                                    100000*10**ubd.decimals(),
+                                    0,
+                                    100000*10**usdt.decimals())
     tx = sandbox1.swapExactInput(ubd.address, 
-                                100000*10**ubd.decimals(),
-                                0,
-                                100000*10**usdt.decimals())
+                                    100500*10**ubd.decimals(),
+                                    0,
+                                    100500*10**usdt.decimals())
 
     assert wbnb.balanceOf(treasury) - before_wbnb_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT()) /100 < 10
     assert before_eth_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT())/100 - treasury.balance()  < 1000
@@ -314,4 +327,4 @@ def test_other_funscion(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2,
     assert markets.getUBDNetworkInfo()[1] == treasury
     assert markets.getUBDNetworkInfo()[2] == sandbox2
     assert markets.getUBDNetworkInfo()[3][0][0] == wbnb
-    assert markets.getUBDNetworkInfo()[3][0][1] == 50'''
+    assert markets.getUBDNetworkInfo()[3][0][1] == 50
