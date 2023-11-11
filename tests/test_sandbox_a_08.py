@@ -119,17 +119,30 @@ def test_treasury_change_asset(
     logging.info('wbtc balance before rebalance = {}'.format(wbtc.balanceOf(treasury)))
     with reverts('Ownable: caller is not the owner'):
         markets.editAssetShares([0], {"from": accounts[1]})
+    
+    before_wbtc_balance = wbtc.balanceOf(treasury)
+    before_usdt_before_sandbox1 = usdt.balanceOf(sandbox1)
+    before_eth_balance = treasury.balance()
     markets.editAssetShares([0], {"from": accounts[0]})
-    logging.info('wbtc balance after rebalance = {}'.format(wbtc.balanceOf(treasury)))
-    markets.editAssetShares([0], {"from": accounts[0]})
+
+    #check rebalance result
+    assert wbtc.balanceOf(treasury) == 0
+    assert treasury.balance() == before_eth_balance
+    assert usdt.balanceOf(sandbox1) == before_usdt_before_sandbox1 + before_wbtc_balance*mockuniv2.rates(usdt.address, wbtc.address)[0]*10**usdt.decimals()/10**wbtc.decimals()
+
 
     logging.info('wbtc balance after rebalance = {}'.format(wbtc.balanceOf(treasury)))
 
     #rebalance happened. Can remove asset
     markets.removeERC20AssetFromTreasury(wbtc, {"from": accounts[0]})
-    
 
+    before_eth_balance = treasury.balance()
+    before_usdt_before_sandbox1 = usdt.balanceOf(sandbox1)
     markets.addERC20AssetToTreasury((wbnb, 50), {'from':accounts[0]})
+    #check rebalance result
+    assert wbnb.balanceOf(treasury) == 0
+    assert treasury.balance() == before_eth_balance/2
+    assert usdt.balanceOf(sandbox1) == before_usdt_before_sandbox1 + before_eth_balance/2*mockuniv2.rates(usdt.address, weth.address)[0]*10**usdt.decimals()/10**weth.decimals()
 
     #wbnb is treasuryERC20Assets
     assert markets.treasuryERC20Assets()[0] == wbnb.address
