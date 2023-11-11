@@ -141,6 +141,7 @@ def test_treasury_change_asset(
     markets.addERC20AssetToTreasury((wbnb, 50), {'from':accounts[0]})
     #check rebalance result
     assert wbnb.balanceOf(treasury) == 0
+    #eth percent is 50%, wbtc persent was 50%
     assert treasury.balance() == before_eth_balance/2
     assert usdt.balanceOf(sandbox1) == before_usdt_before_sandbox1 + before_eth_balance/2*mockuniv2.rates(usdt.address, weth.address)[0]*10**usdt.decimals()/10**weth.decimals()
 
