@@ -221,6 +221,7 @@ def test_redeem_sandbox1(
     assert treasury.balance() - before_eth_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT())/100 == 0 #< 10000000000000
     assert before_usdt_sandbox1_amount + usdt_amount_calc - usdt.balanceOf(sandbox1) < 1000
     assert before_wbnb_treasury_amount == wbnb.balanceOf(treasury.address)
+    assert wbnb.balanceOf(treasury) == 0
 
 
 

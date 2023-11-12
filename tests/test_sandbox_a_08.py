@@ -50,7 +50,7 @@ def test_usdt_to_ubd_100k_1(accounts, ubd, sandbox1, usdt):
 def test_topup_treasury_from_sandbox1(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
         treasury, ubd, markets, wbtc, market_adapter, weth, usdc):
-    logging.info('!!!!!!!!!!!!!!!!!   topup treasury from sandbox1 - after changing of erc20 token in treasury !!!!!!!!!!!!!!!')
+    logging.info('!!!!!!!!!!!!!!!!!   topup treasury from sandbox1 !!!!!!!!!!!!!!!')
     
     init_market_registry(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, treasury, ubd, markets, wbtc, market_adapter, weth, usdc)
     logging.info(
@@ -96,6 +96,7 @@ def test_treasury_change_asset(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
         treasury, ubd, markets, wbtc, market_adapter, weth, usdc, wbnb):
     
+    logging.info('!!!!!!!!!!!!!!!!!   change treasury assets and rebalance !!!!!!!!!!!!!!!')
     mockuniv2.setRate(usdt.address, wbtc.address, (100000, 1))
     mockuniv2.setRate(wbtc.address, usdt.address, (1, 100000))
     
