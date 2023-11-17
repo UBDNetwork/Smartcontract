@@ -8,8 +8,8 @@ import '@uniswap/contracts/libraries/TransferHelper.sol';
 
 contract Treasury is MarketConnector {
 
-	uint256 public constant SANDBOX2_TOPUP_PERCENT = 33;
-    uint256 public constant SANDBOX1_REDEEM_PERCENT = 1;
+	uint256 public constant SANDBOX2_TOPUP_PERCENT  = 330000; // 1% - 10000, 13% - 130000, etc 
+    uint256 public constant SANDBOX1_REDEEM_PERCENT =  10000; // 1% - 10000, 13% - 130000, etc 
 
     
     modifier onlyMarketRegistry()
@@ -53,7 +53,7 @@ contract Treasury is MarketConnector {
         onlyMarketRegistry 
         returns (uint256 amount)
     {
-        amount = address(this).balance * _percent / 100; 
+        amount = address(this).balance * _percent / 1000000; 
         TransferHelper.safeTransferETH(marketRegistry, amount);
     }
 

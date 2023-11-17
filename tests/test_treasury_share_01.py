@@ -108,8 +108,13 @@ def test_topup_treasury(
             Wei(treasury.balance()).to('ether'), markets.getAmountOut(treasury.balance(), [weth, usdt]),
             Wei(markets.getBalanceInStable18(treasury, [wbtc, weth])).to('ether')
     ))
+    treasury_balance_stable18 = t[1]
+    logging.info('treasury_balance_stable: {}'.format(treasury_balance_stable18))
 
     tx = markets.rebalance({'from':accounts[0]})
+    [logging.info('\nfrom:{} to:{} value:{}'.format(x['from'],x['to'],x['value'])) for x in tx.events['Transfer']]
+    logging.info('tx.value:\n {}'.format(tx.events['ReceivedEther']))
+
     t = markets.getActualAssetsSharesM100()
     logging.info(
         '\n rebalancing 1...'
@@ -123,6 +128,7 @@ def test_topup_treasury(
             Wei(markets.getBalanceInStable18(treasury, [wbtc, weth])).to('ether')
     ))
     logging.info('After rebalancing 1 Actual shares: {}'.format(t))
+
 
     tx = markets.rebalance({'from':accounts[0]})
     t = markets.getActualAssetsSharesM100()

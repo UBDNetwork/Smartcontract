@@ -28,13 +28,15 @@ contract MockSwapRouter is IUniswapV2Router02 {
         _;
     }
 
+     event ReceivedEther(address, uint);
+
     constructor(address _factory, address _WETH)  {
         factory = _factory;
         WETH = _WETH;
     }
 
     receive() external payable {
-       // assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
+        emit ReceivedEther(msg.sender, msg.value);
     }
 
     function setRate(address asset1, address asset2, Rate memory _rate) external {
