@@ -39,14 +39,35 @@ contract StakingManager is  Ownable {
         require(_modelIndex < depositModels.length, "Model with this index not exist yet");
         require(depositModels[_modelIndex].validAfter <= block.timestamp, "Model not valid yet");
         require(depositModels[_modelIndex].notValidAfter >= block.timestamp, "Model not valid already");
-        
+        Deposit storage d = deposits[msg.sender];
+        if (d.startDate == 0) {
+            // New deposit
+            d.startDate = block.timestamp;
+            d.body = _amount;
+            d.depositModelIndex = uint8(_modelIndex);
+        } else {
+            // Add amount to deposit
+            // TODO Check that add enable
+            d.body += _amount;
+        }
+        TransferHelper.safeTransferFrom(stakedToken, msg.sender, address(this), _amount);
+    }
 
+    function claimInterest() public returns (uint256 claimedAmount) {
+        // TODO mint reward
+        TransferHelper.safeTransfer(stakedToken, msg.sender, claimedAmount);
+    }
+
+    function withdraw() public returns (uint256 withdrawAmount){
+        // TODO mint reward
+        TransferHelper.safeTransfer(stakedToken, msg.sender, withdrawAmount);
     }
     ///////////////////////////////////////////////////////////
     ///////    Admin Functions        /////////////////////////
     ///////////////////////////////////////////////////////////
     function modelRegister(DepositModel calldata _newModel) external onlyOwner {
         require(_newModel.modelAddress != address(0), "Cant be zero address");
+        require(depositModels.length < type(uint8).max, "Too much models");
         depositModels.push(_newModel);
         emit DepositModelChanged(_newModel.modelAddress, _newModel.validAfter, _newModel.notValidAfter);
     }

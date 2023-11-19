@@ -1,0 +1,19 @@
+// SPDX-License-Identifier: MIT
+// StakingManager 
+pragma solidity 0.8.21;
+
+//import "@openzeppelin/contracts/access/Ownable.sol";
+//import "@uniswap/contracts/libraries/TransferHelper.sol";
+//import "./TimeLock.sol";
+
+
+contract DepositModelOne {
+
+    
+    ///////////////////////////////////////////////////////////
+    ///////    Admin Functions        /////////////////////////
+    ///////////////////////////////////////////////////////////
+    
+    ///////////////////////////////////////////////////////////
+
+}
