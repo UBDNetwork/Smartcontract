@@ -85,7 +85,7 @@ contract Treasury is MarketConnector {
         uint256[] memory _treasuryERC20sended = new uint256[](treasuryERC20AssetsCount);
         _treasuryERC20Assets = treasuryERC20Assets();
         for (uint8 i = 0; i < _treasuryERC20Assets.length; ++ i){
-            _treasuryERC20sended[i] = IERC20(_treasuryERC20Assets[i]).balanceOf(address(this)) * _percent / 100; 
+            _treasuryERC20sended[i] = IERC20(_treasuryERC20Assets[i]).balanceOf(address(this)) * _percent / 1000000; //100; 
             TransferHelper.safeTransfer(
                 _treasuryERC20Assets[i],
                 _to, 
