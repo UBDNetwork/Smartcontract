@@ -189,8 +189,8 @@ def test_topup_sandbox2(
     tx = sandbox2.topupSandBox2( {'from':accounts[0]})
 
     #1/3 of amount
-    wbtc_to_dai_amount = before_wbtc_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/1000000
-    eth_to_dai_amount = before_eth_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/1000000
+    wbtc_to_dai_amount = before_wbtc_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
+    eth_to_dai_amount = before_eth_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
 
     logging.info('wbtc_to_dai_amount = {}'.format(wbtc_to_dai_amount))
     logging.info('eth_to_dai_amount = {}'.format(eth_to_dai_amount))

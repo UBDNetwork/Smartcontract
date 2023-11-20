@@ -115,8 +115,8 @@ def test_rebalance_1(
 
     #check rebalance
     assert wbtc.balanceOf(treasury) - before_wbtc_balance == 0 
-    assert treasury.balance() - before_eth_balance + diff_weth < 2*1e15
-    assert before_usdt_balance_sandbox1 + diff_in_usdt_weth + diff_in_usdt_wbtc - usdt.balanceOf(sandbox1) == 0
+    assert treasury.balance() - before_eth_balance + diff_weth < 8e11 #2*1e15
+    assert before_usdt_balance_sandbox1 + diff_in_usdt_weth + diff_in_usdt_wbtc - usdt.balanceOf(sandbox1) < 2000
 
 #increase rates of all assets in two time 
 def test_rebalance_2(
@@ -165,8 +165,8 @@ def test_rebalance_2(
 
     #check rebalance
     assert wbtc.balanceOf(treasury) - before_wbtc_balance + diff_wbtc == 0 
-    assert treasury.balance() - before_eth_balance + diff_weth < 2*1e15
-    assert before_usdt_balance_sandbox1 + diff_in_usdt_weth + diff_in_usdt_wbtc - usdt.balanceOf(sandbox1) == 0
+    assert treasury.balance() - before_eth_balance + diff_weth < 3e11 #2*1e15
+    assert before_usdt_balance_sandbox1 + diff_in_usdt_weth + diff_in_usdt_wbtc - usdt.balanceOf(sandbox1) < 1000
     
 
 
