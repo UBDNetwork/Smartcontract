@@ -8,8 +8,9 @@ import "../../interfaces/IERC20Burn.sol";
 contract SandBox2 is MarketConnector {
 
     uint256 public constant TREASURY_TOPUP_PERIOD = 1 days;
-    uint256 public constant TREASURY_TOPUP_PERCENT = 10000; // 1% - 10000, 13% - 130000, etc 
-    uint8 public constant  TEAM_PERCENT = 33;
+    uint256 public constant TREASURY_TOPUP_PERCENT = 10000; //   1% -   10000, 13% - 130000, etc 
+    uint256 public constant PERCENT_DENOMINATOR = 10000; 
+    uint256 public constant TEAM_PERCENT = 330000; //   1% -   10000, 13% - 130000, etc 
     
     address public immutable SANDBOX_2_BASE_ASSET;
 
@@ -29,7 +30,7 @@ contract SandBox2 is MarketConnector {
     function topupTreasury() external returns(bool) {
         if (_getCollateralSystemLevelM10() >= 5 && _getCollateralSystemLevelM10() < 10) {
             uint256 topupAmount = 
-                IERC20(SANDBOX_2_BASE_ASSET).balanceOf(address(this)) * TREASURY_TOPUP_PERCENT / 1000000;
+                IERC20(SANDBOX_2_BASE_ASSET).balanceOf(address(this)) * TREASURY_TOPUP_PERCENT / (100 * PERCENT_DENOMINATOR);
             
             require(
                 topupAmount 
@@ -60,7 +61,7 @@ contract SandBox2 is MarketConnector {
         uint256  topupAmount;
         topupAmount = IMarketRegistry(marketRegistry).swapTreasuryAssetsPercentToSandboxAsset();
         emit Sandbox2Topup(SANDBOX_2_BASE_ASSET, topupAmount);
-        _increaseApproveForTEAM(topupAmount * TEAM_PERCENT / 100);
+        _increaseApproveForTEAM(topupAmount * TEAM_PERCENT / (100 * PERCENT_DENOMINATOR));
 
     }
 

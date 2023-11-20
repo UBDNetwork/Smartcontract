@@ -17,6 +17,7 @@ import "./TimeLock.sol";
 contract MarketRegistry is IMarketRegistry, Ownable, TimeLock{
 
     uint8 public constant   NATIVE_TOKEN_DECIMALS = 18;
+    uint256 public constant PERCENT_DENOMINATOR = 10000; 
     uint8 public immutable  MIN_NATIVE_PERCENT;
 
     // Slippage params in Base Points ( https://en.wikipedia.org/wiki/Basis_point )
@@ -179,7 +180,7 @@ contract MarketRegistry is IMarketRegistry, Ownable, TimeLock{
         for (uint256 i; i < ubdNetwork.treasuryERC20Assets.length; ++ i){
             _asset = ubdNetwork.treasuryERC20Assets[i].asset;
             mrkt = _getMarketForAsset(_asset); 
-            inSwap = _amountIn * uint256(ubdNetwork.treasuryERC20Assets[i].percent) / 100;
+            inSwap = _amountIn * (ubdNetwork.treasuryERC20Assets[i].percent * PERCENT_DENOMINATOR) / (100 * PERCENT_DENOMINATOR);
             path[0] = _baseAsset;
             path[1] = _asset; 
             notLessThen = _getNotLessThenEstimate(inSwap, path, mrkt.slippage);
@@ -474,8 +475,9 @@ contract MarketRegistry is IMarketRegistry, Ownable, TimeLock{
         );
         // balance in BASE asset but with Native Decimals
         uint256 factAssetBalanceInBaseAssetNativeDecimals = _bringAmountToNativeDecimals(_path[1], assetBalanceInBaseAsset);
-        uint256 nominalAssetBalanceInBaseAssetNativeDecimals = _treasuryBalanceWithNativeDecimals * _nominalShare / 100; 
-        share  = factAssetBalanceInBaseAssetNativeDecimals * 10000 / _treasuryBalanceWithNativeDecimals;
+        uint256 nominalAssetBalanceInBaseAssetNativeDecimals = 
+            _treasuryBalanceWithNativeDecimals * _nominalShare * PERCENT_DENOMINATOR/ (100 * PERCENT_DENOMINATOR); 
+        share  = factAssetBalanceInBaseAssetNativeDecimals * PERCENT_DENOMINATOR / _treasuryBalanceWithNativeDecimals;
         
         // Case when owner want to remove asset and  set it share=0 before 
         if (_nominalShare == 0) {

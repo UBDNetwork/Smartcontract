@@ -8,8 +8,9 @@ import '@uniswap/contracts/libraries/TransferHelper.sol';
 
 contract Treasury is MarketConnector {
 
-	uint256 public constant SANDBOX2_TOPUP_PERCENT  = 330000; // 1% - 10000, 13% - 130000, etc 
-    uint256 public constant SANDBOX1_REDEEM_PERCENT =  10000; // 1% - 10000, 13% - 130000, etc 
+	uint256 public constant SANDBOX2_TOPUP_PERCENT  = 330000; //   1% -   10000, 13% - 130000, etc 
+    uint256 public constant SANDBOX1_REDEEM_PERCENT =  10000; //   1% -   10000, 13% - 130000, etc 
+    uint256 public constant PERCENT_DENOMINATOR = 10000; 
 
     
     modifier onlyMarketRegistry()
@@ -53,7 +54,7 @@ contract Treasury is MarketConnector {
         onlyMarketRegistry 
         returns (uint256 amount)
     {
-        amount = address(this).balance * _percent / 1000000; 
+        amount = address(this).balance * _percent / (100 * PERCENT_DENOMINATOR); 
         TransferHelper.safeTransferETH(marketRegistry, amount);
     }
 
@@ -85,7 +86,8 @@ contract Treasury is MarketConnector {
         uint256[] memory _treasuryERC20sended = new uint256[](treasuryERC20AssetsCount);
         _treasuryERC20Assets = treasuryERC20Assets();
         for (uint8 i = 0; i < _treasuryERC20Assets.length; ++ i){
-            _treasuryERC20sended[i] = IERC20(_treasuryERC20Assets[i]).balanceOf(address(this)) * _percent / 1000000; //100; 
+            _treasuryERC20sended[i] = IERC20(_treasuryERC20Assets[i]).balanceOf(address(this)) 
+                * _percent / (100 * PERCENT_DENOMINATOR); 
             TransferHelper.safeTransfer(
                 _treasuryERC20Assets[i],
                 _to, 
