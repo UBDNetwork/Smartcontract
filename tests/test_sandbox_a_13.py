@@ -39,7 +39,7 @@ def test_topup_treasury_from_sandbox1(
     #sandbox has 1% of balance > 1000 usdt - can exchange usdt to ether and wbtc
     tx = sandbox1.topupTreasury({'from':accounts[1]})
 
-
+#decrease rate of one asset
 def test_rebalance_1(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
         treasury, ubd, markets, wbtc, market_adapter, weth, usdc):
@@ -92,6 +92,7 @@ def test_rebalance_1(
     assert treasury.balance() - before_eth_balance + diff_weth < 2*1e15
     assert before_usdt_balance_sandbox1 + diff_in_usdt_weth + diff_in_usdt_wbtc - usdt.balanceOf(sandbox1) == 0
 
+#increase rates of all assets in two time 
 def test_rebalance_2(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
         treasury, ubd, markets, wbtc, market_adapter, weth, usdc):
