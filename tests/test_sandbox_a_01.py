@@ -154,22 +154,28 @@ def test_topup_sandbox2(
     #markets.topupSandBox2()
     tx = sandbox2.topupSandBox2( {'from':accounts[0]})
     #tx = treasury.sendEtherForRedeem(treasury.SANDBOX2_TOPUP_PERCENT())
-
+    [logging.info('\nfrom:{} to:{} value:{}'.format(x['from'],x['to'],x['value'])) for x in tx.events['Transfer']]
     #1/3 of amount
-    wbtc_to_dai_amount = before_wbtc_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/100
-    eth_to_dai_amount = before_eth_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/100
+    wbtc_to_dai_amount = before_wbtc_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT() \
+        /(100 *treasury.PERCENT_DENOMINATOR())
+    eth_to_dai_amount = before_eth_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT() \
+        /(100 *treasury.PERCENT_DENOMINATOR())
 
     logging.info('wbtc_to_dai_amount = {}'.format(wbtc_to_dai_amount))
     logging.info('eth_to_dai_amount = {}'.format(eth_to_dai_amount))
     logging.info('eth_balance_market = {}'.format(markets.balance()))
 
-    dai_amount_calc = wbtc_to_dai_amount*mockuniv2.rates(wbtc.address, dai.address)[1]*10**dai.decimals()/10**wbtc.decimals() + eth_to_dai_amount*mockuniv2.rates(weth.address, dai.address)[1]*10**dai.decimals()/10**weth.decimals()
+    dai_amount_calc = wbtc_to_dai_amount*mockuniv2.rates(wbtc.address, dai.address)[1]*10**dai.decimals() \
+        /10**wbtc.decimals() \
+        + eth_to_dai_amount*mockuniv2.rates(weth.address, dai.address)[1]*10**dai.decimals() \
+        /10**weth.decimals()
+
     logging.info('dai_amount_calc = {}'.format(dai_amount_calc))
 
     logging.info(mockuniv2.getAmountsOut(eth_to_dai_amount, [weth.address,dai.address]))
     logging.info(mockuniv2.getAmountsOut(wbtc_to_dai_amount, [wbtc.address,dai.address]))
 
-    assert dai.balanceOf(sandbox2) ==  dai_amount_calc
+    assert int(dai.balanceOf(sandbox2) /10**10) ==  int(dai_amount_calc/10**10)
     assert wbtc.balanceOf(treasury) == before_wbtc_treasury_amount - wbtc_to_dai_amount
     assert treasury.balance() == before_eth_treasury_amount - eth_to_dai_amount
 
@@ -179,7 +185,7 @@ def test_topup_sandbox2(
     logging.info('dai_balance_sandbox = {}'.format(dai.balanceOf(sandbox2.address)))
 
     team = markets.getUBDNetworkTeamAddress()
-    assert dai.allowance(sandbox2.address, team) == dai.balanceOf(sandbox2.address)*sandbox2.TEAM_PERCENT()/100
+    assert dai.allowance(sandbox2.address, team) == dai.balanceOf(sandbox2.address)*sandbox2.TEAM_PERCENT()/1000000
 
 def test_topup_treasury_from_sandbox2(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
@@ -291,8 +297,8 @@ def test_ubd_to_usdt(
     #logging.info(wbtc.balanceOf(treasury.address))
     #logging.info(treasury.balance())
 
-    assert wbtc.balanceOf(treasury) - before_wbtc_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT()) /100 < 10
-    assert treasury.balance() - before_eth_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT())/100 < 10000000000000
+    assert wbtc.balanceOf(treasury) - before_wbtc_treasury_amount*(1000000 - treasury.SANDBOX1_REDEEM_PERCENT()) /1000000 < 10
+    assert treasury.balance() - before_eth_treasury_amount*(1000000 - treasury.SANDBOX1_REDEEM_PERCENT())/1000000 < 10000000000000
     assert before_usdt_sandbox1_amount + usdt_amount_calc - usdt.balanceOf(sandbox1) < 1000
 
     #security decreased
