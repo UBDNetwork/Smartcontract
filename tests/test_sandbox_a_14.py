@@ -34,7 +34,7 @@ def test_topup_treasury_from_sandbox1(
     
     init_market_registry(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, treasury, ubd, markets, wbtc, market_adapter, weth, usdc)
     
-    accounts[1].transfer(mockuniv2, 50e18)
+    accounts[2].transfer(mockuniv2, 30e18)
 
     #sandbox has 1% of balance > 1000 usdt - can exchange usdt to ether and wbtc
     tx = sandbox1.topupTreasury({'from':accounts[1]})

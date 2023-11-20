@@ -33,7 +33,7 @@ def test_usdt_to_ubd_100k_1(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2,
     logging.info('UBDNetwork.state:{}'.format(markets.ubdNetwork()))
     init_market_registry(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, treasury, ubd, markets, wbtc, market_adapter, weth, usdc)
     logging.info('UBDNetwork.state:{}'.format(markets.getUBDNetworkInfo()))
-    accounts[0].transfer(mockuniv2, 50e18)
+    accounts[3].transfer(mockuniv2, 50e18)
 
 
     usdt.approve(sandbox1, PAY_AMOUNT * 100, {'from':accounts[0]})
