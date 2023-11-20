@@ -96,8 +96,8 @@ def test_topup_treasury_from_sandbox1(
     ))
 
     #exchange 1% usdt of sandbox1 to swap => 50% ETH and 50% WBTC + 1% slippage in defi happened - treasury got assets 1% less due to slippage
-    assert wbtc.balanceOf(treasury) - (before_usdt_sandbox*99/100/100/2/mockuniv2.rates(usdt.address, wbtc.address)[0])*10**wbtc.decimals()/10**usdt.decimals() <=100
-    assert (before_usdt_sandbox*99/100/100/2/mockuniv2.rates(usdt.address, weth.address)[0])*10**weth.decimals()/10**usdt.decimals() - treasury.balance()  <= 3000000000000
+    assert (before_usdt_sandbox*99/100/100/2/mockuniv2.rates(usdt.address, wbtc.address)[0])*10**wbtc.decimals()/10**usdt.decimals() - wbtc.balanceOf(treasury) <=100
+    assert (before_usdt_sandbox*99/100/100/2/mockuniv2.rates(usdt.address, weth.address)[0])*10**weth.decimals()/10**usdt.decimals() - treasury.balance() <= 3e12
 
 def test_topup_sandbox2(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
@@ -141,8 +141,8 @@ def test_topup_sandbox2(
     tx = sandbox2.topupSandBox2( {'from':accounts[0]})
 
     #1/3 of amount
-    wbtc_to_dai_amount = before_wbtc_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/100
-    eth_to_dai_amount = before_eth_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/100
+    wbtc_to_dai_amount = before_wbtc_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
+    eth_to_dai_amount = before_eth_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
 
     logging.info('wbtc_to_dai_amount = {}'.format(wbtc_to_dai_amount))
     logging.info('eth_to_dai_amount = {}'.format(eth_to_dai_amount))
@@ -155,7 +155,7 @@ def test_topup_sandbox2(
     #logging.info(mockuniv2.getAmountsOut(eth_to_dai_amount, [weth.address,dai.address]))
     #logging.info(mockuniv2.getAmountsOut(wbtc_to_dai_amount, [wbtc.address,dai.address]))
 
-    assert dai_amount_calc - dai.balanceOf(sandbox2) < 1e15  #mathematical error of Solidity and python 
+    assert dai_amount_calc - dai.balanceOf(sandbox2)  < 1e15  #mathematical error of Solidity and python 
     assert wbtc.balanceOf(treasury) == before_wbtc_treasury_amount - wbtc_to_dai_amount
     assert treasury.balance() == before_eth_treasury_amount - eth_to_dai_amount
 
@@ -169,7 +169,7 @@ def test_topup_sandbox2(
     logging.info('dai_balance_sandbox = {}'.format(dai.balanceOf(sandbox2.address)))
 
     team = markets.getUBDNetworkTeamAddress()
-    assert dai.allowance(sandbox2.address, team) - dai.balanceOf(sandbox2.address)*sandbox2.TEAM_PERCENT()/100 < 1e7
+    assert dai.allowance(sandbox2.address, team) - dai.balanceOf(sandbox2.address)*sandbox2.TEAM_PERCENT()/(100*markets.PERCENT_DENOMINATOR()) <= 1e6
 
     #team withdraw dai from sandbox2
     before_allowance = dai.allowance(sandbox2, team)
@@ -190,26 +190,31 @@ def test_topup_sandbox2(
     before_eth_treasury_amount = treasury.balance()
     before_dai_sandbox2 = dai.balanceOf(sandbox2)
     logging.info('getCollateralLevelM10 = {}'.format(markets.getCollateralLevelM10()))
+    logging.info(before_wbtc_treasury_amount)
+    logging.info(before_eth_treasury_amount)
+    logging.info(before_eth_treasury_amount)
 
     tx = sandbox2.topupSandBox2( {'from':accounts[0]})
 
     #1/3 of amount
-    wbtc_to_dai_amount = before_wbtc_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/100
-    eth_to_dai_amount = before_eth_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/100
+    wbtc_to_dai_amount = before_wbtc_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
+    eth_to_dai_amount = before_eth_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
 
     logging.info('wbtc_to_dai_amount = {}'.format(wbtc_to_dai_amount))
     logging.info('eth_to_dai_amount = {}'.format(eth_to_dai_amount))
     logging.info('eth_balance_market = {}'.format(markets.balance()))
 
+
     #with -1% of slippage
     dai_amount_calc = wbtc_to_dai_amount*mockuniv2.rates(wbtc.address, dai.address)[1]*10**dai.decimals()/10**wbtc.decimals()*99/100 + eth_to_dai_amount*mockuniv2.rates(weth.address, dai.address)[1]*10**dai.decimals()/10**weth.decimals()*99/100
     logging.info('dai_amount_calc = {}'.format(dai_amount_calc))
+    logging.info('dai_balance_sandbox = {}'.format(dai.balanceOf(sandbox2.address)))
 
-    assert dai_amount_calc - dai.balanceOf(sandbox2) < 1e15  #mathematical error of Solidity and python 
+    assert before_dai_sandbox2 + dai_amount_calc - dai.balanceOf(sandbox2) < 1e15  #mathematical error of Solidity and python 
     assert wbtc.balanceOf(treasury) == before_wbtc_treasury_amount - wbtc_to_dai_amount
     assert treasury.balance() == before_eth_treasury_amount - eth_to_dai_amount
 
-    assert tx.events['TeamShareIncreased']['Income'] - (dai.balanceOf(sandbox2) - before_dai_sandbox2)*sandbox2.TEAM_PERCENT()/100 <= 1e6
+    assert tx.events['TeamShareIncreased']['Income'] - (dai.balanceOf(sandbox2) - before_dai_sandbox2)*sandbox2.TEAM_PERCENT()/(100*markets.PERCENT_DENOMINATOR()) <= 1e6
     assert tx.events['TeamShareIncreased']['TeamLimit'] == dai.allowance(sandbox2.address, team)
 
     logging.info('market eth balance = {}'.format(markets.balance()))
@@ -282,7 +287,7 @@ def test_topup_treasury_from_sandbox2(
     wbtc_amount_calc = (before_dai_sandbox2_amount*10**wbtc.decimals()/mockuniv2.rates(dai, wbtc)[0]/10**dai.decimals()/2/100)*99/100
     eth_amount_calc = (before_dai_sandbox2_amount*10**weth.decimals()/mockuniv2.rates(dai, weth)[0]/10**dai.decimals()/2/100)*99/100
 
-    assert dai.balanceOf(sandbox2) - before_dai_sandbox2_amount*99/100 <1e10
+    assert dai.balanceOf(sandbox2) - before_dai_sandbox2_amount*99/100  <2e8
     assert wbtc.balanceOf(treasury) == before_wbtc_treasury_amount + wbtc_amount_calc
     assert  before_eth_treasury_amount + eth_amount_calc - treasury.balance()  < 1e4
 
@@ -309,8 +314,8 @@ def test_redeem_for_sandbox1(
     before_wbtc_treasury_amount = wbtc.balanceOf(treasury.address)
     before_eth_treasury_amount = treasury.balance()
     before_usdt_sandbox1_amount = usdt.balanceOf(sandbox1)
-    wbtc_to_swap = before_wbtc_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/100
-    eth_to_swap = before_eth_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/100
+    wbtc_to_swap = before_wbtc_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
+    eth_to_swap = before_eth_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
     
     #and 1% of defi slippage of usdt
     usdt_amount_calc = (wbtc_to_swap*mockuniv2.rates(wbtc.address, usdt.address)[1]*10**usdt.decimals()/10**wbtc.decimals() + eth_to_swap*mockuniv2.rates(weth.address, usdt.address)[1]*10**usdt.decimals()/10**weth.decimals())*99/100
@@ -324,8 +329,8 @@ def test_redeem_for_sandbox1(
     assert tx.events['Sandbox1Redeem']['Asset'] == usdt.address
     assert tx.events['Sandbox1Redeem']['TopupAmount'] ==  usdt.balanceOf(sandbox1) - before_usdt_sandbox1_amount
 
-    assert wbtc.balanceOf(treasury) - before_wbtc_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT()) /100 < 10
-    assert before_eth_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT())/100 - treasury.balance()  < 1000
+    assert wbtc.balanceOf(treasury) - before_wbtc_treasury_amount + wbtc_to_swap == 0 #< 10
+    assert treasury.balance() + eth_to_swap - before_eth_treasury_amount < 10
     assert before_usdt_sandbox1_amount + usdt_amount_calc == usdt.balanceOf(sandbox1) 
 
 
