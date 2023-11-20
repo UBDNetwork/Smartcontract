@@ -5,6 +5,10 @@ pragma solidity 0.8.21;
 import "./MarketConnector.sol";
 import "../../interfaces/IERC20Burn.sol";
 
+/// @title SandBox2 
+/// @author UBD Team
+/// @notice This contract store UBD ecosystem reserves and team shares
+/// @dev  Check deploy params so they are immutable
 contract SandBox2 is MarketConnector {
 
     uint256 public constant TREASURY_TOPUP_PERIOD = 1 days;
@@ -27,6 +31,8 @@ contract SandBox2 is MarketConnector {
         SANDBOX_2_BASE_ASSET = _baseAsset;
     }
 
+    /// @notice Check condition and topup Treasury
+    /// @dev Revert if no condition yet
     function topupTreasury() external returns(bool) {
         if (_getCollateralSystemLevelM10() >= 5 && _getCollateralSystemLevelM10() < 10) {
             uint256 topupAmount = 
@@ -57,6 +63,8 @@ contract SandBox2 is MarketConnector {
         }
     }
 
+    /// @notice Check condition and topup SandBox2
+    /// @dev Revert if no condition yet
     function topupSandBox2() external returns (bool){
         uint256  topupAmount;
         topupAmount = IMarketRegistry(marketRegistry).swapTreasuryAssetsPercentToSandboxAsset();
@@ -65,7 +73,7 @@ contract SandBox2 is MarketConnector {
 
     }
 
-    /// Approve 30% from DAI in to Team wallet
+    /// @notice Approve 33% from DAI in to Team wallet
     function _increaseApproveForTEAM(uint256 _incAmount) internal {
         address team = IMarketRegistry(marketRegistry).getUBDNetworkTeamAddress();
         uint256 newApprove = IERC20(SANDBOX_2_BASE_ASSET).allowance(address(this),team) + _incAmount;

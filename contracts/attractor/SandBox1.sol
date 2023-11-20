@@ -6,7 +6,10 @@ import "./UBDExchange.sol";
 import "./MarketConnector.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-
+/// @title SandBox1 
+/// @author UBD Team
+/// @notice This contract is main user's entry point in UBD ecosystem
+/// @dev  Check deploy params so they are immutable
 contract SandBox1 is UBDExchange, MarketConnector, ReentrancyGuard {
 
     uint256 public constant TREASURY_TOPUP_PERIOD = 1 days;
@@ -21,7 +24,13 @@ contract SandBox1 is UBDExchange, MarketConnector, ReentrancyGuard {
     {
 
     }
-
+    
+    /// @notice Swap any asset (available at AMM) to UBD
+    /// @dev only called from Sandboxes
+    /// @param _inAsset - contract address of in asset
+    /// @param _inAmount - amount with decimcals
+    /// @param _deadline -acceptable time
+    /// @param _amountOutMin - min acceptable amount of base 
     function swapExactInput(
         address _inAsset,
         uint256 _inAmount, 
@@ -36,7 +45,6 @@ contract SandBox1 is UBDExchange, MarketConnector, ReentrancyGuard {
         // Check system balance and redeem sandbox_1 if  need
         if (_inAsset == address(ubdToken) &&
             IERC20(EXCHANGE_BASE_ASSET).balanceOf(address(this)) < _amountOutMin){
-            // TODO расмотроеть возмость случая  частичной продажи своих UBD
             if (_redeemSandbox1() < _amountOutMin ) {
                 return 0;
             }
@@ -59,7 +67,8 @@ contract SandBox1 is UBDExchange, MarketConnector, ReentrancyGuard {
 
     }
 
-    
+    /// @notice Check condition and topup Treasury
+    /// @dev Revert if no condition yet
     function topupTreasury() external {
         uint256 topupAmount = 
             IERC20(EXCHANGE_BASE_ASSET).balanceOf(address(this)) 
@@ -79,7 +88,10 @@ contract SandBox1 is UBDExchange, MarketConnector, ReentrancyGuard {
         IMarketRegistry(marketRegistry).swapExactBASEInToTreasuryAssets(topupAmount, EXCHANGE_BASE_ASSET);
         emit TreasuryTopup(EXCHANGE_BASE_ASSET, topupAmount);
     }
-
+    
+    /// @notice Emergency method for  case of Sandbox1 BASE asset.
+    /// Call it for  try sell old BASE asset
+    /// @dev Revert if use for current BASE asset
     function topupTreasuryEmergency(address _token) external {
         require(_token != EXCHANGE_BASE_ASSET && _token != address(ubdToken), 'Only for other assets');
         uint256 topupAmount = IERC20(_token).balanceOf(address(this));

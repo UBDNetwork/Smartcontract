@@ -13,7 +13,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@uniswap/contracts/libraries/TransferHelper.sol";
 import "./TimeLock.sol";
 
-
+/// @title MarketRegistry 
+/// @author UBD Team
+/// @notice This contract encapsulate all AMM logic for UBD ecosystem
+/// @dev  Check deploy params so they are immutable
 contract MarketRegistry is IMarketRegistry, Ownable, TimeLock{
 
     uint8 public constant   NATIVE_TOKEN_DECIMALS = 18;
@@ -55,6 +58,13 @@ contract MarketRegistry is IMarketRegistry, Ownable, TimeLock{
         emit ReceivedEther(msg.sender, msg.value);
     }
 
+    /// @notice Swap any asset (available at AMM) to Sandboxe1  BASE asset
+    /// @dev only called from Sandboxes
+    /// @param amountIn - amount with decimcals
+    /// @param amountOutMin - min acceptable amount of base asset
+    /// @param assetIn - contract address of in asset
+    /// @param to - address which receive base asset
+    /// @param deadline - acceptable time
     function swapExactInToBASEOut(
         uint256 amountIn,
         uint256 amountOutMin,
@@ -86,7 +96,8 @@ contract MarketRegistry is IMarketRegistry, Ownable, TimeLock{
             );
     }
 
-
+    /// @notice Swap Treasury assets  to Sandbox1 (usdt) or to Sandbox2  (dai) asset
+    /// @dev only called from Sandboxes
     function swapTreasuryAssetsPercentToSandboxAsset() 
         external
         onlySandboxes 
@@ -144,7 +155,8 @@ contract MarketRegistry is IMarketRegistry, Ownable, TimeLock{
         }
     }
 
-
+    /// @notice Swap Sandbox1 (usdt) or  Sandbox2 (dai) asset to Treasury assets
+    /// @dev only called from Sandboxes
     function swapExactBASEInToTreasuryAssets(uint256 _amountIn, address _baseAsset) 
         external 
         onlySandboxes 

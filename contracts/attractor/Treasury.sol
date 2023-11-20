@@ -6,6 +6,10 @@ import "./MarketConnector.sol";
 import "../../interfaces/IERC20Burn.sol";
 import '@uniswap/contracts/libraries/TransferHelper.sol';
 
+/// @title Treasury 
+/// @author UBD Team
+/// @notice This contract store UBD ecosystem treasuruy assets
+/// @dev  Check deploy params so they are immutable
 contract Treasury is MarketConnector {
 
 	uint256 public constant SANDBOX2_TOPUP_PERCENT  = 330000; //   1% -   10000, 13% - 130000, etc 
@@ -31,7 +35,11 @@ contract Treasury is MarketConnector {
         emit ReceivedEther(msg.sender, msg.value);
     }
     
-
+    /// @notice Send one erc20 treasury asset for swap
+    /// @dev Can be called only from MarketRegistry
+    /// @param _marketAdapter  - address of AMM adapter contract
+    /// @param _erc20 - address of erc20 treasury tokens
+    /// @param _amount - amount of erc20 for  send
     function sendOneERC20ForSwap(address _marketAdapter, address _erc20, uint256 _amount) 
         external
         onlyMarketRegistry 
@@ -40,6 +48,10 @@ contract Treasury is MarketConnector {
         TransferHelper.safeTransfer(_erc20, _marketAdapter, _amount);
     }
 
+    /// @notice Send all erc20 treasury asset for swap
+    /// @dev Can be called only from MarketRegistry
+    /// @param _marketAdapter  - address of AMM adapter contract
+    /// @param _percent - percent of Treasury balance
     function sendERC20ForSwap(address _marketAdapter, uint256 _percent) 
         external
         onlyMarketRegistry 
@@ -49,6 +61,9 @@ contract Treasury is MarketConnector {
         return _sendPercentOfTreasuryTokens(_marketAdapter, _percent);
     }
 
+    /// @notice Send ether from  treasury asset for swap
+    /// @dev Can be called only from MarketRegistry
+    /// @param _percent - percent of Treasury balance
     function sendEtherForRedeem(uint256 _percent) 
         external 
         onlyMarketRegistry 
@@ -59,6 +74,10 @@ contract Treasury is MarketConnector {
     }
 
    
+    /// @notice Returns native token and erc20 balance of address in stableToken units
+    /// @dev Second param is array
+    /// @param _holder - address for get balance
+    /// @param _assets - array of erc20 address for get balance
     function getBalanceInStableUnits(address _holder, address[] memory _assets) 
         external 
         view 
@@ -67,12 +86,16 @@ contract Treasury is MarketConnector {
         return _getBalanceInStableUnits(_holder, _assets);
     }
 
+    /// @notice Check conditions for Sandox2 topup
+    /// @dev Actualy check UBD ecosystem collateral Level
     function isReadyForTopupSandBox2() public view returns(bool) {
         if (_getCollateralSystemLevelM10() >= 30) {
             return true;
         }
     }
 
+    /// @notice Returns array of erc20 Treasury assets
+    /// @dev Keep in mind that Native asset always exist
     function treasuryERC20Assets() public view returns(address[] memory assets) {
          return IMarketRegistry(marketRegistry).treasuryERC20Assets();
     }
