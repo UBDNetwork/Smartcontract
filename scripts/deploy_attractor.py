@@ -60,6 +60,8 @@ CHAIN = {
         'wbtc_address': '0x2c10745ABA5FFe97bEEA7288b755342381D56980',
         'usdt_address': '0x168fF7e2F39b8048E32F52Ada62E41d61Fceda58',
         'dai_address': '0x50BddB7911CE4248822a60968A32CDF1D683e7AD',
+        'timelock': 0,
+        'ubd_address': '0x6771931a59500e0102aB9690f2E9473883010982'
     },
     56:{'explorer_base':'bscscan.com', },
 
@@ -71,6 +73,8 @@ CHAIN = {
         'wbtc_address': '0xa2535BFbe7c0b0EB7B494D70cf7f47e037e19b02',
         'usdt_address': '0xE3cfED0fbCDB7AaE09816718f0f52F10140Fc61F',
         'dai_address': '0xE52E3383740e713631864Af328717966F5Fa4e22',
+        'timelock': 300,
+        'ubd_address': '0xea458a3F46d27ae1ECF7CE67FD57954380e56E78'
     },
     
 
@@ -79,36 +83,49 @@ CHAIN = {
     'premint_address': accounts[0], 
     'enabled_erc20': GOERLI_ERC20_TOKENS, 
     'timelock': 0,
-    'market_adapter': '0xA8e732513A32eE299B87Da7Ef602cDA39cd7514f', #goerli market_adapter
+    'market_adapter': '', 
     'team_address': accounts[0],
     'wbtc_address': '0xa2535BFbe7c0b0EB7B494D70cf7f47e037e19b02',
     'usdt_address': '0xE3cfED0fbCDB7AaE09816718f0f52F10140Fc61F',
     'dai_address': '0xE52E3383740e713631864Af328717966F5Fa4e22',
+    'ubd_address': ''
 })
 print(CHAIN)
 zero_address = '0x0000000000000000000000000000000000000000'
 
 def main():
-    markets = MarketRegistry.deploy(40, tx_params)
+    markets = MarketRegistry.deploy(40,  CHAIN['timelock'], tx_params)
     sandbox1 = SandBox1.deploy(markets.address, CHAIN['usdt_address'], tx_params)
     sandbox2 = SandBox2.deploy(markets.address, CHAIN['dai_address'], tx_params)
     treasury = Treasury.deploy(markets.address, tx_params)
-    ubd = UBDToken.deploy(sandbox1.address, tx_params)
+    #ubd = UBDToken.deploy(sandbox1.address, tx_params)
+    if len(CHAIN['ubd_address']) > 20:
+        ubd = UBDToken.at(CHAIN['ubd_address'])
+    else: 
+        ubd = UBDToken.deploy(sandbox1.address, tx_params)   
 
 
     # Print addresses for quick access from console
-    print("----------Deployment artifacts-------------------")
+    print("\n**MarketRegistry**")  
+    print('https://{}/address/{}#code'.format(CHAIN['explorer_base'], markets.address))
+    print("\n**SandBox1**")  
+    print('https://{}/address/{}#code'.format(CHAIN['explorer_base'], sandbox1.address))
+    print("\n**SandBox2**") 
+    print('https://{}/address/{}#code'.format(CHAIN['explorer_base'], sandbox2.address))
+    print("\n**Treasury**") 
+    print('https://{}/address/{}#code'.format(CHAIN['explorer_base'], treasury.address))
+    print("\n**UBDToken**") 
+    print('https://{}/address/{}#code'.format(CHAIN['explorer_base'], ubd.address))
+
+    print("\n----------Deployment artifacts-------------------")
+    print("```python")
     print("markets = MarketRegistry.at('{}')".format(markets.address))
     print("sandbox1 = SandBox1.at('{}')".format(sandbox1.address))
     print("sandbox2 = SandBox2.at('{}')".format(sandbox2.address))
     print("treasury = Treasury.at('{}')".format(treasury.address))
     print("ubd = UBDToken.at('{}')".format(ubd.address))
-    print("\n")
-    print('https://{}/address/{}#code'.format(CHAIN['explorer_base'], markets.address))
-    print('https://{}/address/{}#code'.format(CHAIN['explorer_base'], sandbox1.address))
-    print('https://{}/address/{}#code'.format(CHAIN['explorer_base'], sandbox2.address))
-    print('https://{}/address/{}#code'.format(CHAIN['explorer_base'], treasury.address))
-    print('https://{}/address/{}#code'.format(CHAIN['explorer_base'], ubd.address))
+    print("```")
+    
 
     if  web3.eth.chainId in [1,11155111,5]:
         MarketRegistry.publish_source(markets);
@@ -126,7 +143,7 @@ def main():
     markets.setTreasury(treasury, tx_params)    
     markets.setTeamAddress(CHAIN['team_address'], tx_params)
     sandbox1.setBeneficiary(CHAIN['team_address'], tx_params)
-    markets.addERC20AssetToTreasury((CHAIN['wbtc_address'], 50), tx_params)
+    
     sandbox1.setUBDToken(ubd, tx_params)
 
     if len(CHAIN['market_adapter']) > 0 :
@@ -140,5 +157,5 @@ def main():
     markets.setMarketParams(ZERO_ADDRESS, (market_adapter, market_adapter, 0), tx_params)
     for a in CHAIN['enabled_erc20']:
         markets.setMarketParams(a, (market_adapter, market_adapter, 0), tx_params)
-
+    markets.addERC20AssetToTreasury((CHAIN['wbtc_address'], 50), tx_params)
 
