@@ -405,7 +405,7 @@ contract MarketRegistry is IMarketRegistry, Ownable, TimeLock{
     }
 
     // 1% = 100 bp
-    function getActualAssetsSharesM100() public  view returns(ActualShares[] memory sharesM100, uint256 r) {
+    function getActualAssetsSharesM100() public  view returns(ActualShares[] memory sharesM100, uint256 trBalance) {
         // Gas Save local vars
         address treasury = ubdNetwork.treasury;
         address baseAsset = ISandbox1(ubdNetwork.sandbox1).EXCHANGE_BASE_ASSET();
@@ -414,7 +414,7 @@ contract MarketRegistry is IMarketRegistry, Ownable, TimeLock{
             treasuryERC20Assets()
         );
         //debug
-        r = treasuryBalanceWithNativeDecimals;
+        trBalance = treasuryBalanceWithNativeDecimals;
 
         address[] memory path = new address[](2);
         sharesM100 = new ActualShares[](ubdNetwork.treasuryERC20Assets.length + 1);
@@ -544,7 +544,7 @@ contract MarketRegistry is IMarketRegistry, Ownable, TimeLock{
                 path[0] = IMarketAdapter(mrkt.marketAdapter).WETH();
                 notLessThen = _getNotLessThenEstimate(actshrs[i].excessAmount, path, mrkt.slippage);
                 // First need send ether from Treasury to this contract
-                uint256 etherPercent = actshrs[i].excessAmount * 100 / treasury.balance;
+                uint256 etherPercent = actshrs[i].excessAmount * 1000000 / treasury.balance;
                 uint256 etherFromTreasuryAmount = ITreasury(treasury).sendEtherForRedeem(etherPercent);
                 notLessThen = _getNotLessThenEstimate(etherFromTreasuryAmount, path, mrkt.slippage);
                 IMarketAdapter(

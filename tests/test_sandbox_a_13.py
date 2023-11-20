@@ -58,7 +58,7 @@ def test_rebalance_1(
     logging.info(before_usdt_balance_sandbox1)
     
     
-    balances_in_usdt = before_eth_balance*mockuniv2.rates(usdt.address, weth.address)[0]*10**usdt.decimals()/10**weth.decimals() + before_wbtc_balance*mockuniv2.rates(usdt.address, wbtc.address)[0]*10**usdt.decimals()/10**wbtc.decimals()
+    balances_in_usdt = before_eth_balance * mockuniv2.rates(usdt.address, weth.address)[0]*10**usdt.decimals()/10**weth.decimals() + before_wbtc_balance*mockuniv2.rates(usdt.address, wbtc.address)[0]*10**usdt.decimals()/10**wbtc.decimals()
 
     #prepare shares in usdt - how it have to be
     #50% eth, 50% wbtc
@@ -67,23 +67,49 @@ def test_rebalance_1(
 
     #prepare difference in usdt
     diff_in_usdt_wbtc = before_wbtc_balance*mockuniv2.rates(usdt.address, wbtc.address)[0]*10**usdt.decimals()/10**wbtc.decimals() - htb_wbtc_in_usdt
-    diff_in_usdt_weth = before_eth_balance*mockuniv2.rates(usdt.address, weth.address)[0]*10**usdt.decimals()/10**weth.decimals() - htb_weth_in_usdt
+    diff_in_usdt_weth = before_eth_balance *mockuniv2.rates(usdt.address, weth.address)[0]*10**usdt.decimals()/10**weth.decimals() - htb_weth_in_usdt
     logging.info(diff_in_usdt_weth)
     if diff_in_usdt_wbtc < 0:
         diff_in_usdt_wbtc = 0
     if diff_in_usdt_weth < 0:
         diff_in_usdt_weth = 0
 
-    logging.info(diff_in_usdt_wbtc)
-    logging.info(diff_in_usdt_weth)
+    logging.info('Diff_in_stable_wbtc: {}'.format(diff_in_usdt_wbtc))
+    logging.info('Diff_in_stable__eth: {}'.format(diff_in_usdt_weth))
 
     #prepare difference in natural units of measurement
     diff_wbtc = diff_in_usdt_wbtc/mockuniv2.rates(usdt.address, wbtc.address)[0]*10**wbtc.decimals()/10**usdt.decimals()
     diff_weth = diff_in_usdt_weth/mockuniv2.rates(usdt.address, weth.address)[0]*10**weth.decimals()/10**usdt.decimals()
-    logging.info(diff_weth)
+    logging.info('Diff_in_wbtc: {}'.format(diff_wbtc))
+    logging.info('Diff_in__eth: {}'.format(Wei(diff_weth).to('ether')))
 
-    logging.info(treasury.balance())
-    markets.rebalance({"from": accounts[0]})
+    
+    logging.info(
+        '\n Before rebalancing ...'
+        '\nSandbox1.balance(usdt):{}'
+        '\ntreasury.balance(wbtc):{} ({})'
+        '\ntreasury.balance(eth):{} ({})'
+        '\ngetBalanceInStableUnits: {}'.format(
+            usdt.balanceOf(sandbox1),
+            wbtc.balanceOf(treasury) / 1e8, markets.getAmountOut(wbtc.balanceOf(treasury), [wbtc, usdt]),
+            Wei(treasury.balance()).to('ether'), markets.getAmountOut(treasury.balance(), [weth, usdt]),
+            Wei(markets.getBalanceInStable18(treasury, [wbtc, weth])).to('ether')
+    ))
+    t = markets.rebalance({"from": accounts[0]})
+    logging.info('Actual transfer to sandbox1 {}'.format(
+        t.events['Transfer'][1]['value'])
+    )
+    logging.info(
+        '\n After rebalancing ...'
+        '\nSandbox1.balance(usdt):{}'
+        '\ntreasury.balance(wbtc):{} ({})'
+        '\ntreasury.balance(eth):{} ({})'
+        '\ngetBalanceInStableUnits: {}'.format(
+            usdt.balanceOf(sandbox1),
+            wbtc.balanceOf(treasury) / 1e8, markets.getAmountOut(wbtc.balanceOf(treasury), [wbtc, usdt]),
+            Wei(treasury.balance()).to('ether'), markets.getAmountOut(treasury.balance(), [weth, usdt]),
+            Wei(markets.getBalanceInStable18(treasury, [wbtc, weth])).to('ether')
+    ))
     logging.info(treasury.balance())
     logging.info(usdt.balanceOf(sandbox1))
 
