@@ -102,9 +102,9 @@ def test_topup_treasury_from_sandbox1(
 
 
     #exchange 1% usdt to 40% ETH, 50% WBTC, 10% WBNB
-    assert wbnb.balanceOf(treasury) - ((before_usdt_sandbox/100)*10/100/mockuniv2.rates(usdt.address, wbnb.address)[0])*10**wbnb.decimals()/10**usdt.decimals() <=100
-    assert wbtc.balanceOf(treasury) - ((before_usdt_sandbox/100)*50/100/mockuniv2.rates(usdt.address, wbtc.address)[0])*10**wbtc.decimals()/10**usdt.decimals() <=100
-    assert ((before_usdt_sandbox/100)*40/100/mockuniv2.rates(usdt.address, weth.address)[0])*10**weth.decimals()/10**usdt.decimals() - treasury.balance()  <= 500000000000
+    assert wbnb.balanceOf(treasury) - ((before_usdt_sandbox/100)*10/100/mockuniv2.rates(usdt.address, wbnb.address)[0])*10**wbnb.decimals()/10**usdt.decimals()  == 0 #<=100
+    assert ((before_usdt_sandbox/100)*50/100/mockuniv2.rates(usdt.address, wbtc.address)[0])*10**wbtc.decimals()/10**usdt.decimals() - wbtc.balanceOf(treasury) <=100
+    assert ((before_usdt_sandbox/100)*40/100/mockuniv2.rates(usdt.address, weth.address)[0])*10**weth.decimals()/10**usdt.decimals() - treasury.balance()  <= 5e12
 
 def test_topup_sandbox2(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
@@ -171,9 +171,9 @@ def test_topup_sandbox2(
     tx = sandbox2.topupSandBox2( {'from':accounts[0]})
 
     #1/3 of amount
-    wbtc_to_dai_amount = before_wbtc_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/100
-    eth_to_dai_amount = before_eth_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/100
-    wbnb_to_dai_amount = before_wbnb_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/100
+    wbtc_to_dai_amount = before_wbtc_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
+    eth_to_dai_amount = before_eth_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
+    wbnb_to_dai_amount = before_wbnb_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
 
     logging.info('wbtc_to_dai_amount = {}'.format(wbtc_to_dai_amount))
     logging.info('wbnb_to_dai_amount = {}'.format(wbnb_to_dai_amount))
@@ -199,7 +199,7 @@ def test_topup_sandbox2(
 
     team = markets.getUBDNetworkTeamAddress()
     assert team == accounts[8]
-    assert dai.allowance(sandbox2.address, team) == dai.balanceOf(sandbox2.address)*sandbox2.TEAM_PERCENT()/100
+    assert dai.allowance(sandbox2.address, team) == dai.balanceOf(sandbox2.address)*sandbox2.TEAM_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
 
 def test_topup_treasury_from_sandbox2(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
@@ -250,7 +250,6 @@ def test_topup_treasury_from_sandbox2(
     assert sandbox2.lastTreasuryTopUp() > 0
 
 
-    ##need call of constant from contract with topup percent - wait appearing it!!
     ## 1% to topup (1/100) and personal percent for each treasury token (50/100, 40/100, 10/100)
     wbtc_amount_calc = before_dai_sandbox2_amount*50*10**wbtc.decimals()/mockuniv2.rates(dai, wbtc)[0]/10**dai.decimals()/100/100
     wbnb_amount_calc = before_dai_sandbox2_amount*10*10**wbnb.decimals()/mockuniv2.rates(dai, wbnb)[0]/10**dai.decimals()/100/100
@@ -259,7 +258,7 @@ def test_topup_treasury_from_sandbox2(
     assert dai.balanceOf(sandbox2) == before_dai_sandbox2_amount*99/100
     assert wbtc.balanceOf(treasury) == before_wbtc_treasury_amount + wbtc_amount_calc
     assert wbnb.balanceOf(treasury) == before_wbnb_treasury_amount + wbnb_amount_calc
-    assert treasury.balance() - before_eth_treasury_amount - eth_amount_calc < 100
+    assert before_eth_treasury_amount + eth_amount_calc - treasury.balance()  < 100
 
     #second time in day - revert is expected
     with reverts('Please wait untit TREASURY_TOPUP_PERIOD'):
@@ -312,9 +311,9 @@ def test_ubd_to_usdt(
     before_wbnb_treasury_amount = wbnb.balanceOf(treasury.address)
     before_eth_treasury_amount = treasury.balance()
     before_usdt_sandbox1_amount = usdt.balanceOf(sandbox1)
-    wbtc_to_swap = before_wbtc_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/100
-    wbnb_to_swap = before_wbnb_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/100
-    eth_to_swap = before_eth_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/100
+    wbtc_to_swap = before_wbtc_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
+    wbnb_to_swap = before_wbnb_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
+    eth_to_swap = before_eth_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
     #logging.info(eth_to_swap)
     usdt_amount_calc = wbtc_to_swap*mockuniv2.rates(wbtc.address, usdt.address)[1]*10**usdt.decimals()/10**wbtc.decimals() + eth_to_swap*mockuniv2.rates(weth.address, usdt.address)[1]*10**usdt.decimals()/10**weth.decimals() + wbnb_to_swap*mockuniv2.rates(wbnb.address, usdt.address)[1]*10**usdt.decimals()/10**wbnb.decimals() 
 
@@ -337,9 +336,9 @@ def test_ubd_to_usdt(
     #logging.info(treasury.balance())
 
     assert tx.return_value == 0 #only redeem - without swap
-    assert wbtc.balanceOf(treasury) - before_wbtc_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT()) /100 < 10
-    assert wbnb.balanceOf(treasury) - before_wbnb_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT()) /100 < 10
-    assert treasury.balance() - before_eth_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT())/100 < 100
+    assert wbtc.balanceOf(treasury) - before_wbtc_treasury_amount + wbtc_to_swap == 0 #< 10
+    assert wbnb.balanceOf(treasury) - before_wbnb_treasury_amount + wbnb_to_swap == 0 # < 10
+    assert before_eth_treasury_amount - eth_to_swap - treasury.balance() < 100
     assert before_usdt_sandbox1_amount + usdt_amount_calc - usdt.balanceOf(sandbox1) < 200
 
     #security decreased
@@ -399,9 +398,9 @@ def test_ubd_to_usdt(
     before_eth_treasury_amount = treasury.balance()
     before_ubd_acc = ubd.balanceOf(accounts[0])
 
-    wbtc_to_swap = before_wbtc_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/100
-    wbnb_to_swap = before_wbnb_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/100
-    eth_to_swap = before_eth_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/100
+    wbtc_to_swap = before_wbtc_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
+    wbnb_to_swap = before_wbnb_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
+    eth_to_swap = before_eth_treasury_amount*treasury.SANDBOX1_REDEEM_PERCENT()/(100*markets.PERCENT_DENOMINATOR())
     usdt_amount_calc = wbtc_to_swap*mockuniv2.rates(wbtc.address, usdt.address)[1]*10**usdt.decimals()/10**wbtc.decimals() + eth_to_swap*mockuniv2.rates(weth.address, usdt.address)[1]*10**usdt.decimals()/10**weth.decimals() + wbnb_to_swap*mockuniv2.rates(wbnb.address, usdt.address)[1]*10**usdt.decimals()/10**wbnb.decimals()
     #logging.info(usdt.balanceOf(sandbox1))
     #logging.info(wbtc.balanceOf(treasury.address))
@@ -413,10 +412,10 @@ def test_ubd_to_usdt(
                             102000*10**usdt.decimals())
 
     assert tx.return_value == 102510*10**usdt.decimals()*100/(100+fee_percent)
-    assert usdt.balanceOf(sandbox1) - before_usdt_sandbox1 - usdt_amount_calc + 102510*10**usdt.decimals()*100/(100+fee_percent) < 30
-    assert wbtc.balanceOf(treasury) - before_wbtc_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT()) /100 < 10
-    assert wbnb.balanceOf(treasury) - before_wbnb_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT()) /100 < 10
-    assert treasury.balance() - before_eth_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT())/100 < 10000000000000 
+    assert before_usdt_sandbox1 + usdt_amount_calc - 102510*10**usdt.decimals()*100/(100+fee_percent) - usdt.balanceOf(sandbox1) < 300
+    assert wbtc.balanceOf(treasury) - before_wbtc_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT()/markets.PERCENT_DENOMINATOR()) /100 < 10
+    assert wbnb.balanceOf(treasury) - before_wbnb_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT()/markets.PERCENT_DENOMINATOR()) /100 < 3000
+    assert before_eth_treasury_amount*(100 - treasury.SANDBOX1_REDEEM_PERCENT()/markets.PERCENT_DENOMINATOR())/100 - treasury.balance() < 1000
     assert ubd.balanceOf(accounts[0]) == before_ubd_acc - 102510*10**ubd.decimals()
     assert before_usdt_acc + 102510*10**usdt.decimals()*100/(100+fee_percent) == usdt.balanceOf(accounts[0])
 
