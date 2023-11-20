@@ -38,7 +38,7 @@ def test_usdt_to_ubd(accounts, ubd, sandbox1, usdt):
     
 
 
-def test_usdt_to_ubd_100k(accounts, ubd, sandbox1, usdt):
+def test_usdt_to_ubd_100k(accounts, ubd, sandbox1, usdt, wbtc, treasury):
     usdt.approve(sandbox1, PAY_AMOUNT * 100, {'from':accounts[0]})
     logging.info('Calculated UBD amount: {}'.format(
         sandbox1.calcOutUBDForExactInBASE(PAY_AMOUNT * 100))
@@ -54,21 +54,31 @@ def test_usdt_to_ubd_100k(accounts, ubd, sandbox1, usdt):
     #logging.info('tx: {}'.format(tx.infwo()))
     assert tx.return_value == MINT_UBD_AMOUNT * 100
     assert ubd.balanceOf(accounts[0]) == MINT_UBD_AMOUNT * 100 + MINT_UBD_AMOUNT
+    logging.info(
+        '\nSandbox1.balance(usdt):{}'
+        '\ntreasury.balance(wbtc):{}'
+        '\ntreasury.balance(eth):{}'.format(
+            usdt.balanceOf(sandbox1),
+            wbtc.balanceOf(treasury),
+            Wei(treasury.balance()).to('ether')
+    ))
 
 #def test_init_market(accounts, ubd, sandbox1, sandbox2, treasury, usdt):
-
 def test_treasuryERC20Assets(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
         treasury, ubd, markets, wbtc, market_adapter, weth, usdc):
-    wbtc.transfer(treasury, WBTC_TREASURY_BALANCE, {'from': accounts[0]})
-    tx = accounts[0].transfer(treasury, ETH_TREASURY_BALANCE)
-    logging.info('Ether transfer:{}'.format(tx.events['ReceivedEther']))
+    
     
     #logging.info('UBDNetwork.state:{}'.format(markets.ubdNetwork()))
     init_market_registry(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, treasury, 
         ubd, markets, wbtc, market_adapter, weth, usdc
     )
+    wtx = wbtc.transfer(treasury, WBTC_TREASURY_BALANCE, {'from': accounts[0]})
+    tx = accounts[0].transfer(treasury, ETH_TREASURY_BALANCE)
+    logging.info('Ether transfer:{}'.format(tx.events['ReceivedEther']))
+    logging.info('WBTC transfer:{}'.format(wtx.events['Transfer']))
+    
     assert markets.treasuryERC20Assets() == [wbtc.address]
     logging.info(
         '\nSandbox1.balance(usdt):{}'
