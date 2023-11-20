@@ -40,7 +40,7 @@ def test_topup_treasury_from_sandbox1(
     tx = sandbox1.topupTreasury({'from':accounts[1]})
 
 
-#decrease rates of all assets in two time 
+#decrease rates of all assets
 def test_rebalance_1(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
         treasury, ubd, markets, wbtc, market_adapter, weth, usdc):
@@ -54,13 +54,36 @@ def test_rebalance_1(
     before_usdt_balance_sandbox1 = usdt.balanceOf(sandbox1)
     before_wbtc_balance = wbtc.balanceOf(treasury)
     before_eth_balance = treasury.balance()
-   
-    markets.rebalance({"from": accounts[0]})
+    logging.info(before_wbtc_balance)
+    logging.info(before_eth_balance)
+    logging.info(before_usdt_balance_sandbox1)
+    
+    balances_in_usdt = before_eth_balance * mockuniv2.rates(usdt.address, weth.address)[0]*10**usdt.decimals()/10**weth.decimals() + before_wbtc_balance*mockuniv2.rates(usdt.address, wbtc.address)[0]*10**usdt.decimals()/10**wbtc.decimals()
+
+    #prepare shares in usdt - how it have to be
+    #50% eth, 50% wbtc
+    htb_wbtc_in_usdt = balances_in_usdt*50/100    
+    htb_weth_in_usdt = balances_in_usdt*50/100
+
+    #prepare difference in usdt
+    diff_in_usdt_wbtc = before_wbtc_balance*mockuniv2.rates(usdt.address, wbtc.address)[0]*10**usdt.decimals()/10**wbtc.decimals() - htb_wbtc_in_usdt
+    diff_in_usdt_weth = before_eth_balance *mockuniv2.rates(usdt.address, weth.address)[0]*10**usdt.decimals()/10**weth.decimals() - htb_weth_in_usdt
+    logging.info(diff_in_usdt_weth)
+    if diff_in_usdt_wbtc < 0:
+        diff_in_usdt_wbtc = 0
+    if diff_in_usdt_weth < 0:
+        diff_in_usdt_weth = 0
+
+    #prepare difference in natural units of measurement
+    diff_wbtc = diff_in_usdt_wbtc/mockuniv2.rates(usdt.address, wbtc.address)[0]*10**wbtc.decimals()/10**usdt.decimals()
+    diff_weth = diff_in_usdt_weth/mockuniv2.rates(usdt.address, weth.address)[0]*10**weth.decimals()/10**usdt.decimals()
+
+    t = markets.rebalance({"from": accounts[0]})
 
     #check rebalance
     assert wbtc.balanceOf(treasury) - before_wbtc_balance == 0 
-    assert treasury.balance() - before_eth_balance == 0
-    assert before_usdt_balance_sandbox1 - usdt.balanceOf(sandbox1) == 0 #diff_in_usdt_weth + diff_in_usdt_wbtc
+    assert treasury.balance() - before_eth_balance + diff_weth < 2e12 #< 2*1e15
+    assert before_usdt_balance_sandbox1 + diff_in_usdt_weth + diff_in_usdt_wbtc - usdt.balanceOf(sandbox1) < 200
 
 #add eth to treasury a little
 def test_rebalance_2(
@@ -72,13 +95,33 @@ def test_rebalance_2(
     before_usdt_balance_sandbox1 = usdt.balanceOf(sandbox1)
     before_wbtc_balance = wbtc.balanceOf(treasury)
     before_eth_balance = treasury.balance()
-   
+    
+    balances_in_usdt = before_eth_balance * mockuniv2.rates(usdt.address, weth.address)[0]*10**usdt.decimals()/10**weth.decimals() + before_wbtc_balance*mockuniv2.rates(usdt.address, wbtc.address)[0]*10**usdt.decimals()/10**wbtc.decimals()
+
+    #prepare shares in usdt - how it have to be
+    #50% eth, 50% wbtc
+    htb_wbtc_in_usdt = balances_in_usdt*50/100    
+    htb_weth_in_usdt = balances_in_usdt*50/100
+
+    #prepare difference in usdt
+    diff_in_usdt_wbtc = before_wbtc_balance*mockuniv2.rates(usdt.address, wbtc.address)[0]*10**usdt.decimals()/10**wbtc.decimals() - htb_wbtc_in_usdt
+    diff_in_usdt_weth = before_eth_balance *mockuniv2.rates(usdt.address, weth.address)[0]*10**usdt.decimals()/10**weth.decimals() - htb_weth_in_usdt
+    logging.info(diff_in_usdt_weth)
+    if diff_in_usdt_wbtc < 0:
+        diff_in_usdt_wbtc = 0
+    if diff_in_usdt_weth < 0:
+        diff_in_usdt_weth = 0
+
+    #prepare difference in natural units of measurement
+    diff_wbtc = diff_in_usdt_wbtc/mockuniv2.rates(usdt.address, wbtc.address)[0]*10**wbtc.decimals()/10**usdt.decimals()
+    diff_weth = diff_in_usdt_weth/mockuniv2.rates(usdt.address, weth.address)[0]*10**weth.decimals()/10**usdt.decimals()
+
     markets.rebalance({"from": accounts[0]})
 
     #check rebalance
     assert wbtc.balanceOf(treasury) - before_wbtc_balance == 0 
-    assert treasury.balance() - before_eth_balance == 0
-    assert before_usdt_balance_sandbox1 - usdt.balanceOf(sandbox1) == 0
+    assert treasury.balance() - before_eth_balance + diff_weth < 9e11 #< 2*1e15
+    assert before_usdt_balance_sandbox1 + diff_in_usdt_weth + diff_in_usdt_wbtc - usdt.balanceOf(sandbox1) < 1000
 
 #usdt billions
 def test_usdt_to_ubd_billions(accounts, ubd, sandbox1, usdt):
@@ -111,13 +154,57 @@ def test_topup_treasury_from_sandbox1_1(
 
     #sandbox has 1% of balance > 1000 usdt - can exchange usdt to ether and wbtc
     before_usdt_sandbox = usdt.balanceOf(sandbox1.address)
+    before_wbtc_balance = wbtc.balanceOf(treasury)
+    before_eth_balance = treasury.balance()
     tx = sandbox1.topupTreasury({'from':accounts[1]})
 
     #exchange 1% usdt to 50% ETH and 50% WBTC
-    logging.info(treasury.balance())
-    logging.info(before_usdt_sandbox/100/2/mockuniv2.rates(usdt.address, weth.address)[0]*10**weth.decimals()/10**usdt.decimals())
-    assert wbtc.balanceOf(treasury) - (before_usdt_sandbox/100/2/mockuniv2.rates(usdt.address, wbtc.address)[0])*10**wbtc.decimals()/10**usdt.decimals() <= 2e7
-    assert treasury.balance() - (before_usdt_sandbox/100/2/mockuniv2.rates(usdt.address, weth.address)[0])*10**weth.decimals()/10**usdt.decimals()  < 4e17
+    assert before_wbtc_balance + (before_usdt_sandbox/100/2/mockuniv2.rates(usdt.address, wbtc.address)[0])*10**wbtc.decimals()/10**usdt.decimals() - wbtc.balanceOf(treasury) < 100 #2e7
+    assert before_eth_balance + (before_usdt_sandbox/100/2/mockuniv2.rates(usdt.address, weth.address)[0])*10**weth.decimals()/10**usdt.decimals() - treasury.balance() < 3e11 #4e17
+    assert before_usdt_sandbox *99/100 - usdt.balanceOf(sandbox1.address) < 100
+
+    logging.info('getCollateralLevelM10 = {}'.format(markets.getCollateralLevelM10()))
+
+def test_topup_sandbox2(
+        accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
+        treasury, ubd, markets, wbtc, market_adapter, weth):
+
+    #bullrun
+    mockuniv2.setRate(usdt.address, wbtc.address, (160000000000, 1))
+    mockuniv2.setRate(usdt.address, weth.address, (80000000000, 1))
+    mockuniv2.setRate(wbtc.address, usdt.address, (1, 160000000000))
+    mockuniv2.setRate(weth.address, usdt.address, (1,  80000000000))
+
+    mockuniv2.setRate(dai.address, wbtc.address, (160000000000, 1))
+    mockuniv2.setRate(dai.address, weth.address, (80000000000, 1))
+    mockuniv2.setRate(wbtc.address, dai.address, (1, 160000000000))
+    mockuniv2.setRate(weth.address, dai.address, (1,  80000000000))
+
+    logging.info('getCollateralLevelM10 = {}'.format(markets.getCollateralLevelM10()))
+
+    before_wbtc_treasury_amount = wbtc.balanceOf(treasury.address)
+    before_eth_treasury_amount = treasury.balance()
+
+    #markets.topupSandBox2()
+    tx = sandbox2.topupSandBox2( {'from':accounts[0]})
+
+    #1/3 of amount
+    wbtc_to_dai_amount = before_wbtc_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/1000000
+    eth_to_dai_amount = before_eth_treasury_amount*treasury.SANDBOX2_TOPUP_PERCENT()/1000000
+
+    logging.info('wbtc_to_dai_amount = {}'.format(wbtc_to_dai_amount))
+    logging.info('eth_to_dai_amount = {}'.format(eth_to_dai_amount))
+    logging.info('eth_balance_market = {}'.format(markets.balance()))
+
+    dai_amount_calc = wbtc_to_dai_amount*mockuniv2.rates(wbtc.address, dai.address)[1]*10**dai.decimals()/10**wbtc.decimals() + eth_to_dai_amount*mockuniv2.rates(weth.address, dai.address)[1]*10**dai.decimals()/10**weth.decimals()
+    logging.info('dai_amount_calc = {}'.format(dai_amount_calc))
+
+    logging.info(mockuniv2.getAmountsOut(eth_to_dai_amount, [weth.address,dai.address]))
+    logging.info(mockuniv2.getAmountsOut(wbtc_to_dai_amount, [wbtc.address,dai.address]))
+
+    assert dai_amount_calc - dai.balanceOf(sandbox2) < 1e14
+    assert wbtc.balanceOf(treasury) == before_wbtc_treasury_amount - wbtc_to_dai_amount
+    assert before_eth_treasury_amount - eth_to_dai_amount - treasury.balance()   < 1000
 
 
 
