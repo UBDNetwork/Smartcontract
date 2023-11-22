@@ -4,7 +4,8 @@ pragma solidity 0.8.21;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@uniswap/contracts/libraries/TransferHelper.sol";
-//import "./TimeLock.sol";
+import "../../interfaces/IDepositModel.sol";
+import "../../interfaces/ISandbox1.sol";
 
 
 contract StakingManager is  Ownable {
@@ -15,50 +16,74 @@ contract StakingManager is  Ownable {
         address modelAddress;
     }
 
-    struct Deposit {
-        uint256 startDate;
-        uint256 body;
-        uint256 interestAmount;
-        uint256 lastInterestPayDate;
-        uint8 depositModelIndex;
-
-    }
 
     address public immutable stakedToken;
+    address public immutable rewardMintAddress;
 
     DepositModel[] public depositModels;
-    mapping(address => Deposit) public deposits;
+
+
+    mapping(address => Deposit[]) public deposits;
     event DepositModelChanged(address Model, uint256 ValidAfter, uint256 NotValidAfer);
 
-    constructor(address _erc20) {
+    constructor(address _erc20, address _rewardMintAddress) {
         require(_erc20 != address(0), "Cant be zero address");
         stakedToken = _erc20;
+        rewardMintAddress = _rewardMintAddress;
+        
     }
 
-    function deposit(uint256 _amount, uint256 _modelIndex) external {
+    function deposit(uint8 _modelIndex, Deposit memory _newDeposit) external {
         require(_modelIndex < depositModels.length, "Model with this index not exist yet");
         require(depositModels[_modelIndex].validAfter <= block.timestamp, "Model not valid yet");
         require(depositModels[_modelIndex].notValidAfter >= block.timestamp, "Model not valid already");
-        Deposit storage d = deposits[msg.sender];
-        if (d.startDate == 0) {
-            // New deposit
-            d.startDate = block.timestamp;
-            d.body = _amount;
-            d.depositModelIndex = uint8(_modelIndex);
-        } else {
-            // Add amount to deposit
-            // TODO Check that add enable
-            d.body += _amount;
-        }
-        TransferHelper.safeTransferFrom(stakedToken, msg.sender, address(this), _amount);
+        // Pre Check
+        bool isOK;
+        (isOK, _newDeposit) = IDepositModel(depositModels[_modelIndex].modelAddress).checkOpen(
+            msg.sender, 
+            _newDeposit
+        );
+
+        // Save stake(depost) info
+        if (isOK){
+            Deposit storage d = deposits[msg.sender].push(); 
+            _insertNewDepositInfo(d, _newDeposit); 
+        }       
+ 
+        // Receive funds
+        TransferHelper.safeTransferFrom(stakedToken, msg.sender, address(this), _newDeposit.body);
     }
 
-    function claimInterest() public returns (uint256 claimedAmount) {
+    function addFundsToDeposit(uint256 _depositIndex, uint256 _addAmount) external {
+        Deposit storage d = deposits[msg.sender][_depositIndex];
+        _accrueInterests(d);
+        d.body += _addAmount;
+        // Receive funds
+        TransferHelper.safeTransferFrom(stakedToken, msg.sender, address(this), _addAmount);
+    }
+
+    function claimInterests(uint256 _depositIndex) external returns (uint256 claimedAmount) {
+        Deposit storage d = deposits[msg.sender][_depositIndex];
+        _accrueInterests(d);
+        // amountParams[0] - is always interest that accrued but not payed yey
+        claimedAmount = d.amountParams[0];
+        d.amountParams[0] = 0;
+        //
         // TODO mint reward
         TransferHelper.safeTransfer(stakedToken, msg.sender, claimedAmount);
     }
 
-    function withdraw() public returns (uint256 withdrawAmount){
+    function withdraw(uint256 _depositIndex) external returns (uint256 withdrawAmount){
+        Deposit storage d = deposits[msg.sender][_depositIndex];
+        _accrueInterests(d);
+        _payInterestToBody(d); 
+        // accrue interests(with MINT!!!!) and pay all interest to body
+        withdrawAmount = d.body;
+        //IERC20Mint(stakedToken).mint()
+        // TODO mint reward
+        TransferHelper.safeTransfer(stakedToken, msg.sender, withdrawAmount);
+    }
+    function withdrawEmergency() external returns (uint256 withdrawAmount){
         // TODO mint reward
         TransferHelper.safeTransfer(stakedToken, msg.sender, withdrawAmount);
     }
@@ -81,5 +106,63 @@ contract StakingManager is  Ownable {
         );  
     }
     ///////////////////////////////////////////////////////////
+    function getUserDeposits(address _user) external view returns(Deposit[] memory) {
+        return deposits[msg.sender];
+    }
+
+    function getUserDepositByIndex(address _user, uint256 _index) public view returns(Deposit memory) {
+        return deposits[msg.sender][_index];
+    }
+
+    function _accrueInterests(Deposit storage _deposit) 
+        internal 
+        returns(Deposit memory _newValues, uint256 increment)
+    {
+        (_newValues, increment) = IDepositModel(depositModels[_deposit.depositModelIndex].modelAddress)
+            .accrueInterests(_deposit);
+        _updateDepositInfo(_deposit, _newValues); 
+        ISandbox1(rewardMintAddress).mintReward(address(this), increment);   
+    }
+
+    function _payInterestToBody(Deposit storage _deposit) internal returns(Deposit memory _newValues){
+        _newValues = IDepositModel(depositModels[_deposit.depositModelIndex].modelAddress)
+            .payInterestsToBody(_deposit);
+        _updateDepositInfo(_deposit, _newValues);
+
+    }
+
+    function _insertNewDepositInfo(Deposit storage _deposit, Deposit memory _newValues) 
+        internal 
+        returns(Deposit memory)
+    {
+        _deposit.body = _newValues.body;
+        _deposit.startDate = _newValues.startDate;
+        _deposit.depositModelIndex = _newValues.depositModelIndex;
+        for (uint256 i = 0; i < _newValues.amountParams.length; ++ i){
+            _deposit.amountParams.push(_newValues.amountParams[i]);
+        }
+
+        for (uint256 i = 0; i < _newValues.addressParams.length; ++ i){
+            _deposit.addressParams.push(_newValues.addressParams[i]);
+        } 
+        
+    }
+
+    function _updateDepositInfo(Deposit storage _deposit, Deposit memory _newValues) 
+        internal 
+        returns(Deposit memory)
+    {
+        _deposit.body = _newValues.body;
+        //_deposit.startDate = _newValues.startDate;
+        //_deposit.depositModelIndex = _newValues.depositModelIndex
+        for (uint256 i = 0; i < _newValues.amountParams.length; ++ i){
+            _deposit.amountParams[i] =_newValues.amountParams[i];
+        }
+
+        for (uint256 i = 0; i < _newValues.addressParams.length; ++ i){
+            _deposit.addressParams[i] = _newValues.addressParams[i];
+        } 
+        
+    }
 
 }

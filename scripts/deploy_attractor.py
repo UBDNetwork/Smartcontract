@@ -4,8 +4,8 @@ import json
 if  web3.eth.chain_id in [4, 5, 97, 11155111]:
     # Testnets
     #private_key='???'
-    #accounts.load('ttwo');
-    accounts.load('secret2');
+    accounts.load('ttwo');
+    #accounts.load('secret2');
 
 elif web3.eth.chain_id in [1,56,137]:
     accounts.load('ubd_deployer')
@@ -99,10 +99,10 @@ def main():
     sandbox2 = SandBox2.deploy(markets.address, CHAIN['dai_address'], tx_params)
     treasury = Treasury.deploy(markets.address, tx_params)
     #ubd = UBDToken.deploy(sandbox1.address, tx_params)
-    if len(CHAIN['ubd_address']) > 20:
-        ubd = UBDToken.at(CHAIN['ubd_address'])
-    else: 
-        ubd = UBDToken.deploy(sandbox1.address, tx_params)   
+    # if len(CHAIN['ubd_address']) > 20:
+    #     ubd = UBDToken.at(CHAIN['ubd_address'])
+    # else: 
+    ubd = UBDToken.deploy(sandbox1.address, tx_params)   
 
 
     # Print addresses for quick access from console
@@ -143,7 +143,6 @@ def main():
     markets.setTreasury(treasury, tx_params)    
     markets.setTeamAddress(CHAIN['team_address'], tx_params)
     sandbox1.setBeneficiary(CHAIN['team_address'], tx_params)
-    
     sandbox1.setUBDToken(ubd, tx_params)
 
     if len(CHAIN['market_adapter']) > 0 :
@@ -153,8 +152,11 @@ def main():
     else:
         mockuniv2 = MockSwapRouter.deploy(accounts[2], accounts[2], tx_params)
         market_adapter = MarketAdapterCustomMarket.deploy('Mock UniSwapV2 adapter', mockuniv2, tx_params)
+        mockuniv2.setRate(CHAIN['usdt_address'], CHAIN['wbtc_address'], (28000, 1))
+        mockuniv2.setRate(CHAIN['wbtc_address'], CHAIN['usdt_address'], (1, 28000))
 
     markets.setMarketParams(ZERO_ADDRESS, (market_adapter, market_adapter, 0), tx_params)
+
     for a in CHAIN['enabled_erc20']:
         markets.setMarketParams(a, (market_adapter, market_adapter, 0), tx_params)
     markets.addERC20AssetToTreasury((CHAIN['wbtc_address'], 50), tx_params)
