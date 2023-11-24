@@ -178,6 +178,6 @@ def staking(accounts, StakingManager, ubd, sandbox1):
 
 @pytest.fixture(scope="module")
 def model_one(accounts, DepositModelOne):
-    mo = accounts[0].deploy(DepositModelOne)
+    mo = accounts[0].deploy(DepositModelOne, 18)
     yield mo
 

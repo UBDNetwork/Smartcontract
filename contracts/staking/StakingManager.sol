@@ -68,23 +68,26 @@ contract StakingManager is  Ownable {
         // amountParams[0] - is always interest that accrued but not payed yey
         claimedAmount = d.amountParams[0];
         d.amountParams[0] = 0;
-        //
-        // TODO mint reward
-        TransferHelper.safeTransfer(stakedToken, msg.sender, claimedAmount);
+        if (claimedAmount > 0) {
+            TransferHelper.safeTransfer(stakedToken, msg.sender, claimedAmount);    
+        }
     }
 
     function withdraw(uint256 _depositIndex) external returns (uint256 withdrawAmount){
         Deposit storage d = deposits[msg.sender][_depositIndex];
+        // accrue interests(with MINT!!!!) and pay all interest to body
         _accrueInterests(d);
         _payInterestToBody(d); 
-        // accrue interests(with MINT!!!!) and pay all interest to body
         withdrawAmount = d.body;
-        //IERC20Mint(stakedToken).mint()
-        // TODO mint reward
+        d.body = 0;
         TransferHelper.safeTransfer(stakedToken, msg.sender, withdrawAmount);
     }
-    function withdrawEmergency() external returns (uint256 withdrawAmount){
-        // TODO mint reward
+
+    function withdrawEmergency(uint256 _depositIndex) external returns (uint256 withdrawAmount){
+        Deposit storage d = deposits[msg.sender][_depositIndex];
+        _payInterestToBody(d); 
+        withdrawAmount = d.body;
+        d.body = 0;
         TransferHelper.safeTransfer(stakedToken, msg.sender, withdrawAmount);
     }
     ///////////////////////////////////////////////////////////
@@ -112,6 +115,15 @@ contract StakingManager is  Ownable {
 
     function getUserDepositByIndex(address _user, uint256 _index) public view returns(Deposit memory) {
         return deposits[msg.sender][_index];
+    }
+
+    function calcInterests(Deposit memory _deposit, uint256 _monthCount) 
+        external 
+        view
+        returns(Deposit memory _newValues, uint256 increment)
+    {
+        (_newValues, increment) = IDepositModel(depositModels[_deposit.depositModelIndex].modelAddress)
+            .calcInterests(_deposit, _monthCount);
     }
 
     function _accrueInterests(Deposit storage _deposit) 
