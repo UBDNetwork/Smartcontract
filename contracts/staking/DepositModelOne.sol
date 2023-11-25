@@ -47,10 +47,11 @@ contract DepositModelOne is Rates, IDepositModel{
 
         // 1. How many full months since start deposit
         uint256 fullM = (block.timestamp -  _deposit.startDate) / INTEREST_ACCRUE_PERIOD;
+        // uint256 currRate = 100000;
         uint256 currRate;
         uint256 availableForClaim;
         uint256 oneMonthAccrued;
-        for (uint256 i = _deposit.amountParams[1] + 1; i <= fullM; i ++) {
+        for (uint256 i = _deposit.amountParams[1] + 1; i <= fullM; ++ i) {
             currRate = _getRateForPeriodAndAmount(_deposit.body / DECIMALS10, i);
             oneMonthAccrued = _deposit.body * (currRate / 12) / (100 * PERCENT_DENOMINATOR) ;
             // In this deposit type only part of increment available for claim
@@ -58,7 +59,7 @@ contract DepositModelOne is Rates, IDepositModel{
             if (availableForClaim > 0) {
                 _deposit.amountParams[0] += availableForClaim;
             }
-            
+            // THIS IS DEBUG TIME EVENT ONLY! COMMENT BEFORE PRODUCTION
             emit InterestsAccrued(i, currRate, _deposit.body, oneMonthAccrued);
             _deposit.body += oneMonthAccrued - availableForClaim;
             increment += oneMonthAccrued;

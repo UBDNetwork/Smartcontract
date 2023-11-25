@@ -46,6 +46,7 @@ contract Rates {
         rates[14] = [80000,   82500,   85000,   87500,   90000,   92500,   95000,   97500,  100000];
         rates[15] = [82500,   85000,   87500,   90000,   92500,   95000,   97500,  100000,  102500];
         rates[16] = [85000,   87500,   90000,   92500,   95000,   97500,  100000,  102500,  105000];
+
     }
 
     function _getRateForPeriodAndAmount(uint256 _amount, uint256 _currMonth) 
@@ -58,9 +59,11 @@ contract Rates {
             return 0;
         }
         uint256 monthIndex;
-        for(uint256 i = 0; i < months.length; i ++){
+        //for(uint256 i = 0; i < months.length; ++ i){
+        // Literals for GAs sAfe
+        for(uint256 i = 0; i < 9 ; ++ i){
             // Case of last month in table
-            if (i == months.length-1){
+            if (i == 9 - 1){
                monthIndex = i;
             } else {
                 if (_currMonth >= months[i] && _currMonth < months[i + 1])
@@ -73,9 +76,9 @@ contract Rates {
         }
 
         uint256 amountIndex;
-        for(uint256 i = 0; i < amounts.length; i ++){
+        for(uint256 i = 0; i < 17; ++ i){
             // Case of last amount in table
-            if (i == amounts.length - 1){
+            if (i == 17 -1){
                amountIndex = i;
             } else {
                 if (_amount >= amounts[i] && _amount < amounts[i + 1])

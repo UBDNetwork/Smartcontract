@@ -8,7 +8,6 @@ STAKE_AMOUNT = 1000e18
 ADD_FUNDS_AMOUNT = 3333e18
 MINT_UBD_AMOUNT = 995029850746269000000000000
 ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
-WITH_DEBUG_EVENT = True
 
 PAY_AMOUNT = 100_0005_000e6
 def test_prepare_ubd(accounts, ubd, sandbox1, usdt):
@@ -70,8 +69,8 @@ def test_stake_ubd(accounts, ubd, staking, sandbox1, model_one):
     assert ubd.balanceOf(staking) == STAKE_AMOUNT
     
 def test_claim_interests(accounts, ubd, staking, sandbox1, model_one):
-    logging.info('..... Wait for {} years '.format(10))
-    chain.sleep(3600 * 24 * 30 * 120 ) # One Month
+    logging.info('..... Wait for {} years '.format(1))
+    chain.sleep(3600 * 24 * 30 * 12 ) # One years
 
     logging.info('******* Claim Interests: {}'.format(''))
     cl_tx = staking.claimInterests(0)
@@ -80,8 +79,8 @@ def test_claim_interests(accounts, ubd, staking, sandbox1, model_one):
         cl_tx.events['Transfer']
     ))
     deposits = staking.getUserDeposits(accounts[0])
-    if WITH_DEBUG_EVENT : 
-        [logging.info('\nEvent InterestsAccrued: {}'.format(e)) for e in cl_tx.events['InterestsAccrued']]
+
+    #[logging.info('\nEvent InterestsAccrued: {}'.format(e)) for e in cl_tx.events['InterestsAccrued']]
     logging.info('User deposits: {}'.format(
         deposits
     ))
@@ -101,8 +100,7 @@ def test_add_funds(accounts, ubd, staking, sandbox1, model_one):
     ubd.approve(staking, ADD_FUNDS_AMOUNT,  {"from": accounts[0]})
     logging.info('******* Add funds: {}'.format('3333e18'))
     ad_tx = staking.addFundsToDeposit(0, ADD_FUNDS_AMOUNT, {"from": accounts[0]})
-    if WITH_DEBUG_EVENT: 
-        [logging.info('\nEvent InterestsAccrued: {}'.format(e)) for e in ad_tx.events['InterestsAccrued']]
+    #[logging.info('\nEvent InterestsAccrued: {}'.format(e)) for e in ad_tx.events['InterestsAccrued']]
     deposits = staking.getUserDeposits(accounts[0])
     logging.info('User deposits: {}'.format(
         deposits
@@ -124,8 +122,7 @@ def test_withdraw_funds(accounts, ubd, staking, sandbox1, model_one):
     )) 
 
     w_tx = staking.withdraw(0, {"from": accounts[0]})
-    if WITH_DEBUG_EVENT: 
-        [logging.info('\nEvent InterestsAccrued: {}'.format(e)) for e in w_tx.events['InterestsAccrued']]
+    #[logging.info('\nEvent InterestsAccrued: {}'.format(e)) for e in w_tx.events['InterestsAccrued']]
     deposits = staking.getUserDeposits(accounts[0])
     logging.info('User deposits: {}'.format(
         deposits
