@@ -79,7 +79,8 @@ contract StakingManager is  Ownable {
         _accrueInterests(d);
         _payInterestToBody(d); 
         withdrawAmount = d.body;
-        d.body = 0;
+        //d.body = 0;
+        _removeDepositRecord(_depositIndex);
         TransferHelper.safeTransfer(stakedToken, msg.sender, withdrawAmount);
     }
 
@@ -87,7 +88,8 @@ contract StakingManager is  Ownable {
         Deposit storage d = deposits[msg.sender][_depositIndex];
         _payInterestToBody(d); 
         withdrawAmount = d.body;
-        d.body = 0;
+        //d.body = 0;
+        _removeDepositRecord(_depositIndex);
         TransferHelper.safeTransfer(stakedToken, msg.sender, withdrawAmount);
     }
     ///////////////////////////////////////////////////////////
@@ -175,6 +177,16 @@ contract StakingManager is  Ownable {
             _deposit.addressParams[i] = _newValues.addressParams[i];
         } 
         
+    }
+
+    function _removeDepositRecord(uint256 _depositIndex) 
+        internal 
+    {
+        Deposit[] storage userDeposits = deposits[msg.sender];
+        if (_depositIndex != userDeposits.length -1) {
+            userDeposits[_depositIndex] = userDeposits[userDeposits.length -1];
+        }
+        userDeposits.pop();
     }
 
 }

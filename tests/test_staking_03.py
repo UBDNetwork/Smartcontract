@@ -3,7 +3,6 @@ import logging
 from brownie import Wei, reverts, chain
 from help_init_registry import init_market_registry
 LOGGER = logging.getLogger(__name__)
-227 456 336630847086976886,
 STAKE_AMOUNT = 100_000e18
 ADD_FUNDS_AMOUNT = 3333e18
 MINT_UBD_AMOUNT = 995029850746269000000000000
