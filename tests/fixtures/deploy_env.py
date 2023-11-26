@@ -181,3 +181,7 @@ def model_one(accounts, DepositModelOne):
     mo = accounts[0].deploy(DepositModelOne, 18)
     yield mo
 
+@pytest.fixture(scope="module")
+def model_two(accounts, DepositModel_02):
+    mo = accounts[0].deploy(DepositModel_02, 18)
+    yield mo

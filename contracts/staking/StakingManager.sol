@@ -33,13 +33,13 @@ contract StakingManager is  Ownable {
         
     }
 
-    function deposit(uint8 _modelIndex, Deposit memory _newDeposit) external {
-        require(_modelIndex < depositModels.length, "Model with this index not exist yet");
-        require(depositModels[_modelIndex].validAfter <= block.timestamp, "Model not valid yet");
-        require(depositModels[_modelIndex].notValidAfter >= block.timestamp, "Model not valid already");
+    function deposit(Deposit memory _newDeposit) external {
+        require(_newDeposit.depositModelIndex < depositModels.length, "Model with this index not exist yet");
+        require(depositModels[_newDeposit.depositModelIndex].validAfter <= block.timestamp, "Model not valid yet");
+        require(depositModels[_newDeposit.depositModelIndex].notValidAfter >= block.timestamp, "Model not valid already");
         // Pre Check
         bool isOK;
-        (isOK, _newDeposit) = IDepositModel(depositModels[_modelIndex].modelAddress).checkOpen(
+        (isOK, _newDeposit) = IDepositModel(depositModels[_newDeposit.depositModelIndex].modelAddress).checkOpen(
             msg.sender, 
             _newDeposit
         );

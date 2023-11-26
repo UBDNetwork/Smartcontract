@@ -3,12 +3,12 @@
 pragma solidity 0.8.21;
 
 import "../../interfaces/IDepositModel.sol";
-import "./Rates.sol";
+import "./Rates_02.sol";
 
 /// _deposit.amountParams[0]  - accrued and available for claim interests
 /// _deposit.amountParams[1]  - Last Accrued Month 
 /// _deposit.amountParams[2]  - percent of accrued that available for claim
-contract DepositModelOne is Rates, IDepositModel{
+contract DepositModel_02 is Rates_02, IDepositModel{
 
     uint256 public constant INTEREST_ACCRUE_PERIOD = 30 days;
     uint256 public immutable DECIMALS10;
@@ -22,7 +22,7 @@ contract DepositModelOne is Rates, IDepositModel{
         view returns(bool ok, Deposit memory)
     {
          // This deposit index (TODO - move to constructor?)
-         //_deposit.depositModelIndex = 0;
+         //_deposit.depositModelIndex = 1;
 
         if (_deposit.startDate == 0) {
             // New deposit

@@ -56,13 +56,13 @@ def test_stake_ubd(accounts, ubd, staking, sandbox1, model_one):
     d = (0, STAKE_AMOUNT, 
         [0, 
          0, 
-         #0,
-         500000 # % of interests Available for claim from each accrued period 1%-10000
+         0,
+         #500000 # % of interests Available for claim from each accrued period 1%-10000
         ], 
-        [], 18
+        [], 0
     )
     logging.info('******* Deposit: {}'.format(STAKE_AMOUNT))
-    staking.deposit(0, d,{"from": accounts[0]})
+    staking.deposit(d,{"from": accounts[0]})
     logging.info('User deposits: {}'.format(
         staking.getUserDeposits(accounts[0])
     ))
