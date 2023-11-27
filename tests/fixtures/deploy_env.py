@@ -116,6 +116,8 @@ def ubd(accounts, UBDToken, sandbox1):
     #sandbox1.setUBDToken(erc.address, {'from':accounts[0]})
     yield erc
 
+
+
 ##############################################################
 @pytest.fixture(scope="module")
 def mockuniv2(accounts, MockSwapRouter, dai, usdt, wbtc, weth, usdc, wbnb):
@@ -159,3 +161,27 @@ def market_adapter(accounts, MarketAdapterCustomMarket, mockuniv2):
 def hackERC20(accounts, HackERC20, market_adapter, sandbox1, markets):
     erc = accounts[0].deploy(HackERC20, 'Hack ERC20', 'Hack', market_adapter, sandbox1, markets)
     yield erc
+
+###########################################################
+##   Staking ##############################################
+###########################################################
+# @pytest.fixture(scope="module")
+# def ubd_stake(accounts, UBDToken):
+#     erc = accounts[0].deploy(UBDToken, accounts[0])
+#     #sandbox1.setUBDToken(erc.address, {'from':accounts[0]})
+#     yield erc
+
+@pytest.fixture(scope="module")
+def staking(accounts, StakingManager, ubd, sandbox1):
+    st = accounts[0].deploy(StakingManager, ubd, sandbox1)
+    yield st 
+
+@pytest.fixture(scope="module")
+def model_one(accounts, DepositModelOne):
+    mo = accounts[0].deploy(DepositModelOne, 18)
+    yield mo
+
+@pytest.fixture(scope="module")
+def model_two(accounts, DepositModel_02):
+    mo = accounts[0].deploy(DepositModel_02, 18)
+    yield mo
