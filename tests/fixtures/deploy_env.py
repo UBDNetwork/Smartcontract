@@ -156,6 +156,6 @@ def market_adapter(accounts, MarketAdapterCustomMarket, mockuniv2):
 #1000 000000
 
 @pytest.fixture(scope="module")
-def hackERC20(accounts, HackERC20, market_adapter, sandbox1):
-    erc = accounts[0].deploy(HackERC20, 'Hack ERC20', 'Hack', market_adapter, sandbox1)
+def hackERC20(accounts, HackERC20, market_adapter, sandbox1, markets):
+    erc = accounts[0].deploy(HackERC20, 'Hack ERC20', 'Hack', market_adapter, sandbox1, markets)
     yield erc
