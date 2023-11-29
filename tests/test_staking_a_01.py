@@ -2,12 +2,13 @@ import pytest
 import logging
 from brownie import Wei, reverts, chain
 from help_init_registry import init_market_registry
+import os
 LOGGER = logging.getLogger(__name__)
 STAKE_AMOUNT = 100_000e18
 ADD_FUNDS_AMOUNT = 3333e18
 MINT_UBD_AMOUNT = 995029850746269000000000000
 ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
-WITH_DEBUG_EVENT = True
+#WITH_DEBUG_EVENT = True
 MONTH_WAIT = 10
 PAY_AMOUNT = 100_0005_000e6
 def test_prepare_ubd(accounts, ubd, sandbox1, usdt):
@@ -94,7 +95,9 @@ def test_claim_interests(accounts, ubd, staking, sandbox1, model_two):
         cl_tx.events['Transfer']
     ))
     
-    if WITH_DEBUG_EVENT : 
+    logging.info(os.environ.get("WITH_DEBUG_EVENT") )
+
+    if os.environ.get("WITH_DEBUG_EVENT") == 'True': 
         [logging.info('\nEvent InterestsAccrued: {}'.format(e)) for e in cl_tx.events['InterestsAccrued']]
     logging.info('User deposits: {}'.format(
         deposits
