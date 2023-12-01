@@ -20,9 +20,10 @@ def test_hackECR20_reentrancy(
 
     mockuniv2.setRate(usdt.address, hackERC20.address, (1, 1))
     mockuniv2.setRate(hackERC20.address, usdt.address, (1, 1))
-    #markets.setMarketParams(hackERC20, (market_adapter, market_adapter, 0), {'from':accounts[0]})
+    markets.setMarketParams(hackERC20, (market_adapter, market_adapter, 0), {'from':accounts[0]})
     
     hackERC20.approve(markets, PAY_AMOUNT*1000, {'from':accounts[0]})
+    usdt.approve(sandbox1, PAY_AMOUNT*100000000000000000000000, {'from':accounts[0]})
     
     chain.sleep(10)
     

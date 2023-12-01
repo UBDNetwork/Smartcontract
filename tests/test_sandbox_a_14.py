@@ -165,7 +165,7 @@ def test_topup_treasury_from_sandbox1_1(
 
     logging.info('getCollateralLevelM10 = {}'.format(markets.getCollateralLevelM10()))
 
-def test_topup_sandbox2(
+def test_topup_sandbox2_billions(
         accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
         treasury, ubd, markets, wbtc, market_adapter, weth):
 
@@ -205,6 +205,55 @@ def test_topup_sandbox2(
     assert dai_amount_calc - dai.balanceOf(sandbox2) < 1e14
     assert wbtc.balanceOf(treasury) == before_wbtc_treasury_amount - wbtc_to_dai_amount
     assert before_eth_treasury_amount - eth_to_dai_amount - treasury.balance()   < 1000
+
+def test_topup_treasury_from_sandbox2(
+        accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, 
+        treasury, ubd, markets, wbtc, market_adapter, weth):
+    
+    logging.info('!!!!!!!!!!!!!!!!!   topup treasury from sandbox2    !!!!!!!!!!!!!!!')
+
+    mockuniv2.setRate(dai.address, wbtc.address, (10, 1))
+    mockuniv2.setRate(dai.address, weth.address, (1, 1))
+    mockuniv2.setRate(weth.address, dai.address, (1, 10))
+    mockuniv2.setRate(wbtc.address, dai.address, (1, 1))
+
+    mockuniv2.setRate(usdt.address, wbtc.address, (10, 1))
+    mockuniv2.setRate(usdt.address, weth.address, (1, 1))
+    mockuniv2.setRate(wbtc.address, usdt.address, (1, 10))
+    mockuniv2.setRate(weth.address, usdt.address, (1, 1))
+    
+    logging.info(markets.getCollateralLevelM10())
+    '''wbtc_treasury_amount_in_usdt = wbtc.balanceOf(treasury.address)*mockuniv2.rates(wbtc, usdt)[1]*10**usdt.decimals()/10**wbtc.decimals()
+    eth_treasury_amount_in_usdt = treasury.balance()*mockuniv2.rates(weth, usdt)[1]*10**usdt.decimals()/10**weth.decimals()
+    usdt_sandbox1_amount = usdt.balanceOf(sandbox1.address)
+    ubd_amount_in_usdt = ubd.totalSupply()*10**usdt.decimals()/10**ubd.decimals()
+
+    security = 10*(wbtc_treasury_amount_in_usdt + eth_treasury_amount_in_usdt + usdt_sandbox1_amount)/ubd_amount_in_usdt
+    #check security  - between 0.5 and 1
+    assert round(security) == markets.getCollateralLevelM10()
+
+    #topup treasury from sandbox2 - 1% of dai, at least $1,000 - to wbtc and eth 50x50
+    before_wbtc_treasury_amount = wbtc.balanceOf(treasury.address)
+    before_eth_treasury_amount = treasury.balance()
+    before_dai_sandbox2_amount = dai.balanceOf(sandbox2.address)
+
+    # add call constant with percent!!!!
+    logging.info('dai to exchange = {}'.format(before_dai_sandbox2_amount/100))
+    assert sandbox2.lastTreasuryTopUp() == 0
+    tx = sandbox2.topupTreasury()
+    assert tx.return_value == True
+    assert sandbox2.lastTreasuryTopUp() > 0
+
+
+    ##need call of constant from contract with topup percent - wait appearing it!!
+    wbtc_amount_calc = before_dai_sandbox2_amount*10**wbtc.decimals()/mockuniv2.rates(dai, wbtc)[0]/10**dai.decimals()/2/100
+    eth_amount_calc = before_dai_sandbox2_amount*10**weth.decimals()/mockuniv2.rates(dai, weth)[0]/10**dai.decimals()/2/100
+
+    assert dai.balanceOf(sandbox2) == before_dai_sandbox2_amount*99/100
+    assert wbtc.balanceOf(treasury) == before_wbtc_treasury_amount + wbtc_amount_calc
+    assert treasury.balance() - before_eth_treasury_amount - eth_amount_calc < 100'''
+
+
 
 
 
