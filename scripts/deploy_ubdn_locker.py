@@ -1,18 +1,18 @@
 from brownie import *
 import json
 
-if  web3.eth.chain_id in [4, 5, 97, 1313161555]:
+if  web3.eth.chain_id in [4, 5, 97, 11155111]:
     # Testnets
     #private_key='???'
     accounts.load('ttwo');
-elif web3.eth.chain_id in [1,56,137, 1313161554]:
+elif web3.eth.chain_id in [1,56,137, 11155111]:
     accounts.load('ubd_deployer')
     
 print('Deployer:{}, balance: {}'.format(accounts[0],Wei(accounts[0].balance()).to('ether') ))
 print('web3.eth.chain_id={}'.format(web3.eth.chainId))
 
 tx_params = {'from':accounts[0]}
-if web3.eth.chainId in  [1,4, 5, 137]:
+if web3.eth.chainId in  [1,4, 5, 137,11155111]:
     tx_params={'from':accounts[0], 'priority_fee': chain.priority_fee}
 
 ETH_PAYMENT_TOKENS = [
@@ -24,6 +24,13 @@ ETH_PAYMENT_TOKENS = [
 GOERLI_PAYMENT_TOKENS = [
 '0x3a1A748d061fb00dD3D43c4130713A505be5D5d5',  #DAI
 '0x985190ff075d46e29f863E906122F8faf35aC1Ac'  #test USDT
+]
+
+
+SEPOLIA_ERC20_TOKENS = [
+    '0xE3cfED0fbCDB7AaE09816718f0f52F10140Fc61F', # USDT
+    '0xBF8528699868B1a5279084C92B1d31D9C0160504', # USDC
+    '0xE52E3383740e713631864Af328717966F5Fa4e22', # DAI
 ]
 
 CHAIN = {   
@@ -46,8 +53,19 @@ CHAIN = {
     80001:{'explorer_base':'mumbai.polygonscan.com', },  
     43114:{'explorer_base':'cchain.explorer.avax.network', },
     43113:{'explorer_base':'cchain.explorer.avax-test.network', },
+    11155111:{
+        'explorer_base':'sepolia.etherscan.io', 
+        'enabled_erc20': SEPOLIA_ERC20_TOKENS,
+        'premint_address': accounts[0],
+        'timelock': 300,
+    }
 
-}.get(web3.eth.chainId, {'explorer_base':'io','premint_address': accounts[0], 'enabled_erc20':GOERLI_PAYMENT_TOKENS, 'timelock': 0})
+}.get(web3.eth.chainId, {
+    'explorer_base':'io',
+    'premint_address': accounts[0], 
+    'enabled_erc20':GOERLI_PAYMENT_TOKENS, 
+    'timelock': 0
+})
 print(CHAIN)
 zero_address = '0x0000000000000000000000000000000000000000'
 
@@ -55,20 +73,26 @@ def main():
     locker = UBDNLockerDistributor.deploy(CHAIN['timelock'], tx_params)
     erc20 = UBDNToken.deploy(CHAIN['premint_address'], locker.address, 5_000_000e18, tx_params)
     # Print addresses for quick access from console
-    print("----------Deployment artifacts-------------------")
-    print("locker = UBDNLockerDistributor.at('{}')".format(locker.address))
-    print("erc20 = UBDNToken.at('{}')".format(erc20.address))
     
+    print("\n**UBDNLockerDistributor**")
     print('https://{}/address/{}#code'.format(CHAIN['explorer_base'],locker.address))
+    print("\n**UBDNToken**")
     print('https://{}/address/{}#code'.format(CHAIN['explorer_base'],erc20.address))
 
-    if  web3.eth.chainId in [1,4, 5,56, 137, 43114,1313161555,1313161554]:
-        UBDNLockerDistributor.publish_source(locker);
-        UBDNToken.publish_source(erc20);
+    print("```python")
+    print("locker = UBDNLockerDistributor.at('{}')".format(locker.address))
+    print("erc20 = UBDNToken.at('{}')".format(erc20.address))
+    print("```")
     
     locker.setDistributionToken(erc20,tx_params)
     for t in CHAIN['enabled_erc20']:
        locker.setPaymentTokenStatus(t, True, tx_params)
+       
+    if  web3.eth.chainId in [1,4, 5,56, 137, 43114,11155111,1313161554]:
+        UBDNLockerDistributor.publish_source(locker);
+        UBDNToken.publish_source(erc20);
+    
+    
 
 
 
