@@ -118,7 +118,10 @@ def main():
         StakingManager.publish_source(staking);
         DepositModel_02.publish_source(model_02);
         sandbox1 = SandBox1.at(CHAIN['sandbox_1'])
+        sandbox1.setStakingContract(staking, True, tx_params)
     
-    sandbox1.setStakingContract(staking, True, tx_params)
+    
+    staking.modelRegister((0, chain.time() + 3600 * 24 * 360, model_02), tx_params)
+
 
    

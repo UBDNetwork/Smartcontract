@@ -68,7 +68,7 @@ contract StakingManager is  Ownable {
     function claimInterests(uint256 _depositIndex) external returns (uint256 claimedAmount) {
         Deposit storage d = deposits[msg.sender][_depositIndex];
         _accrueInterests(d);
-        // amountParams[0] - is always interest that accrued but not payed yey
+        // amountParams[0] - is always interest that accrued but not payed yet
         claimedAmount = d.amountParams[0];
         d.amountParams[0] = 0;
         if (claimedAmount > 0) {

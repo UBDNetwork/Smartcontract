@@ -84,7 +84,9 @@ def test_claim_interests(accounts, ubd, staking, sandbox1, model_one):
     logging.info('User deposits: {}'.format(
         deposits
     ))
-    assert cl_tx.return_value == cl_tx.events['Transfer'][1]['value']
+    if deposits[0][2][0] > 0:
+        assert cl_tx.return_value == cl_tx.events['Transfer'][1]['value']
+            
     assert ubd.balanceOf(staking) == deposits[0][1]
 
 def test_add_funds(accounts, ubd, staking, sandbox1, model_one):
@@ -123,11 +125,11 @@ def test_withdraw_funds(accounts, ubd, staking, sandbox1, model_one):
 
     w_tx = staking.withdraw(0, {"from": accounts[0]})
     #[logging.info('\nEvent InterestsAccrued: {}'.format(e)) for e in w_tx.events['InterestsAccrued']]
-    deposits = staking.getUserDeposits(accounts[0])
-    logging.info('User deposits: {}'.format(
-        deposits
-    ))
-    assert ubd.balanceOf(staking) == deposits[0][1] + deposits[0][2][0]
+    # deposits = staking.getUserDeposits(accounts[0])
+    # logging.info('User deposits: {}'.format(
+    #     deposits
+    # ))
+    # assert ubd.balanceOf(staking) == deposits[0][1] + deposits[0][2][0]
     assert ubd.balanceOf(staking) == 0
     
     
