@@ -25,6 +25,7 @@ contract StakingManager is  Ownable {
 
     mapping(address => Deposit[]) public deposits;
     event DepositModelChanged(address Model, uint256 ValidAfter, uint256 NotValidAfer);
+    event DepositNew(address indexed User , uint256 indexed DepositIndex, uint256 DepositValue);
 
     constructor(address _erc20, address _rewardMintAddress) {
         require(_erc20 != address(0), "Cant be zero address");
@@ -47,11 +48,13 @@ contract StakingManager is  Ownable {
         // Save stake(depost) info
         if (isOK){
             Deposit storage d = deposits[msg.sender].push(); 
-            _insertNewDepositInfo(d, _newDeposit); 
-        }       
+            _insertNewDepositInfo(d, _newDeposit);
+            emit DepositNew(msg.sender,deposits[msg.sender].length - 1, d.body); 
+            // Receive funds
+            TransferHelper.safeTransferFrom(stakedToken, msg.sender, address(this), _newDeposit.body);
+        }      
  
-        // Receive funds
-        TransferHelper.safeTransferFrom(stakedToken, msg.sender, address(this), _newDeposit.body);
+        
     }
 
     function addFundsToDeposit(uint256 _depositIndex, uint256 _addAmount) external {
