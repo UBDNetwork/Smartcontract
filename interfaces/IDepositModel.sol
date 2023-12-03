@@ -3,13 +3,18 @@ pragma solidity 0.8.21;
 
 
 struct Deposit {
-        uint256 startDate;
-        uint256 body;
-        uint256[] amountParams;
-        address[] addressParams;
-        uint8 depositModelIndex;
+    uint256 startDate;
+    uint256 body;
+    uint256[] amountParams;
+    address[] addressParams;
+    uint8 depositModelIndex;
+}
 
-    }
+struct DepositInfo {
+    uint256 startDate;
+    uint256 body;
+    uint8 depositModelIndex;
+}
 
 interface IDepositModel  {
 

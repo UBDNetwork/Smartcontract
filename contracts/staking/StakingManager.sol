@@ -115,19 +115,49 @@ contract StakingManager is  Ownable {
     }
     ///////////////////////////////////////////////////////////
     function getUserDeposits(address _user) external view returns(Deposit[] memory) {
-        return deposits[msg.sender];
+        return deposits[_user];
     }
 
     function getUserDeposits2(address _user) external view returns(Deposit[] memory) {
-        Deposit[] memory uds = new Deposit[](deposits[msg.sender].length);
+        Deposit[] memory uds = new Deposit[](deposits[_user].length);
         for (uint256 i = 0; i < uds.length; ++ i) {
-            uds[i] = deposits[msg.sender][i];     
+            uds[i] = deposits[_user][i];     
         }
         return uds;
     }
 
-    function getUserDepositByIndex(address _user, uint256 _index) public view returns(Deposit memory) {
-        return deposits[msg.sender][_index];
+    function getUserDepositsCount(address _user) external view returns(uint256) {
+        return deposits[_user].length;
+    }
+
+    function getUserDepositByIndex(address _user, uint256 _index) 
+        public 
+        view 
+        returns(Deposit memory) 
+    {
+        return deposits[_user][_index];
+    }
+
+    function getUserDepositByIndex2(address _user, uint256 _index) 
+        public 
+        view 
+        returns(DepositInfo memory, uint256[] memory, address[] memory) 
+    {
+        Deposit memory d =  deposits[_user][_index];
+        DepositInfo memory di;
+        di.startDate = d.startDate;
+        di.body = d.body;
+        di.depositModelIndex = d.depositModelIndex;
+
+        uint256[] memory amts = new uint256[](d.amountParams.length);
+        address[] memory adrs = new address[](d.addressParams.length);
+        for(uint256 i = 0; i < amts.length; ++ i){
+            amts[i] = d.amountParams[i];
+        }
+        for(uint256 i = 0; i < adrs.length; ++ i){
+            adrs[i] = d.addressParams[i];
+        }
+        return(di, amts, adrs);
     }
 
 
