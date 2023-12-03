@@ -118,9 +118,18 @@ contract StakingManager is  Ownable {
         return deposits[msg.sender];
     }
 
+    function getUserDeposits2(address _user) external view returns(Deposit[] memory) {
+        Deposit[] memory uds = new Deposit[](deposits[msg.sender].length);
+        for (uint256 i = 0; i < uds.length; ++ i) {
+            uds[i] = deposits[msg.sender][i];     
+        }
+        return uds;
+    }
+
     function getUserDepositByIndex(address _user, uint256 _index) public view returns(Deposit memory) {
         return deposits[msg.sender][_index];
     }
+
 
     function calcInterests(Deposit memory _deposit, uint256 _monthCount) 
         external 

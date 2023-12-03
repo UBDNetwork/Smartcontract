@@ -1,4 +1,6 @@
 import pytest
+from brownie import chain
+
 
 @pytest.fixture(scope="module")
 def distributor(accounts, UBDNDistributor):
@@ -102,7 +104,7 @@ def sandbox2(accounts, SandBox2, markets, dai):
 
 @pytest.fixture(scope="module")
 def treasury(accounts, Treasury, markets):
-    tr = accounts[0].deploy(Treasury,  markets.address)
+    tr = accounts[0].deploy(Treasury,  markets.address,)
     yield tr
 
 @pytest.fixture(scope="module")
