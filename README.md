@@ -13,6 +13,31 @@ brownie test
 ```
 Don't forget [ganache](https://www.npmjs.com/package/ganache)
 
+### Tests in separate Ganache/Anvil (after london)
+1. Install Ganache (chainid: 1337) https://github.com/trufflesuite/ganache#command-line-use or Anvil (chainid: 31337) ..  
+2. Add  network in live networks as follow:
+```yaml
+  - name: Local New
+   networks:
+     - name: Local
+       id: local
+       host: http://127.0.0.1:8545
+       chainid: 1337
+```
+3. Remove deployments info  
+`rm -r build/deployments/1337/`  
+
+4. **In separate** terminal run ganache
+```bash
+ganachee
+```
+4. Run test
+```bash
+brownie test ./tests/test_staking_05.py --network local
+
+```
+
+
 ### Deployments Info
 Deploy is very simple. You can find workflow in 
 [fixtures](./tests/fixtures/deploy_env.py) 
