@@ -53,7 +53,8 @@ contract DepositModel_02 is Rates_02, IDepositModel{
         uint256 oneMonthAccrued;
         for (uint256 i = _deposit.amountParams[1] + 1; i <= fullM; ++ i) {
             currRate = _getRateForPeriodAndAmount(_deposit.body / DECIMALS10, i);
-            oneMonthAccrued = _deposit.body * (currRate / 12) / (100 * PERCENT_DENOMINATOR) ;
+            //oneMonthAccrued = _deposit.body * (currRate / 12) / (100 * PERCENT_DENOMINATOR) ;
+            oneMonthAccrued = _deposit.body * currRate / (100 * PERCENT_DENOMINATOR) / 12 ;
             // In this deposit type only part of increment available for claim
             availableForClaim = oneMonthAccrued * _deposit.amountParams[2] / (100 * PERCENT_DENOMINATOR);
             if (availableForClaim > 0) {
@@ -79,7 +80,8 @@ contract DepositModel_02 is Rates_02, IDepositModel{
         uint256 oneMonthAccrued;
         for (uint256 i = _deposit.amountParams[1] + 1; i <= _monthCount; i ++) {
             currRate = _getRateForPeriodAndAmount(_deposit.body / DECIMALS10, i);
-            oneMonthAccrued = _deposit.body * (currRate / 12) / (100 * PERCENT_DENOMINATOR) ;
+            //oneMonthAccrued = _deposit.body * (currRate / 12) / (100 * PERCENT_DENOMINATOR) ;
+            oneMonthAccrued = _deposit.body * currRate / (100 * PERCENT_DENOMINATOR) / 12 ;
             // In this deposit type only part of increment available for claim
             availableForClaim = oneMonthAccrued * _deposit.amountParams[2] / (100 * PERCENT_DENOMINATOR);
             if (availableForClaim > 0) {
