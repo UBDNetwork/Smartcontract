@@ -81,7 +81,7 @@ def test_stake_ubd(accounts, ubd, staking, sandbox1, model_one, model_two):
 
     logging.info(model_two.calcInterests(d,3))
 
-#10 monthes - nothing claim, only 
+#10 monthes - nothing claim, only accrue interests
 def test_claim_interests(accounts, ubd, staking, sandbox1, model_two):
     logging.info('..... Wait for {} months '.format(MONTH_WAIT))
     chain.sleep(3600 * 24 * 30 * MONTH_WAIT ) # ten Months
@@ -224,6 +224,16 @@ def test_claim_interests_1(accounts, ubd, staking, sandbox1, model_two):
 
     deposits = staking.getUserDeposits(accounts[0])
 
+    #check getters
+    assert staking.getUserDeposits2(accounts[0]) == deposits
+    assert staking.getUserDepositsCount(accounts[0]) == 2
+    assert staking.getUserDepositByIndex2(accounts[0], 1)[0][0] == deposits[1][0]
+    assert staking.getUserDepositByIndex2(accounts[0], 1)[0][1] == deposits[1][1]
+    assert staking.getUserDepositByIndex2(accounts[0], 1)[0][2] == deposits[1][4]
+    assert staking.getUserDepositByIndex2(accounts[0], 1)[1] == deposits[1][2]
+    assert staking.getUserDepositByIndex2(accounts[0], 1)[2] == deposits[1][3]
+
+    #check deposit after claim
     assert body - deposits[1][1] < 3e16
     assert deposits[1][2][1] == 10
     assert deposits[1][2][0] == 0
