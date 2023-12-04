@@ -74,9 +74,7 @@ def test_stake_ubd(accounts, ubd, staking, sandbox1, model_one, model_two):
         0  #model index
     )
     tx = staking.deposit(d,{"from": accounts[0]})
-    logging.info('User deposits: {}'.format(
-        staking.getUserDeposits(accounts[0])
-    ))
+
     assert ubd.balanceOf(staking) == STAKE_AMOUNT
     assert tx.events['DepositNew']['User'] == accounts[0]
     assert tx.events['DepositNew']['DepositIndex'] == 0
@@ -104,23 +102,13 @@ def test_claim_interests(accounts, ubd, staking, sandbox1, model_two):
     logging.info('******* Claim Interests: {}'.format(''))
     deposits = staking.getUserDeposits(accounts[0])
     body_before = deposits[0][1]
-    logging.info(ubd.balanceOf(accounts[0]))
     cl_tx = staking.claimInterests(0)
-    logging.info(ubd.balanceOf(accounts[0]))
-    
-    logging.info('Events Transfer: {}'.format(
-        cl_tx.events['Transfer']
-    ))
-    
-    logging.info(os.environ.get("WITH_DEBUG_EVENT") )
 
     if os.environ.get("WITH_DEBUG_EVENT") == 'True': 
         [logging.info('\nEvent InterestsAccrued: {}'.format(e)) for e in cl_tx.events['InterestsAccrued']]
     logging.info('User deposits: {}'.format(
         deposits
     ))
-    #assert cl_tx.return_value == cl_tx.events['Transfer'][1]['value']
-    #assert ubd.balanceOf(staking) == deposits[0][1]
 
     #accrue interest
     body = body_before
@@ -152,7 +140,6 @@ def test_prepare_ubd_1(accounts, ubd, sandbox1, usdt):
         ZERO_ADDRESS, 
         {'from':accounts[0]}
     )
-    logging.info(ubd.balanceOf(accounts[0]))
 
 #stake huge amount to check amount bonus
 def test_stake_ubd_1(accounts, ubd, staking, sandbox1, model_one, model_two):
@@ -168,9 +155,6 @@ def test_stake_ubd_1(accounts, ubd, staking, sandbox1, model_one, model_two):
         0  #model index
     )
     tx = staking.deposit(d,{"from": accounts[0]})
-    logging.info('User deposits: {}'.format(
-        staking.getUserDeposits(accounts[0])
-    ))
 
 #5 monthes - nothing claim, only accrue
 def test_claim_interests(accounts, ubd, staking, sandbox1, model_two):
@@ -186,9 +170,6 @@ def test_claim_interests(accounts, ubd, staking, sandbox1, model_two):
     
     if os.environ.get("WITH_DEBUG_EVENT") == 'True': 
         [logging.info('\nEvent InterestsAccrued: {}'.format(e)) for e in cl_tx.events['InterestsAccrued']]
-    logging.info('User deposits: {}'.format(
-        deposits
-    ))
 
     #accrue interest
     body = body_before
