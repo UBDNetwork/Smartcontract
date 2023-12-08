@@ -20,7 +20,7 @@ abstract contract Rates_02 {
         view 
         returns(uint256 rate) 
     {
-        rate = BASE_START + BASE_STEP * (_currMonth / 4);
+        rate = BASE_START + BASE_STEP * (_currMonth / 3);
         rate += AMOUNT_BONUS * (_amount / AMOUNT_STEP);
         if (rate >= BASE_MAX) {
             rate = BASE_MAX;
