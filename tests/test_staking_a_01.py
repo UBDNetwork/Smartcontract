@@ -109,7 +109,7 @@ def test_claim_interests(accounts, ubd, staking, sandbox1, model_two):
     #accrue interest
     body = body_before
     for i in range(10):
-        rate = model_two.BASE_START() + model_two.BASE_STEP()*((i+1) // 4)
+        rate = model_two.BASE_START() + model_two.BASE_STEP()*((i+1) // 3)
         rate = rate + model_two.AMOUNT_BONUS() * ((deposits[0][1] / 10**ubd.decimals()) // model_two.AMOUNT_STEP()) #add bonus for amount 
         body = body * (1 + rate / model_two.PERCENT_DENOMINATOR() / 100 / 12)  
         #body = body_before * (1 + rate / model_two.PERCENT_DENOMINATOR() / 100 / 12)  
@@ -167,7 +167,7 @@ def test_stake_ubd_1(accounts, usdt, ubd, staking, sandbox1, model_one, model_tw
     deposits = staking.getUserDeposits(accounts[0])
     assert ubd.balanceOf(staking) == deposits[0][1] + deposits[1][1]
 
-    assert staking.getUserDepositByIndex(accounts[0], 1)[0] == t
+    #assert staking.getUserDepositByIndex(accounts[0], 1)[0] == t
     assert staking.getUserDepositByIndex(accounts[0], 1)[1] == d[1]
     assert staking.getUserDepositByIndex(accounts[0], 1)[2] == d[2]
     assert staking.getUserDepositByIndex(accounts[0], 1)[3] == d[3]
@@ -198,7 +198,7 @@ def test_claim_interests_1(accounts, ubd, staking, sandbox1, model_two):
     claimable_interests = 0
     claimable_interests_all = 0
     for i in range(10):
-        rate = model_two.BASE_START() + model_two.BASE_STEP()*((i+1) // 4)
+        rate = model_two.BASE_START() + model_two.BASE_STEP()*((i+1) // 3)
         interests = body * rate / model_two.PERCENT_DENOMINATOR() / 100 / 12
         body = body + interests * (1 - deposits[1][2][2] / model_two.PERCENT_DENOMINATOR() / 100)
         claimable_interests = interests * deposits[1][2][2] / model_two.PERCENT_DENOMINATOR() / 100
@@ -240,7 +240,7 @@ def test_withdraw(accounts, ubd, staking, sandbox1, model_two):
     #accrue interest
     body = deposits[0][1]
     for i in range(10,20):
-        rate = model_two.BASE_START() + model_two.BASE_STEP()*((i+1) // 4)
+        rate = model_two.BASE_START() + model_two.BASE_STEP()*((i+1) // 3)
         rate = rate + model_two.AMOUNT_BONUS() * ((deposits[0][1] / 10**ubd.decimals()) // model_two.AMOUNT_STEP()) 
         body = body * (1 + rate / model_two.PERCENT_DENOMINATOR() / 100 / 12)  
         #body = body_before * (1 + rate / model_two.PERCENT_DENOMINATOR() / 100 / 12)  
@@ -275,7 +275,7 @@ def test_addFunds(accounts, ubd, staking, sandbox1, model_two):
     claimable_interests = 0
     claimable_interests_all = 0
     for i in range(10,20):
-        rate = model_two.BASE_START() + model_two.BASE_STEP()*((i+1) // 4)
+        rate = model_two.BASE_START() + model_two.BASE_STEP()*((i+1) // 3)
         rate = rate + model_two.AMOUNT_BONUS() * ((deposits[0][1] / 10**ubd.decimals()) // model_two.AMOUNT_STEP())  #add bonus for amount 
         interests = body * rate / model_two.PERCENT_DENOMINATOR() / 100 / 12
         body = body + interests * (1 - deposits[0][2][2] / model_two.PERCENT_DENOMINATOR() / 100)

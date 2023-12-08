@@ -114,7 +114,7 @@ def test_claim_interests(accounts, ubd, staking, sandbox1, model_two):
     body = body_before
     for i in range(120):
         if i < 95:
-            rate = model_two.BASE_START() + model_two.BASE_STEP()*((i+1) // 4)
+            rate = model_two.BASE_START() + model_two.BASE_STEP()*((i+1) // 3)
             rate = rate + model_two.AMOUNT_BONUS() * ((deposits[0][1] / 10**ubd.decimals()) // model_two.AMOUNT_STEP()) #add bonus for amount 
         body = body * (1 + rate / model_two.PERCENT_DENOMINATOR() / 100 / 12)  
         #body = body_before * (1 + rate / model_two.PERCENT_DENOMINATOR() / 100 / 12)  

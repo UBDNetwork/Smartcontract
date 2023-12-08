@@ -8,6 +8,9 @@ LOGGER = logging.getLogger(__name__)
 PAY_AMOUNT = 1005e6
 MINT_UBD_AMOUNT = 1000e18
 ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+
+#check security < 0.5
+
 def test_usdt_to_ubd(accounts, ubd, sandbox1, usdt):
     logging.info('!!!!!!!!!!!!!!!!!   exchange from usdt to ubd    !!!!!!!!!!!!!!!')
     sandbox1.setUBDToken(ubd, {'from':accounts[0]})
@@ -50,7 +53,7 @@ def test_topup_treasury_from_sandbox1(
         treasury, ubd, markets, wbtc, market_adapter, weth, usdc):
     
     init_market_registry(accounts, mockuniv2, dai, usdt, sandbox1, sandbox2, treasury, ubd, markets, wbtc, market_adapter, weth, usdc)
-    accounts[9].transfer(mockuniv2, 30e18)
+    accounts[8].transfer(mockuniv2, 30e18)
 
     #sandbox has 1% of balance > 1000 usdt - can exchange usdt to ether and wbtc
     for i in range(70):
@@ -202,5 +205,3 @@ def test_ubd_to_usdt(
     assert wbtc.balanceOf(treasury) == before_wbtc_treasury_amount 
     assert treasury.balance() == before_eth_treasury_amount
     assert before_usdt_sandbox1_amount == usdt.balanceOf(sandbox1)
-
-   
