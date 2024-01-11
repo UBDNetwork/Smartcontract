@@ -53,8 +53,6 @@ contract StakingManager is  Ownable {
             // Receive funds
             TransferHelper.safeTransferFrom(stakedToken, msg.sender, address(this), _newDeposit.body);
         }      
- 
-        
     }
 
     function addFundsToDeposit(uint256 _depositIndex, uint256 _addAmount) external {

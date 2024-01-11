@@ -21,6 +21,7 @@ ETH_ERC20_TOKENS = [
 '0x6b175474e89094c44da98b954eedeac495271d0f',  #DAI
 '0xdAC17F958D2ee523a2206206994597C13D831ec7',  #USDT
 '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',  #USDC
+'0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'   #WBTC
 ]
 
 
@@ -47,10 +48,13 @@ CHAIN = {
         'explorer_base':'etherscan.io', 
         'enabled_erc20': ETH_ERC20_TOKENS, 
         'premint_address': '0xE206f8AC6067d8253C57D86ac96A789Cd90ed4D4',
-        'timelock': 0,
-        'market_adapter': '',
-        'team_address': accounts[0],
-        'wbtc_address': ''
+        'timelock': 172800,
+        'market_adapter': '0xF45c2b4C01Bc3a0FD723c828C74033E28F0c9328',
+        'team_address': '0xE206f8AC6067d8253C57D86ac96A789Cd90ed4D4',
+        'wbtc_address': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+        'usdt_address': '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+        'dai_address' : '0x6b175474e89094c44da98b954eedeac495271d0f',
+        'ubd_address': ''
     },
     5:{
         'explorer_base':'goerli.etherscan.io', 

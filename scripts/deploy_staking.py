@@ -47,10 +47,14 @@ CHAIN = {
         'explorer_base':'etherscan.io', 
         'enabled_erc20': ETH_ERC20_TOKENS, 
         'premint_address': '0xE206f8AC6067d8253C57D86ac96A789Cd90ed4D4',
-        'timelock': 0,
-        'market_adapter': '',
-        'team_address': accounts[0],
-        'wbtc_address': ''
+        'timelock': 172800,
+        'market_adapter': '0xF45c2b4C01Bc3a0FD723c828C74033E28F0c9328',
+        'team_address': '0xE206f8AC6067d8253C57D86ac96A789Cd90ed4D4',
+        'wbtc_address': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+        'usdt_address': '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+        'dai_address' : '0x6b175474e89094c44da98b954eedeac495271d0f',
+        'ubd_address': '0x08A0356dF4F4052accE757FaacCEc35b621bBDD2',
+        'sandbox_1': '0x5eE5c97A594cb4a922B9c0d259bEe7fe0622afAa'
     },
     5:{
         'explorer_base':'goerli.etherscan.io', 
@@ -61,7 +65,8 @@ CHAIN = {
         'usdt_address': '0x168fF7e2F39b8048E32F52Ada62E41d61Fceda58',
         'dai_address': '0x50BddB7911CE4248822a60968A32CDF1D683e7AD',
         'timelock': 0,
-        'ubd_address': '0x6771931a59500e0102aB9690f2E9473883010982'
+        'ubd_address': '0x6771931a59500e0102aB9690f2E9473883010982',
+        'sandbox_1': '0x7Fe48EE4FBAE0aAf9540688951208D0D5609b860'
     },
     56:{'explorer_base':'bscscan.com', },
 

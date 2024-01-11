@@ -2,16 +2,14 @@
 // MarketAdapterCustomMarket for like UniSwapV2 market 
 pragma solidity 0.8.21;
 
-//import "./UBDExchange.sol";
 import '@uniswap/contracts/libraries/TransferHelper.sol';
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "../../interfaces/IMarketAdapter.sol";
 import "../../interfaces/IOracleAdapter.sol";
 import '../../interfaces/IUniswapV2Router02.sol';
 
-/// @dev Adapter for MockMarket based on Uniswap2
+/// @dev Adapter for Markets based on Uniswap2
 /// @dev All assets should be transfered to this contract balance 
-/// @dev before call. Native asset should 
+/// @dev before call. Native asset should be in tz value
 contract MarketAdapterCustomMarket is IMarketAdapter, IOracleAdapter {
 
     string public name;
@@ -124,9 +122,11 @@ contract MarketAdapterCustomMarket is IMarketAdapter, IOracleAdapter {
         view 
         returns (uint256 amountOut)
     {
-        uint256[] memory amts = new uint256[](path.length); 
-        amts = IUniswapV2Router02(ROUTERV2).getAmountsOut(amountIn, path);
-        amountOut = amts[amts.length-1];
+        if (amountIn != 0) {
+            uint256[] memory amts = new uint256[](path.length); 
+            amts = IUniswapV2Router02(ROUTERV2).getAmountsOut(amountIn, path);
+            amountOut = amts[amts.length-1];
+        }
     }
 
     function getAmountIn(uint amountOut, address[] memory path)
